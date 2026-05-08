@@ -1,0 +1,109 @@
+"use server";
+
+import { PrismaClient } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import * as XLSX from "xlsx";
+
+const prisma = new PrismaClient();
+
+export async function importScheduleFromExcel(eventId: string, base64Data: string) {
+  try {
+    const buffer = Buffer.from(base64Data, 'base64');
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+    // Data format expected: { ProgramName, Venue, StartTime, Duration, StageType }
+    for (const row of data) {
+      const programName = row.ProgramName || row.Program;
+      if (!programName) continue;
+
+      const program = await prisma.program.findFirst({
+        where: { 
+          name: { equals: programName.toString().trim() },
+          eventId 
+        }
+      });
+
+      if (program) {
+        let startTime = null;
+        if (row.StartTime) {
+          // Attempt to parse Date/Time
+          startTime = new Date(row.StartTime);
+          if (isNaN(startTime.getTime())) startTime = null;
+        }
+
+        await prisma.program.update({
+          where: { id: program.id },
+          data: {
+            venue: row.Venue?.toString() || program.venue,
+            startTime: startTime || program.startTime,
+            duration: parseInt(row.Duration) || program.duration,
+            stageType: row.StageType?.toString() || program.stageType,
+          }
+        });
+      }
+    }
+
+    revalidatePath("/dashboard/schedule");
+    return { success: true, count: data.length };
+  } catch (error) {
+    console.error("Failed to import schedule:", error);
+    return { success: false, error: "Failed to import Excel data" };
+  }
+}
+
+export async function checkSchedulingConflicts(eventId: string) {
+  try {
+    const assignments = await prisma.programAssignment.findMany({
+      where: { program: { eventId } },
+      include: {
+        candidate: true,
+        program: true,
+      }
+    });
+
+    const conflicts: any[] = [];
+    
+    // Group assignments by candidate
+    const candidateSchedules: Record<string, any[]> = {};
+    assignments.forEach(as => {
+      if (!as.program.startTime) return;
+      if (!candidateSchedules[as.candidateId]) candidateSchedules[as.candidateId] = [];
+      
+      const start = new Date(as.program.startTime).getTime();
+      const end = start + (as.program.duration * 60 * 1000);
+      
+      candidateSchedules[as.candidateId].push({
+        id: as.id,
+        candidateName: as.candidate.name,
+        programName: as.program.name,
+        start,
+        end
+      });
+    });
+
+    // Check for overlaps for each candidate
+    Object.values(candidateSchedules).forEach(schedule => {
+      for (let i = 0; i < schedule.length; i++) {
+        for (let j = i + 1; j < schedule.length; j++) {
+          const a = schedule[i];
+          const b = schedule[j];
+          
+          if (a.start < b.end && b.start < a.end) {
+            conflicts.push({
+              candidateName: a.candidateName,
+              programs: [a.programName, b.programName],
+              time: new Date(a.start).toLocaleString()
+            });
+          }
+        }
+      }
+    });
+
+    return { success: true, conflicts };
+  } catch (error) {
+    return { success: false, error: "Failed to check conflicts" };
+  }
+}

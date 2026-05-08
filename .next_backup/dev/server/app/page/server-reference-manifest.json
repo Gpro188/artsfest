@@ -1,0 +1,17 @@
+{
+  "node": {
+    "40477342e2f3236b453ea2cd9c1adb2ea79322016b": {
+      "workers": {
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/public.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getPublicEventData",
+          "filename": "src/app/actions/public.ts"
+        }
+      },
+      "exportedName": "getPublicEventData",
+      "filename": "src/app/actions/public.ts"
+    }
+  },
+  "edge": {}
+}

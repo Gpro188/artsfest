@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      String   @default("MANAGER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  team      Team?    @relation("TeamManager")
+}
+
+model Event {
+  id                 String       @id @default(uuid())
+  name               String
+  startDate          DateTime?
+  endDate            DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  categories         Category[]
+  generalPointMatrix PointMatrix? @relation("EventGeneralPoints")
+  programs           Program[]
+  teams              Team[]
+}
+
+model Category {
+  id                String       @id @default(uuid())
+  name              String
+  chestNumberOffset Int          @default(0)
+  eventId           String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  posterBgUrl       String?
+  candidates        Candidate[]
+  event             Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  pointMatrix       PointMatrix? @relation("CategoryPoints")
+  programs          Program[]
+}
+
+model Team {
+  id          String      @id @default(uuid())
+  name        String
+  prefixCode  String      @unique
+  eventId     String
+  managerId   String?     @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  flagColor   String?     @default("#4F46E5")
+  leaderName  String?
+  leaderPhoto String?
+  candidates  Candidate[]
+  results     Result[]
+  manager     User?       @relation("TeamManager", fields: [managerId], references: [id])
+  event       Event       @relation(fields: [eventId], references: [id])
+}
+
+model PointMatrix {
+  id                    String    @id @default(uuid())
+  categoryId            String?   @unique
+  eventId               String?   @unique
+  individualPoints      String?
+  groupPoints           String?
+  generalPoints         String?
+  maxIndividualPrograms Int       @default(3)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  event                 Event?    @relation("EventGeneralPoints", fields: [eventId], references: [id], onDelete: Cascade)
+  category              Category? @relation("CategoryPoints", fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model Candidate {
+  id          String              @id @default(uuid())
+  name        String
+  chestNumber String?             @unique
+  categoryId  String
+  teamId      String
+  isApproved  Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  photo       String?
+  team        Team                @relation(fields: [teamId], references: [id])
+  category    Category            @relation(fields: [categoryId], references: [id])
+  programs    ProgramAssignment[]
+  results     Result[]
+}
+
+model Program {
+  id            String              @id @default(uuid())
+  programCode   String?
+  name          String
+  type          String
+  categoryId    String?
+  eventId       String
+  venue         String?
+  startTime     DateTime?
+  duration      Int                 @default(10)
+  stageType     String              @default("ON_STAGE")
+  candidateLimitPerTeam Int           @default(1)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  mediaTemplate MediaTemplate?
+  event         Event               @relation(fields: [eventId], references: [id])
+  category      Category?           @relation(fields: [categoryId], references: [id])
+  assignments   ProgramAssignment[]
+  results       Result[]
+}
+
+model ProgramAssignment {
+  id            String    @id @default(uuid())
+  candidateId   String
+  programId     String
+  createdAt     DateTime  @default(now())
+  scheduledTime DateTime?
+  slotNumber    Int?
+  program       Program   @relation(fields: [programId], references: [id])
+  candidate     Candidate @relation(fields: [candidateId], references: [id])
+
+  @@unique([candidateId, programId])
+}
+
+model Result {
+  id          String    @id @default(uuid())
+  candidateId String?
+  teamId      String?
+  programId   String
+  marks       Float
+  rank        Int?
+  grade       String?
+  points      Float
+  isPublished Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  program     Program   @relation(fields: [programId], references: [id])
+  candidate   Candidate? @relation(fields: [candidateId], references: [id])
+  team        Team?      @relation(fields: [teamId], references: [id])
+
+  @@unique([candidateId, programId])
+  @@unique([teamId, programId])
+}
+
+model MediaTemplate {
+  id        String   @id @default(uuid())
+  programId String   @unique
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  program   Program  @relation(fields: [programId], references: [id])
+}
+
+model GlobalSetting {
+  id                            String    @id @default("default")
+  festName                      String    @default("Arts Fest")
+  festMoto                      String    @default("Celebrating Creativity")
+  festLogo                      String?
+  updatedAt                     DateTime  @updatedAt
+  candidateRegistrationDeadline DateTime?
+  programAssignmentDeadline     DateTime?
+
+  // Poster Template Assets
+  posterHeaderUrl               String?
+  posterFooterUrl               String?
+  posterCongratulationUrl       String?
+  posterLogoUrl                 String?
+  posterBgUrl                   String?
+  posterPrimaryColor            String?   @default("#1e293b")
+  posterSecondaryColor          String?   @default("#f97316")
+  posterTextColor               String?   @default("#1e293b")
+}

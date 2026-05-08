@@ -1,0 +1,62 @@
+import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
+import PrintButton from "@/components/PrintButton";
+
+export default async function PrintSchedulePage() {
+  const settings = await getSettings();
+  const programs = await prisma.program.findMany({
+    orderBy: { startTime: 'asc' },
+    include: { category: true, event: true }
+  });
+
+  return (
+    <div style={{ padding: '40px', backgroundColor: 'white', color: 'black', minHeight: '100vh' }}>
+      <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '2px solid black', paddingBottom: '20px' }}>
+        <h1 style={{ margin: '0 0 5px 0' }}>{settings.festName}</h1>
+        <h2 style={{ margin: 0, fontSize: '1.2rem', textTransform: 'uppercase' }}>Official Program Schedule</h2>
+        <p style={{ margin: '5px 0 0 0', fontStyle: 'italic' }}>{settings.festMoto}</p>
+      </div>
+
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f3f4f6' }}>
+            <th style={{ border: '1px solid black', padding: '10px' }}>Time</th>
+            <th style={{ border: '1px solid black', padding: '10px' }}>Program Name</th>
+            <th style={{ border: '1px solid black', padding: '10px' }}>Category</th>
+            <th style={{ border: '1px solid black', padding: '10px' }}>Venue</th>
+            <th style={{ border: '1px solid black', padding: '10px' }}>Stage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {programs.map(p => (
+            <tr key={p.id}>
+              <td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>
+                {p.startTime ? new Date(p.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}
+              </td>
+              <td style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold' }}>{p.name}</td>
+              <td style={{ border: '1px solid black', padding: '8px' }}>{p.category?.name || 'General'}</td>
+              <td style={{ border: '1px solid black', padding: '8px' }}>{p.venue || '-'}</td>
+              <td style={{ border: '1px solid black', padding: '8px', textAlign: 'center' }}>{p.stageType}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between' }}>
+        <div>Generated on: {new Date().toLocaleString()}</div>
+        <div style={{ borderTop: '1px solid black', width: '200px', textAlign: 'center', paddingTop: '5px' }}>Convener Signature</div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; color: black !important; }
+        }
+      `}} />
+      
+      <div className="no-print" style={{ position: 'fixed', bottom: '20px', right: '20px' }}>
+        <PrintButton label="Print Schedule" />
+      </div>
+    </div>
+  );
+}
