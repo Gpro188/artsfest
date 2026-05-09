@@ -267,9 +267,8 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
             )}
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: 'var(--spacing-xl)' }}>
