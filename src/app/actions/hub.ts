@@ -57,7 +57,7 @@ export async function getHubData() {
       };
     });
 
-    return { success: true, data: hubEvents };
+    return { success: true, data: hubEvents || [] };
   } catch (error) {
     console.error("Hub data fetch failed:", error);
     return { success: false, error: "Failed to load hub data" };

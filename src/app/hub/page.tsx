@@ -6,7 +6,7 @@ import { getSettings } from "@/lib/settings";
 export default async function HubPage() {
   const settings = await getSettings();
   const res = await getHubData();
-  const events = res.success ? res.data : [];
+  const events = (res.success && res.data) ? res.data : [];
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
