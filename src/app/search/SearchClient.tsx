@@ -147,8 +147,8 @@ export default function SearchClient({
                   <option value="GROUP">GROUP</option>
                 </select>
               </div>
-              </div>
-            )}
+            </>
+          )}
           </div>
         )}
         
