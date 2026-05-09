@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRef, useEffect } from "react";
 
 export default function EventSwitcher({ events, activeEventId }: { events: any[], activeEventId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleSwitch = (eventId: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -14,30 +16,103 @@ export default function EventSwitcher({ events, activeEventId }: { events: any[]
     } else {
       params.delete("eventId");
     }
-    router.push(`${pathname}?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  // Center the active element on load
+  useEffect(() => {
+    if (scrollRef.current) {
+      const activeElement = scrollRef.current.querySelector(`[data-active="true"]`);
+      if (activeElement) {
+        activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [activeEventId]);
+
   return (
-    <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.6)', padding: '4px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)', marginBottom: 'var(--spacing-md)', alignSelf: 'flex-start' }}>
-      {events.map(event => (
-        <button
-          key={event.id}
-          onClick={() => handleSwitch(event.id)}
-          style={{
-            padding: '0.5rem 1.5rem',
-            borderRadius: 'var(--radius-full)',
-            border: 'none',
-            background: activeEventId === event.id ? 'var(--primary)' : 'transparent',
-            color: activeEventId === event.id ? 'white' : 'var(--text-secondary)',
-            fontWeight: activeEventId === event.id ? 600 : 400,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            fontSize: '0.875rem'
-          }}
-        >
-          {event.name}
-        </button>
-      ))}
+    <div className="event-switcher-wrapper">
+      <div 
+        ref={scrollRef}
+        className="event-switcher-scroll"
+      >
+        {events.map(event => (
+          <button
+            key={event.id}
+            data-active={activeEventId === event.id}
+            onClick={() => handleSwitch(event.id)}
+            className={`event-switch-btn ${activeEventId === event.id ? 'active' : ''}`}
+          >
+            {event.name}
+          </button>
+        ))}
+      </div>
+
+      <style jsx>{`
+        .event-switcher-wrapper {
+          position: relative;
+          margin-bottom: var(--spacing-lg);
+          padding: 4px;
+          background: rgba(15, 23, 42, 0.4);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-full);
+          max-width: 100%;
+          overflow: hidden;
+          align-self: flex-start;
+        }
+
+        .event-switcher-scroll {
+          display: flex;
+          gap: 4px;
+          overflow-x: auto;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none;  /* IE/Edge */
+          scroll-snap-type: x mandatory;
+          padding: 2px;
+        }
+
+        .event-switcher-scroll::-webkit-scrollbar {
+          display: none; /* Chrome/Safari */
+        }
+
+        .event-switch-btn {
+          white-space: nowrap;
+          padding: 0.6rem 1.8rem;
+          border-radius: var(--radius-full);
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          font-size: 0.9rem;
+          scroll-snap-align: center;
+        }
+
+        .event-switch-btn:hover {
+          color: white;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .event-switch-btn.active {
+          background: var(--primary);
+          color: white;
+          font-weight: 700;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          transform: scale(1.02);
+        }
+
+        @media (max-width: 768px) {
+          .event-switcher-wrapper {
+            width: 100%;
+            border-radius: var(--radius-lg);
+          }
+          .event-switch-btn {
+            padding: 0.5rem 1.2rem;
+            font-size: 0.8rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }
+
