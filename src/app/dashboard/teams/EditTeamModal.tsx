@@ -9,6 +9,7 @@ export default function EditTeamModal({ team, onClose }: { team: any, onClose: (
   const [leaderName, setLeaderName] = useState(team.leaderName || "");
   const [leaderPhoto, setLeaderPhoto] = useState(team.leaderPhoto || "");
   const [flagColor, setFlagColor] = useState(team.flagColor || "#4F46E5");
+  const [managerUsername, setManagerUsername] = useState(team.manager?.username || "");
   const [managerPassword, setManagerPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +22,7 @@ export default function EditTeamModal({ team, onClose }: { team: any, onClose: (
       leaderName,
       leaderPhoto,
       flagColor,
+      managerUsername: managerUsername || undefined,
       managerPassword: managerPassword || undefined,
     });
     if (result.success) {
@@ -63,9 +65,15 @@ export default function EditTeamModal({ team, onClose }: { team: any, onClose: (
             <input type="text" className="form-input" value={leaderPhoto} onChange={(e) => setLeaderPhoto(e.target.value)} />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">New Manager Password (Leave blank to keep current)</label>
-            <input type="password" className="form-input" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} minLength={6} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+            <div className="form-group">
+              <label className="form-label">Manager Username</label>
+              <input type="text" className="form-input" value={managerUsername} onChange={(e) => setManagerUsername(e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">New Manager Password</label>
+              <input type="password" className="form-input" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} minLength={6} placeholder="Leave blank to keep current" />
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-md)' }}>

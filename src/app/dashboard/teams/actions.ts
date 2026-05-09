@@ -63,14 +63,29 @@ export async function updateTeam(id: string, data: any) {
       flagColor: data.flagColor,
     };
 
-    if (data.managerPassword) {
-      const hashedPassword = await bcrypt.hash(data.managerPassword, 10);
+    if (data.managerUsername || data.managerPassword) {
       const team = await prisma.team.findUnique({ where: { id } });
       if (team?.managerId) {
-        await prisma.user.update({
-          where: { id: team.managerId },
-          data: { password: hashedPassword }
-        });
+        const userUpdateData: any = {};
+        
+        if (data.managerUsername) {
+          const existingUser = await prisma.user.findUnique({ where: { username: data.managerUsername } });
+          if (existingUser && existingUser.id !== team.managerId) {
+            return { success: false, error: "Manager username already taken" };
+          }
+          userUpdateData.username = data.managerUsername;
+        }
+
+        if (data.managerPassword) {
+          userUpdateData.password = await bcrypt.hash(data.managerPassword, 10);
+        }
+
+        if (Object.keys(userUpdateData).length > 0) {
+          await prisma.user.update({
+            where: { id: team.managerId },
+            data: userUpdateData
+          });
+        }
       }
     }
 
