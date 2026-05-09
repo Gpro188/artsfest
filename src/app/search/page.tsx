@@ -139,7 +139,7 @@ export default async function SearchPage({
 
       <main style={{ flex: 1, padding: 'var(--spacing-xl) 0' }}>
         <div className="container" style={{ maxWidth: '900px' }}>
-          <h2 style={{ marginBottom: 'var(--spacing-lg)' }}>Advanced Program & Result Search</h2>
+          <h2 style={{ marginBottom: 'var(--spacing-lg)' }}>Advanced Programme & Result Search</h2>
           
           <SearchClient 
             initialQuery={query} 

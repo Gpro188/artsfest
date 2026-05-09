@@ -58,19 +58,19 @@ export default function SearchClient({
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
-              <option value="chestNumber">Chest Number / Candidate</option>
-              <option value="program">Program Name / Results</option>
+              <option value="chestNumber">Candidate / Chest Number</option>
+              <option value="program">Programme / Result Board</option>
             </select>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Query (Optional)</label>
+            <label className="form-label">Programme / Name</label>
             <input 
               type="text" 
               className="form-input" 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={type === 'chestNumber' ? 'e.g. 101 or John' : 'e.g. Oppana'}
+              placeholder={type === 'chestNumber' ? 'Search by Name or Chest #' : 'Search by Programme Name or Code'}
             />
           </div>
 
@@ -145,6 +145,7 @@ export default function SearchClient({
                   <option value="">All Types</option>
                   <option value="INDIVIDUAL">INDIVIDUAL</option>
                   <option value="GROUP">GROUP</option>
+                  <option value="GENERAL">GENERAL</option>
                 </select>
               </div>
             </>
