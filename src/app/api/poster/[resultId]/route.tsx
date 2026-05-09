@@ -1,7 +1,8 @@
 import { ImageResponse } from 'next/og';
 import { PrismaClient } from '@prisma/client';
 
-export const runtime = 'edge';
+// Removed edge runtime due to Vercel 1MB size limit with Prisma
+
 
 const prisma = new PrismaClient();
 
