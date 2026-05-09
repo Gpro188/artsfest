@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import SearchClient from "./SearchClient";
 import { getSettings } from "@/lib/settings";
-
-const prisma = new PrismaClient();
 
 export default async function SearchPage({
   searchParams,
@@ -40,16 +38,25 @@ export default async function SearchPage({
 
   if (query || categoryId || stageType || programType || eventId) {
     if (type === "chestNumber") {
-      const candidateWhere: any = { isApproved: true };
+      const candidateWhere: any = {};
+      
+      const filters: any[] = [];
       if (query) {
-        candidateWhere.OR = [
-          { chestNumber: { contains: query, mode: 'insensitive' } },
-          { name: { contains: query, mode: 'insensitive' } },
-          { team: { prefixCode: { contains: query, mode: 'insensitive' } } }
-        ];
+        filters.push({
+          OR: [
+            { chestNumber: { contains: query, mode: 'insensitive' } },
+            { name: { contains: query, mode: 'insensitive' } },
+            { team: { name: { contains: query, mode: 'insensitive' } } },
+            { team: { prefixCode: { contains: query, mode: 'insensitive' } } }
+          ]
+        });
       }
-      if (categoryId) candidateWhere.categoryId = categoryId;
-      if (eventId) candidateWhere.team = { ...candidateWhere.team, eventId: eventId };
+      if (categoryId) filters.push({ categoryId });
+      if (eventId) filters.push({ team: { eventId } });
+
+      if (filters.length > 0) {
+        candidateWhere.AND = filters;
+      }
 
       candidateResults = await prisma.candidate.findMany({
         where: candidateWhere,
@@ -74,16 +81,24 @@ export default async function SearchPage({
       });
     } else if (type === "program") {
       const programWhere: any = {};
+      const filters: any[] = [];
+
       if (query) {
-        programWhere.OR = [
-          { name: { contains: query, mode: 'insensitive' } },
-          { programCode: { contains: query, mode: 'insensitive' } }
-        ];
+        filters.push({
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { programCode: { contains: query, mode: 'insensitive' } }
+          ]
+        });
       }
-      if (categoryId) programWhere.categoryId = categoryId;
-      if (eventId) programWhere.eventId = eventId;
-      if (stageType) programWhere.stageType = stageType as any;
-      if (programType) programWhere.type = programType as any;
+      if (categoryId) filters.push({ categoryId });
+      if (eventId) filters.push({ eventId });
+      if (stageType) filters.push({ stageType: stageType as any });
+      if (programType) filters.push({ type: programType as any });
+
+      if (filters.length > 0) {
+        programWhere.AND = filters;
+      }
 
       programResults = await prisma.program.findMany({
         where: programWhere,
@@ -91,7 +106,6 @@ export default async function SearchPage({
           event: true,
           category: true,
           results: {
-            where: { isPublished: true },
             orderBy: { marks: 'desc' },
             include: { candidate: { include: { team: true } } }
           },
