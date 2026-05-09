@@ -3,6 +3,8 @@ import Link from "next/link";
 import PublicDashboard from "./components/PublicDashboard";
 import { getSettings } from "@/lib/settings";
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function HomePage() {
   const events = await prisma.event.findMany({
     orderBy: { createdAt: 'desc' }

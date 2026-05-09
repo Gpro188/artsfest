@@ -173,8 +173,8 @@ export async function getPublicEventData(eventId: string) {
   }
 }
 
-export async function getProgramResults(programId: string) {
-  try {
+const getCachedProgramResults = unstable_cache(
+  async (programId: string) => {
     const [program, settings] = await Promise.all([
       prisma.program.findUnique({
         where: { id: programId },
@@ -195,9 +195,17 @@ export async function getProgramResults(programId: string) {
       prisma.globalSetting.findUnique({ where: { id: "default" } })
     ]);
 
-    if (!program) return { success: false, error: "Program not found" };
+    return { program, settings };
+  },
+  ['program-results'],
+  { revalidate: 60, tags: ['results'] }
+);
 
-    return { success: true, data: { program, settings } };
+export async function getProgramResults(programId: string) {
+  try {
+    const data = await getCachedProgramResults(programId);
+    if (!data.program) return { success: false, error: "Program not found" };
+    return { success: true, data };
   } catch (error) {
     console.error("Failed to fetch program results:", error);
     return { success: false, error: "Failed to fetch results" };

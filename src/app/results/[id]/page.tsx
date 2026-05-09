@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export const revalidate = 60; // Cache for 1 minute
+
 export default async function ProgramResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const res = await getProgramResults(id);
