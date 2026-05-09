@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { submitMarks } from "./actions";
 
 export default function ScoringForm({ events }: { events: any[] }) {
@@ -14,6 +14,17 @@ export default function ScoringForm({ events }: { events: any[] }) {
   const [grade, setGrade] = useState<string>(""); 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null);
+
+  // Sync state with props when switching events
+  useEffect(() => {
+    if (events.length > 0) {
+      setEventId(events[0].id);
+      setProgramType("");
+      setCategoryId("");
+      setProgramId("");
+      setParticipantId("");
+    }
+  }, [events]);
 
   const selectedEvent = events.find(e => e.id === eventId);
   const allPrograms = selectedEvent?.programs || [];

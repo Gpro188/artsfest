@@ -10,6 +10,11 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
   const [conflicts, setConflicts] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
 
+  // Sync state with props when switching events
+  useEffect(() => {
+    setPrograms(initialPrograms);
+  }, [initialPrograms]);
+
   useEffect(() => {
     fetchConflicts();
   }, [programs]);
