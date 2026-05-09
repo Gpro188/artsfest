@@ -7,7 +7,6 @@ import { toPng } from "html-to-image";
 export default function ProgramResultsView({ program, settings, userRole }: { program: any, settings: any, userRole?: string }) {
   const isAuthorizedMedia = userRole === 'ADMIN' || userRole === 'MEDIA';
   const [isPosterMode, setIsPosterMode] = useState(false);
-  const [isBodyOnly, setIsBodyOnly] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const posterRef = useRef<HTMLDivElement>(null);
 
@@ -32,8 +31,8 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
         quality: 1.0,
         pixelRatio: 2, // Higher quality
         cacheBust: true,
-        width: 800,    // Force fixed width for export
-        height: 1128,  // Force fixed height for export
+        width: 1080,    // Force fixed width for export
+        height: 1350,  // Force fixed height for export
         style: {
             transform: 'scale(1)', // Reset any CSS transforms
             margin: '0',
@@ -43,7 +42,7 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
       });
       
       const link = document.createElement('a');
-      link.download = `${program.name}_${isBodyOnly ? 'Raw_Body' : 'Poster'}.png`;
+      link.download = `${program.name}_Poster.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -78,23 +77,19 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
   if (isPosterMode) {
     return (
       <div className="poster-container" style={{ minHeight: '100vh', backgroundColor: '#0f172a', padding: '40px 0' }}>
-        <div style={{ padding: '20px', textAlign: 'center', position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)', marginBottom: '20px' }}>
-            <button onClick={() => { setIsPosterMode(false); setIsBodyOnly(false); }} className="btn btn-secondary no-print">← Back</button>
-            <button onClick={handleDownloadImage} className="btn btn-primary no-print" style={{ marginLeft: '10px' }} disabled={isGenerating}>
-                {isGenerating ? '⌛ Generating...' : finalPosterUrl ? '📥 Download Final Poster' : isBodyOnly ? '🖼️ Download Clean Body' : '🖼️ Download Branded PNG'}
-            </button>
-            <button onClick={handleShare} className="btn btn-secondary no-print" style={{ marginLeft: '10px', backgroundColor: '#25D366', color: 'white', borderColor: '#25D366' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px', padding: '20px', position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)', marginBottom: '20px' }}>
+            <button onClick={() => setIsPosterMode(false)} className="btn btn-secondary no-print">← Back</button>
+            
+            {/* Show Download button only if media has set a poster BG or if user is admin */}
+            {(finalPosterUrl || program.category?.posterBgUrl || settings?.posterBgUrl || isAuthorizedMedia) && (
+              <button onClick={handleDownloadImage} className="btn btn-primary no-print" disabled={isGenerating}>
+                  {isGenerating ? '⌛ Generating...' : '📥 Download Poster'}
+              </button>
+            )}
+
+            <button onClick={handleShare} className="btn btn-secondary no-print" style={{ backgroundColor: '#25D366', color: 'white', borderColor: '#25D366' }}>
                 📲 Share Result
             </button>
-            {isAuthorizedMedia && !finalPosterUrl && (
-                <button 
-                    onClick={() => setIsBodyOnly(!isBodyOnly)} 
-                    className="btn btn-secondary no-print" 
-                    style={{ marginLeft: '10px' }}
-                >
-                    {isBodyOnly ? '✨ Show Branding' : '🧊 Clean Body Only'}
-                </button>
-            )}
         </div>
 
         <style jsx global>{`
@@ -105,14 +100,14 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                 padding: 20px;
                 overflow-x: hidden;
             }
-            @media (max-width: 800px) {
+            @media (max-width: 1100px) {
                 .printable-poster {
-                    transform: scale(calc((100vw - 40px) / 800)) !important;
+                    transform: scale(calc((100vw - 40px) / 1080)) !important;
                     transform-origin: top center !important;
                 }
                 /* Compensate for the space taken by scaled element */
                 .poster-stage {
-                    height: calc(1128px * (100vw - 40px) / 800 + 100px) !important;
+                    height: calc(1350px * (100vw - 40px) / 1080 + 100px) !important;
                 }
             }
             @media print {
@@ -136,8 +131,8 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
         {/* The Poster Area */}
         <div className="poster-stage">
             <div ref={posterRef} className="printable-poster" style={{
-                width: '800px',
-                height: '1128px', 
+                width: '1080px',
+                height: '1350px', 
                 margin: '0 auto',
                 backgroundColor: 'white',
                 color: '#1e293b',
@@ -155,24 +150,20 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
             ) : (
                 /* OPTION B: Auto-Generated Poster */
                 <>
-                    {/* Branding Assets (Hidden in BodyOnly mode) */}
-                    {!isBodyOnly && (
-                        <>
-                            {(program.category?.posterBgUrl || settings?.posterBgUrl) && (
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-                                    <img 
-                                        src={program.category?.posterBgUrl || settings.posterBgUrl} 
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                        alt="" 
-                                        crossOrigin="anonymous" 
-                                    />
-                                </div>
-                            )}
-                            <div style={{ position: 'absolute', top: '20px', right: '40px', zIndex: 2 }}>
-                                {settings?.posterLogoUrl && <img src={settings.posterLogoUrl} style={{ height: '80px', objectFit: 'contain' }} alt="" crossOrigin="anonymous" />}
-                            </div>
-                        </>
+                    {/* Branding Assets */}
+                    {(program.category?.posterBgUrl || settings?.posterBgUrl) && (
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+                            <img 
+                                src={program.category?.posterBgUrl || settings.posterBgUrl} 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                alt="" 
+                                crossOrigin="anonymous" 
+                            />
+                        </div>
                     )}
+                    <div style={{ position: 'absolute', top: '30px', right: '50px', zIndex: 2 }}>
+                        {settings?.posterLogoUrl && <img src={settings.posterLogoUrl} style={{ height: '100px', objectFit: 'contain' }} alt="" crossOrigin="anonymous" />}
+                    </div>
 
                     {/* CENTER BODY CONTENT (Reference Image Style) */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', zIndex: 1, padding: '0', justifyContent: 'center', height: '100%' }}>
@@ -185,19 +176,19 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                             {/* Header Info */}
                             <div style={{ marginBottom: '40px' }}>
                                 <div style={{ 
-                                    fontSize: '1.2rem', 
+                                    fontSize: '1.4rem', 
                                     fontWeight: 900, 
-                                    color: (!isBodyOnly && settings?.posterBgUrl) ? 'white' : (settings?.posterSecondaryColor || '#f97316'), 
+                                    color: settings?.posterBgUrl ? 'white' : (settings?.posterSecondaryColor || '#f97316'), 
                                     textTransform: 'uppercase', 
                                     letterSpacing: '3px',
-                                    marginBottom: '5px'
+                                    marginBottom: '10px'
                                 }}>
                                     {program.category?.name || 'General'}
                                 </div>
                                 <div style={{ 
-                                    fontSize: '5rem', 
+                                    fontSize: '6rem', 
                                     fontWeight: 900, 
-                                    color: (!isBodyOnly && settings?.posterBgUrl) ? 'white' : (settings?.posterPrimaryColor || '#1e293b'), 
+                                    color: settings?.posterBgUrl ? 'white' : (settings?.posterPrimaryColor || '#1e293b'), 
                                     letterSpacing: '-2px', 
                                     margin: '0', 
                                     lineHeight: 0.9,
@@ -208,13 +199,12 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                             </div>
 
                             {/* Winners Horizontal Line */}
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 20px', gap: '15px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 40px', gap: '30px', flexWrap: 'wrap' }}>
                                 {winners.map((winner: any) => (
                                     <WinnerCard 
                                         key={winner.id} 
                                         result={winner} 
                                         rank={winner.rank} 
-                                        isBodyOnly={isBodyOnly} 
                                         secondaryColor={settings?.posterSecondaryColor}
                                         textColor={settings?.posterTextColor}
                                     />
@@ -267,7 +257,7 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 'var(--spacing-xl)' }}>
+      <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 'var(--spacing-xl)' }}>
         {/* Winners Board */}
         <div>
           <h2 style={{ marginBottom: 'var(--spacing-lg)', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -419,17 +409,15 @@ function WinnerDisplay({ result, rank, isMain = false }: { result: any, rank: nu
 function WinnerCard({ 
     result, 
     rank, 
-    isBodyOnly = false, 
     secondaryColor = "#f97316", 
     textColor = "#1e293b" 
 }: { 
     result: any, 
     rank: number, 
-    isBodyOnly?: boolean, 
     secondaryColor?: string, 
     textColor?: string 
 }) {
-    const photoSize = '200px';
+    const photoSize = '240px'; // Slightly larger for 1080p
     
     const displayName = result.candidate?.name || result.team?.name || 'Participant';
     const teamName = result.candidate?.team?.name || result.team?.name || '';
