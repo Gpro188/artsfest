@@ -43,8 +43,9 @@ export default async function SearchPage({
       const candidateWhere: any = { isApproved: true };
       if (query) {
         candidateWhere.OR = [
-          { chestNumber: { contains: query } },
-          { team: { prefixCode: { contains: query } } }
+          { chestNumber: { contains: query, mode: 'insensitive' } },
+          { name: { contains: query, mode: 'insensitive' } },
+          { team: { prefixCode: { contains: query, mode: 'insensitive' } } }
         ];
       }
       if (categoryId) candidateWhere.categoryId = categoryId;
@@ -73,7 +74,12 @@ export default async function SearchPage({
       });
     } else if (type === "program") {
       const programWhere: any = {};
-      if (query) programWhere.name = { contains: query };
+      if (query) {
+        programWhere.OR = [
+          { name: { contains: query, mode: 'insensitive' } },
+          { programCode: { contains: query, mode: 'insensitive' } }
+        ];
+      }
       if (categoryId) programWhere.categoryId = categoryId;
       if (eventId) programWhere.eventId = eventId;
       if (stageType) programWhere.stageType = stageType as any;
