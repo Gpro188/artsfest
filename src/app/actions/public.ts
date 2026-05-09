@@ -2,8 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 
-export async function getPublicEventData(eventId: string) {
-  try {
+import { unstable_cache } from 'next/cache';
+
+const getCachedPublicEventData = unstable_cache(
+  async (eventId: string) => {
     // 1. Get Latest Results (Published only)
     const latestResults = await prisma.result.findMany({
       where: { 
@@ -149,16 +151,22 @@ export async function getPublicEventData(eventId: string) {
     };
 
     return { 
-      success: true, 
-      data: { 
         latestResults, 
         leaderboard, 
         teams, 
         topStars, 
         categoryStars,
         stats
-      } 
     };
+  },
+  ['public-event-data'],
+  { revalidate: 30, tags: ['public-event-data'] }
+);
+
+export async function getPublicEventData(eventId: string) {
+  try {
+    const data = await getCachedPublicEventData(eventId);
+    return { success: true, data };
   } catch (error) {
     console.error("Failed to fetch public data:", error);
     return { success: false, error: "Failed to fetch data" };

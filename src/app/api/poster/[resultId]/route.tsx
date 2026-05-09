@@ -18,6 +18,10 @@ export async function GET(request: Request, context: { params: Promise<{ resultI
       }
     });
 
+    const settings = await prisma.globalSetting.findUnique({
+      where: { id: 'default' }
+    });
+
     if (!result || !result.isPublished) {
       return new Response('Poster not found or result not published', { status: 404 });
     }
@@ -26,7 +30,11 @@ export async function GET(request: Request, context: { params: Promise<{ resultI
     const teamName = result.candidate?.team.name || result.team?.name || 'Team';
 
     const templateBgUrl = result.program.mediaTemplate?.imageUrl;
-    const bgImage = templateBgUrl ? templateBgUrl : 'https://placehold.co/1080x1080/0F172A/FFF?text=Winner'; // Fallback
+    const bgImage = templateBgUrl ? templateBgUrl : (settings?.posterBgUrl || 'https://placehold.co/1080x1080/0F172A/FFF?text=Winner'); // Fallback
+
+    const textColor = settings?.posterTextColor || 'white';
+    const primaryColor = settings?.posterPrimaryColor || '#FCD34D';
+    const secondaryColor = settings?.posterSecondaryColor || '#4F46E5';
 
     return new ImageResponse(
       (
@@ -42,7 +50,7 @@ export async function GET(request: Request, context: { params: Promise<{ resultI
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             paddingBottom: '120px',
-            color: 'white',
+            color: textColor,
             fontFamily: 'sans-serif',
           }}
         >
@@ -70,10 +78,10 @@ export async function GET(request: Request, context: { params: Promise<{ resultI
             </h1>
             
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-              <span style={{ fontSize: '40px', fontWeight: 600, color: '#FCD34D', marginRight: '20px' }}>
+              <span style={{ fontSize: '40px', fontWeight: 600, color: primaryColor, marginRight: '20px' }}>
                 {result.rank === 1 ? '1ST PLACE' : result.rank === 2 ? '2ND PLACE' : result.rank === 3 ? '3RD PLACE' : `${result.grade} GRADE`}
               </span>
-              <span style={{ fontSize: '30px', background: '#4F46E5', padding: '5px 20px', borderRadius: '50px' }}>
+              <span style={{ fontSize: '30px', background: secondaryColor, padding: '5px 20px', borderRadius: '50px', color: textColor }}>
                 {teamName}
               </span>
             </div>
