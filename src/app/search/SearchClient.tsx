@@ -29,6 +29,7 @@ export default function SearchClient({
   const [categoryId, setCategoryId] = useState(initialCategoryId);
   const [stageType, setStageType] = useState(initialStageType);
   const [programType, setProgramType] = useState(initialProgramType);
+  const [showAdvanced, setShowAdvanced] = useState(!!(initialEventId || initialCategoryId || initialStageType || initialProgramType));
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -47,7 +48,8 @@ export default function SearchClient({
   return (
     <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
       <form onSubmit={handleSearch}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--spacing-md)', alignItems: 'flex-end' }}>
+        {/* Simple Search Area */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)', alignItems: 'flex-end', marginBottom: showAdvanced ? 'var(--spacing-md)' : 0 }}>
           
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Search By</label>
@@ -68,9 +70,28 @@ export default function SearchClient({
               className="form-input" 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={type === 'chestNumber' ? 'e.g. 101' : 'e.g. Quran'}
+              placeholder={type === 'chestNumber' ? 'e.g. 101 or John' : 'e.g. Oppana'}
             />
           </div>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button type="submit" className="btn btn-primary" style={{ height: '42px', flex: 1 }}>
+              🔍 Search
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setShowAdvanced(!showAdvanced)} 
+              className="btn btn-secondary" 
+              style={{ height: '42px', padding: '0 15px', whiteSpace: 'nowrap' }}
+            >
+              {showAdvanced ? 'Hide Advanced' : '⚙️ Advanced Filters'}
+            </button>
+          </div>
+        </div>
+
+        {/* Advanced Filters Area */}
+        {showAdvanced && (
+          <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--spacing-md)', alignItems: 'flex-end', padding: 'var(--spacing-md)', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.05)' }}>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Select Event</label>
@@ -126,13 +147,10 @@ export default function SearchClient({
                   <option value="GROUP">GROUP</option>
                 </select>
               </div>
-            </>
-          )}
-
-          <button type="submit" className="btn btn-primary" style={{ height: '42px' }}>
-            Filter & Search
-          </button>
-        </div>
+              </div>
+            )}
+          </div>
+        )}
         
         {(query || eventId || categoryId || stageType || programType) && (
           <div style={{ marginTop: '10px', display: 'flex', gap: '5px' }}>
