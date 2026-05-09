@@ -7,8 +7,13 @@ import ResultList from "./ResultList";
 import TeamScorePreview from "./TeamScorePreview";
 import ExcelExport from "./ExcelExport";
 import PendingProgramsList from "./PendingProgramsList";
+import EventSwitcher from "@/app/components/EventSwitcher";
 
-export default async function ScoringPage() {
+export default async function ScoringPage({
+  searchParams,
+}: {
+  searchParams: { eventId?: string }
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user.role !== "JUDGE" && session.user.role !== "ADMIN")) {
@@ -16,6 +21,22 @@ export default async function ScoringPage() {
   }
 
   const events = await prisma.event.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const activeEventId = searchParams.eventId || events[0]?.id;
+
+  if (!activeEventId) {
+    return (
+        <div className="animate-fade-in" style={{ padding: 'var(--spacing-xl)', textAlign: 'center' }}>
+            <h2>No Events Found</h2>
+            <p>Create an event first to manage scoring.</p>
+        </div>
+    );
+  }
+
+  const activeEvent = await prisma.event.findUnique({
+    where: { id: activeEventId },
     include: {
       generalPointMatrix: true,
       programs: { 
@@ -33,11 +54,15 @@ export default async function ScoringPage() {
         } 
       },
       teams: true
-    },
-    orderBy: { createdAt: 'desc' }
+    }
   });
 
+  if (!activeEvent) redirect("/dashboard/scoring");
+
   const results = await prisma.result.findMany({
+    where: {
+        program: { eventId: activeEventId }
+    },
     include: {
       candidate: { include: { team: true, category: true } },
       team: true,
@@ -50,7 +75,8 @@ export default async function ScoringPage() {
   // Find programs with no results but have assignments
   const allPrograms = await prisma.program.findMany({
     where: {
-      assignments: { some: {} } // Has at least one candidate assigned
+      eventId: activeEventId,
+      assignments: { some: {} } 
     },
     include: {
       results: true,
@@ -61,8 +87,9 @@ export default async function ScoringPage() {
 
   const pendingPrograms = allPrograms.filter(p => p.results.length === 0);
 
-  // Calculate Team Scores
+  // Calculate Team Scores for the active event
   const allTeams = await prisma.team.findMany({
+    where: { eventId: activeEventId },
     include: {
       candidates: {
         include: { results: true }
@@ -104,10 +131,12 @@ export default async function ScoringPage() {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
         <h1 style={{ margin: 0 }}>Live Scoring & Results Hub</h1>
         <ExcelExport results={results} />
       </div>
+
+      <EventSwitcher events={events} activeEventId={activeEventId} />
       
       {events.length === 0 ? (
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
@@ -124,7 +153,7 @@ export default async function ScoringPage() {
               <h2 style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                  🎯 Rapid Result Entry
               </h2>
-              <ScoringForm events={events} />
+              <ScoringForm events={[activeEvent]} />
             </div>
 
             {/* Results Management Section */}
@@ -143,7 +172,7 @@ export default async function ScoringPage() {
                 <span style={{ fontSize: '0.8rem', backgroundColor: 'var(--error)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{pendingPrograms.length}</span>
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
-                Programs with assignments but no results recorded.
+                Programs with assignments but no results recorded for <strong>{activeEvent.name}</strong>.
               </p>
               <PendingProgramsList programs={pendingPrograms} />
             </div>

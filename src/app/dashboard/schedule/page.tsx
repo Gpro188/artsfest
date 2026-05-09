@@ -4,8 +4,13 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AdminScheduler from "./AdminScheduler";
 import ManagerScheduler from "./ManagerScheduler";
+import EventSwitcher from "@/app/components/EventSwitcher";
 
-export default async function SchedulePage() {
+export default async function SchedulePage({
+  searchParams,
+}: {
+  searchParams: { eventId?: string }
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -15,7 +20,14 @@ export default async function SchedulePage() {
   const { role, id: userId } = session.user;
 
   if (role === "ADMIN") {
+    const events = await prisma.event.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const activeEventId = searchParams.eventId || events[0]?.id;
+
     const programs = await prisma.program.findMany({
+      where: activeEventId ? { eventId: activeEventId } : {},
       include: {
         event: true,
         category: true,
@@ -31,7 +43,7 @@ export default async function SchedulePage() {
 
     return (
       <div className="animate-fade-in">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
           <h1 style={{ margin: 0 }}>Global Festival Schedule</h1>
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
             <a href="/print/schedule" target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
@@ -42,7 +54,10 @@ export default async function SchedulePage() {
             </a>
           </div>
         </div>
-        <AdminScheduler initialPrograms={programs as any} eventId={programs[0]?.eventId || "default"} />
+
+        <EventSwitcher events={events} activeEventId={activeEventId || ""} />
+
+        <AdminScheduler initialPrograms={programs as any} eventId={activeEventId || "default"} />
       </div>
     );
   }
