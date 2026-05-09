@@ -5,9 +5,7 @@ import { getSettings } from "@/lib/settings";
 import SettingsForm from "./SettingsForm";
 import PendingList from "./PendingList";
 import MaintenanceActions from "./MaintenanceActions";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);

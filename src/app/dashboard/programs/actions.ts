@@ -1,9 +1,7 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-
-const prisma = new PrismaClient();
 
 export async function createProgram(data: { programCode?: string | null, name: string, type: string, categoryId: string | null, eventId: string, candidateLimitPerTeam?: number, duration?: number }) {
   try {

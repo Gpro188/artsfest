@@ -1,11 +1,9 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import TeamForm from "./TeamForm";
 import TeamList from "./TeamList";
-
-const prisma = new PrismaClient();
 
 export default async function TeamsPage() {
   const session = await getServerSession(authOptions);

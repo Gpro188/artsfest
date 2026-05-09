@@ -1,12 +1,10 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import ProgramForm from "./ProgramForm";
 import ProgramList from "./ProgramList";
 import ProgramBulkActions from "./BulkActions";
-
-const prisma = new PrismaClient();
 
 export default async function ProgramsPage() {
   const session = await getServerSession(authOptions);

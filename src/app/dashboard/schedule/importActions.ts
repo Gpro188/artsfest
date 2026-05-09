@@ -1,10 +1,8 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import * as XLSX from "xlsx";
-
-const prisma = new PrismaClient();
 
 export async function importScheduleFromExcel(eventId: string, base64Data: string) {
   try {

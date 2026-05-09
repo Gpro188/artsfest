@@ -1,13 +1,11 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import PointMatrixForm from "./PointMatrixForm";
 import CategoryManager from "./CategoryManager";
 import GeneralPointForm from "./GeneralPointForm";
 import Link from "next/link";
-
-const prisma = new PrismaClient();
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

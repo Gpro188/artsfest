@@ -1,9 +1,7 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-
-const prisma = new PrismaClient();
 
 // Helper to determine Grade based on marks
 function calculateGrade(marks: number) {
