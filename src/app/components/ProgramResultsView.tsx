@@ -8,6 +8,7 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
   const isAuthorizedMedia = userRole === 'ADMIN' || userRole === 'MEDIA';
   const [isPosterMode, setIsPosterMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedDataUrl, setGeneratedDataUrl] = useState<string | null>(null);
   const posterRef = useRef<HTMLDivElement>(null);
 
   const results = program.results || [];
@@ -20,7 +21,7 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
   // Use the uploaded template if it exists
   const finalPosterUrl = program.mediaTemplate?.imageUrl;
 
-  const handleDownloadImage = async () => {
+  const handleGeneratePoster = async () => {
     if (!posterRef.current) return;
     setIsGenerating(true);
     try {
@@ -41,10 +42,7 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
         }
       });
       
-      const link = document.createElement('a');
-      link.download = `${program.name}_Poster.png`;
-      link.href = dataUrl;
-      link.click();
+      setGeneratedDataUrl(dataUrl);
     } catch (err) {
       console.error(err);
       alert('Failed to generate image. Please try again or use Print/PDF.');
@@ -53,19 +51,53 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
     }
   };
 
+  const handleDownloadImage = () => {
+      const urlToDownload = finalPosterUrl || generatedDataUrl;
+      if (!urlToDownload) return;
+      
+      const link = document.createElement('a');
+      link.download = `${program.name}_Poster.png`;
+      link.href = urlToDownload;
+      link.click();
+  };
+
   const handleShare = async () => {
     const shareUrl = window.location.href;
     const shareText = `🏆 *ArtsFest Results Update!* 🏆\n\n*Program:* ${program.name}\n*Category:* ${program.category?.name || 'General'}\n\nCheck out the winners and download the official poster here:\n${shareUrl}\n\nCongratulations to all winners! 🎉`;
 
-    if (navigator.share) {
+    const urlToShare = finalPosterUrl || generatedDataUrl;
+
+    if (navigator.share && urlToShare) {
         try {
-            await navigator.share({
+            let filesArray: File[] = [];
+            
+            // Convert data URL to File object if we generated it
+            if (urlToShare.startsWith('data:')) {
+                const res = await fetch(urlToShare);
+                const blob = await res.blob();
+                const file = new File([blob], `${program.name}_Poster.png`, { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    filesArray = [file];
+                }
+            }
+            
+            const shareData: any = {
                 title: `${program.name} Results`,
                 text: shareText,
-                url: shareUrl,
-            });
+            };
+            
+            if (filesArray.length > 0) {
+                shareData.files = filesArray;
+            } else {
+                shareData.url = shareUrl;
+            }
+
+            await navigator.share(shareData);
         } catch (err) {
             console.error("Error sharing:", err);
+            // Fallback
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(waUrl, '_blank');
         }
     } else {
         // Fallback to WhatsApp direct link
@@ -78,18 +110,24 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
     return (
       <div className="poster-container" style={{ minHeight: '100vh', backgroundColor: '#0f172a', padding: '40px 0' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px', padding: '20px', position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)', marginBottom: '20px' }}>
-            <button onClick={() => setIsPosterMode(false)} className="btn btn-secondary no-print">← Back</button>
+            <button onClick={() => { setIsPosterMode(false); setGeneratedDataUrl(null); }} className="btn btn-secondary no-print">← Back</button>
             
-            {/* Show Download button only if media has set a poster BG or if user is admin */}
-            {(finalPosterUrl || program.category?.posterBgUrl || settings?.posterBgUrl || isAuthorizedMedia) && (
-              <button onClick={handleDownloadImage} className="btn btn-primary no-print" disabled={isGenerating}>
-                  {isGenerating ? '⌛ Generating...' : '📥 Download Poster'}
+            {!finalPosterUrl && !generatedDataUrl && (program.category?.posterBgUrl || settings?.posterBgUrl || isAuthorizedMedia) && (
+              <button onClick={handleGeneratePoster} className="btn btn-primary no-print" disabled={isGenerating}>
+                  {isGenerating ? '⌛ Generating...' : '✨ Generate Poster'}
               </button>
             )}
 
-            <button onClick={handleShare} className="btn btn-secondary no-print" style={{ backgroundColor: '#25D366', color: 'white', borderColor: '#25D366' }}>
-                📲 Share Result
-            </button>
+            {(finalPosterUrl || generatedDataUrl) && (
+              <>
+                  <button onClick={handleDownloadImage} className="btn btn-primary no-print">
+                      📥 Download Poster
+                  </button>
+                  <button onClick={handleShare} className="btn btn-secondary no-print" style={{ backgroundColor: '#25D366', color: 'white', borderColor: '#25D366' }}>
+                      📲 Share Result
+                  </button>
+              </>
+            )}
         </div>
 
         <style jsx global>{`
@@ -129,23 +167,31 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
         `}</style>
 
         {/* The Poster Area */}
-        <div className="poster-stage">
-            <div ref={posterRef} className="printable-poster" style={{
-                width: '1080px',
-                height: '1350px', 
-                margin: '0 auto',
-                backgroundColor: 'white',
-                color: '#1e293b',
-                position: 'relative',
-                overflow: 'hidden',
-                fontFamily: 'var(--font-heading)',
-                boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
-                display: 'flex',
-                flexDirection: 'column',
-                transformOrigin: 'top center'
-            }}>
-            {/* OPTION A: Show Final Uploaded Poster */}
-            {finalPosterUrl ? (
+        <div className="poster-stage" style={{ padding: '0 20px' }}>
+            {generatedDataUrl ? (
+                /* OPTION C: Show Generated Poster Responsively */
+                <img 
+                    src={generatedDataUrl} 
+                    style={{ width: '100%', maxWidth: '600px', height: 'auto', borderRadius: 'var(--radius-md)', boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }} 
+                    alt="Generated Result" 
+                />
+            ) : (
+                <div ref={posterRef} className="printable-poster" style={{
+                    width: '1080px',
+                    height: '1350px', 
+                    margin: '0 auto',
+                    backgroundColor: 'white',
+                    color: '#1e293b',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    fontFamily: 'var(--font-heading)',
+                    boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transformOrigin: 'top center'
+                }}>
+                {/* OPTION A: Show Final Uploaded Poster */}
+                {finalPosterUrl ? (
                 <img src={finalPosterUrl} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Final Result" crossOrigin="anonymous" />
             ) : (
                 /* OPTION B: Auto-Generated Poster */
@@ -216,6 +262,8 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                         <div style={{ height: '25%' }}></div>
                     </div>
                 </>
+            )}
+            </div>
             )}
         </div>
       </div>
