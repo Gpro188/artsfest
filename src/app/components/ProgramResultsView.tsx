@@ -63,7 +63,15 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
 
   const handleShare = async () => {
     const shareUrl = window.location.href;
-    const shareText = `🏆 *ArtsFest Results Update!* 🏆\n\n*Program:* ${program.name}\n*Category:* ${program.category?.name || 'General'}\n\nCheck out the winners and download the official poster here:\n${shareUrl}\n\nCongratulations to all winners! 🎉`;
+    
+    // Construct Result Summary
+    const winnersSummary = winners.map((w: any) => {
+      const name = w.candidate?.name || w.team?.name;
+      const rankText = w.rank === 1 ? '1st' : w.rank === 2 ? '2nd' : '3rd';
+      return `${rankText}: ${name}`;
+    }).join('\n');
+
+    const shareText = `🏆 *${program.event.name}* 🏆\n\n*Category:* ${program.category?.name || 'General'}\n*Program:* ${program.name}\n\n*Results:*\n${winnersSummary}\n\nCongratulations to all winners! 🎉\n\nView full results here:\n${shareUrl}`;
 
     const urlToShare = finalPosterUrl || generatedDataUrl;
 
