@@ -1,16 +1,15 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import CandidateForm from "./CandidateForm";
 import CandidateList from "./CandidateList";
 import CandidateFilter from "./CandidateFilter";
 
-const prisma = new PrismaClient();
-
-export default async function CandidatesPage({ searchParams }: { searchParams: Promise<{ teamId?: string, categoryId?: string }> }) {
+export default async function CandidatesPage(props: { searchParams: Promise<{ teamId?: string, categoryId?: string }> }) {
+  const searchParams = await props.searchParams;
   const session = await getServerSession(authOptions);
-  const { teamId: filterTeamId, categoryId: filterCategoryId } = await searchParams;
+  const { teamId: filterTeamId, categoryId: filterCategoryId } = searchParams;
 
   if (!session || (session.user.role !== "MANAGER" && session.user.role !== "ADMIN")) {
     redirect("/dashboard");
@@ -21,7 +20,13 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
   let teams: any[] = [];
   let isRegistrationOpen = true;
 
-  const settings = await prisma.globalSetting.findUnique({ where: { id: "default" } });
+  // Parallelize basic lookups
+  const [settings, allTeams, allCategories] = await Promise.all([
+    prisma.globalSetting.findUnique({ where: { id: "default" }, select: { candidateRegistrationDeadline: true } }),
+    session.user.role === "ADMIN" ? prisma.team.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
+    session.user.role === "ADMIN" ? prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([])
+  ]);
+
   if (session.user.role !== "ADMIN" && settings?.candidateRegistrationDeadline) {
     isRegistrationOpen = new Date() <= new Date(settings.candidateRegistrationDeadline);
   }
@@ -37,8 +42,8 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
     userTeamId = team.id;
     categories = team.event.categories;
   } else {
-    categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
-    teams = await prisma.team.findMany({ orderBy: { name: 'asc' } });
+    categories = allCategories;
+    teams = allTeams;
   }
 
   // Define where clause
@@ -53,9 +58,14 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
 
   const candidates = await prisma.candidate.findMany({
     where: whereClause,
-    include: {
-      team: { include: { event: true } },
-      category: true,
+    select: {
+      id: true,
+      name: true,
+      chestNumber: true,
+      photo: true,
+      createdAt: true,
+      team: { select: { id: true, name: true, flagColor: true, event: { select: { name: true } } } },
+      category: { select: { id: true, name: true } },
       _count: {
         select: { programs: true }
       }

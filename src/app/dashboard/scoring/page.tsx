@@ -58,44 +58,54 @@ export default async function ScoringPage(props: {
 
   if (!activeEvent) redirect("/dashboard/scoring");
 
-  const results = await prisma.result.findMany({
-    where: {
-        program: { eventId: activeEventId }
-    },
-    include: {
-      candidate: { include: { team: true, category: true } },
-      team: true,
-      program: { include: { category: true, event: true } }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 500 
-  });
-
-  // Find programs with no results but have assignments
-  const allPrograms = await prisma.program.findMany({
-    where: {
-      eventId: activeEventId,
-      assignments: { some: {} } 
-    },
-    include: {
-      results: true,
-      category: true,
-      _count: { select: { assignments: true } }
-    }
-  });
+  // Fetch results, pending programs, and teams in PARALLEL
+  const [results, allPrograms, allTeams] = await Promise.all([
+    prisma.result.findMany({
+      where: { program: { eventId: activeEventId } },
+      select: {
+        id: true,
+        points: true,
+        rank: true,
+        grade: true,
+        isPublished: true,
+        candidateId: true,
+        teamId: true,
+        programId: true,
+        createdAt: true,
+        candidate: { select: { name: true, chestNumber: true, team: { select: { name: true, flagColor: true } }, category: { select: { name: true } } } },
+        team: { select: { name: true, flagColor: true } },
+        program: { select: { id: true, name: true, category: { select: { name: true } } } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200 // Limit to 200 for speed
+    }),
+    prisma.program.findMany({
+      where: { eventId: activeEventId, assignments: { some: {} } },
+      select: {
+        id: true,
+        name: true,
+        results: { select: { id: true } },
+        category: { select: { name: true } },
+        _count: { select: { assignments: true } }
+      }
+    }),
+    prisma.team.findMany({
+      where: { eventId: activeEventId },
+      select: {
+        id: true,
+        name: true,
+        flagColor: true,
+        candidates: {
+            select: {
+                results: { select: { points: true, isPublished: true } }
+            }
+        },
+        results: { select: { points: true, isPublished: true } }
+      }
+    })
+  ]);
 
   const pendingPrograms = allPrograms.filter(p => p.results.length === 0);
-
-  // Calculate Team Scores for the active event
-  const allTeams = await prisma.team.findMany({
-    where: { eventId: activeEventId },
-    include: {
-      candidates: {
-        include: { results: true }
-      },
-      results: true
-    }
-  });
 
   const teamScores = allTeams.map(team => {
     let publishedPoints = 0;
