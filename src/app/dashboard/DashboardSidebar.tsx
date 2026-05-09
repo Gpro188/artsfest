@@ -20,6 +20,7 @@ export default function DashboardSidebar({ role, username, festName, festMoto }:
   const NavLinks = () => (
     <>
       <Link href="/dashboard" onClick={close} className="nav-link">Dashboard Home</Link>
+      <Link href="/hub" onClick={close} className="nav-link" style={{ color: 'var(--primary)', fontWeight: 700 }}>🌐 Live Hub (Slides)</Link>
 
       {role === 'ADMIN' && (
         <>
@@ -39,6 +40,7 @@ export default function DashboardSidebar({ role, username, festName, festMoto }:
         <>
           <div className="nav-section-title">Media Center</div>
           <Link href="/dashboard/media" onClick={close} className="nav-link media-link">Poster Branding</Link>
+          <Link href="/hub" onClick={close} className="nav-link">🌐 Live Hub (Slides)</Link>
           <Link href="/dashboard/scoring" onClick={close} className="nav-link">View Results</Link>
         </>
       )}
