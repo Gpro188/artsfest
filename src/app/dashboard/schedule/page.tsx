@@ -6,11 +6,10 @@ import AdminScheduler from "./AdminScheduler";
 import ManagerScheduler from "./ManagerScheduler";
 import EventSwitcher from "@/app/components/EventSwitcher";
 
-export default async function SchedulePage({
-  searchParams,
-}: {
-  searchParams: { eventId?: string }
+export default async function SchedulePage(props: {
+  searchParams: Promise<{ eventId?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const session = await getServerSession(authOptions);
 
   if (!session) {

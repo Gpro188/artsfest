@@ -3,18 +3,17 @@ import Link from "next/link";
 import SearchClient from "./SearchClient";
 import { getSettings } from "@/lib/settings";
 
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: { 
+export default async function SearchPage(props: {
+  searchParams: Promise<{ 
     q?: string; 
     type?: string; 
     categoryId?: string; 
     stageType?: string; 
     programType?: string;
     eventId?: string;
-  }
+  }>;
 }) {
+  const searchParams = await props.searchParams;
   const settings = await getSettings();
   const festName = settings.festName;
   const query = searchParams.q || "";

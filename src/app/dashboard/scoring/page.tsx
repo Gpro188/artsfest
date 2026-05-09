@@ -9,11 +9,10 @@ import ExcelExport from "./ExcelExport";
 import PendingProgramsList from "./PendingProgramsList";
 import EventSwitcher from "@/app/components/EventSwitcher";
 
-export default async function ScoringPage({
-  searchParams,
-}: {
-  searchParams: { eventId?: string }
+export default async function ScoringPage(props: {
+  searchParams: Promise<{ eventId?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user.role !== "JUDGE" && session.user.role !== "ADMIN")) {
