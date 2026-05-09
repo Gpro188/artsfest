@@ -138,64 +138,47 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                 padding: 20px;
                 overflow-x: hidden;
             }
-            @media (max-width: 1100px) {
-                .printable-poster {
-                    transform: scale(calc((100vw - 40px) / 1080)) !important;
-                    transform-origin: top center !important;
-                }
-                /* Compensate for the space taken by scaled element */
-                .poster-stage {
-                    height: calc(1350px * (100vw - 40px) / 1080 + 100px) !important;
-                }
-            }
-            @media print {
-                body * { visibility: hidden; }
-                .printable-poster, .printable-poster * { visibility: visible; }
-                .printable-poster { 
-                    position: absolute; 
-                    left: 0; 
-                    top: 0; 
-                    width: 100% !important;
-                    height: 100% !important;
-                    max-width: none !important;
-                    box-shadow: none !important;
-                    transform: scale(1) !important;
-                    margin: 0 !important;
-                }
-                .no-print { display: none !important; }
-            }
         `}</style>
 
-        {/* The Poster Area */}
-        <div className="poster-stage" style={{ padding: '0 20px' }}>
+        {/* The Visible Poster Area */}
+        <div className="poster-stage" style={{ padding: '0 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: '60vh' }}>
             {generatedDataUrl ? (
-                /* OPTION C: Show Generated Poster Responsively */
                 <img 
                     src={generatedDataUrl} 
-                    style={{ width: '100%', maxWidth: '600px', height: 'auto', borderRadius: 'var(--radius-md)', boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }} 
+                    style={{ width: '100%', maxWidth: '500px', height: 'auto', borderRadius: 'var(--radius-md)', boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }} 
                     alt="Generated Result" 
                 />
+            ) : finalPosterUrl ? (
+                <img 
+                    src={finalPosterUrl} 
+                    style={{ width: '100%', maxWidth: '500px', height: 'auto', borderRadius: 'var(--radius-md)', boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }} 
+                    alt="Final Result" 
+                    crossOrigin="anonymous" 
+                />
             ) : (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '50px 20px', border: '2px dashed rgba(255,255,255,0.2)', borderRadius: 'var(--radius-lg)' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🖼️</div>
+                    <h3 style={{ marginBottom: '10px', color: 'var(--text-secondary)' }}>Ready to Generate</h3>
+                    <p style={{ fontSize: '0.9rem', maxWidth: '300px', margin: '0 auto' }}>Click the Generate Poster button above to automatically design and create the high-resolution official poster.</p>
+                </div>
+            )}
+        </div>
+
+        {/* Hidden area for HTML-to-Image rendering - ONLY rendered if no finalPosterUrl */}
+        {!finalPosterUrl && !generatedDataUrl && (
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
                 <div ref={posterRef} className="printable-poster" style={{
                     width: '1080px',
                     height: '1350px', 
-                    margin: '0 auto',
+                    margin: '0',
                     backgroundColor: 'white',
                     color: '#1e293b',
                     position: 'relative',
                     overflow: 'hidden',
                     fontFamily: 'var(--font-heading)',
-                    boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
                     display: 'flex',
-                    flexDirection: 'column',
-                    transformOrigin: 'top center'
+                    flexDirection: 'column'
                 }}>
-                {/* OPTION A: Show Final Uploaded Poster */}
-                {finalPosterUrl ? (
-                <img src={finalPosterUrl} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Final Result" crossOrigin="anonymous" />
-            ) : (
-                /* OPTION B: Auto-Generated Poster */
-                <>
                     {/* Branding Assets */}
                     {(program.category?.posterBgUrl || settings?.posterBgUrl) && (
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
@@ -261,10 +244,9 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                         {/* Bottom Empty Space (approx 30%) */}
                         <div style={{ height: '25%' }}></div>
                     </div>
-                </>
-            )}
+                </div>
             </div>
-            )}
+        )}
         </div>
       </div>
     );
