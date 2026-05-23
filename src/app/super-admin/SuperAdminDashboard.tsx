@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createFest, createFestUser } from "../actions/superAdmin";
+import { createFest, createFestUser, deleteFest, deleteUser } from "../actions/superAdmin";
 
 interface SuperAdminDashboardProps {
   initialData: {
@@ -25,6 +25,32 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
   const [eventId, setEventId] = useState(data.events[0]?.id || "");
   const [userLoading, setUserLoading] = useState(false);
   const [userMessage, setUserMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleDeleteFest = async (eventId: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete the fest "${name}"? This will permanently delete all candidates, teams, programs, results, and page views associated with it. This action cannot be undone.`)) {
+      return;
+    }
+    const res = await deleteFest(eventId);
+    if (res.success) {
+      alert(`Fest "${name}" deleted successfully.`);
+      window.location.reload();
+    } else {
+      alert(res.error || "Failed to delete fest.");
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, username: string) => {
+    if (!confirm(`Are you sure you want to delete the user account "${username}"?`)) {
+      return;
+    }
+    const res = await deleteUser(userId);
+    if (res.success) {
+      alert(`User "${username}" deleted successfully.`);
+      window.location.reload();
+    } else {
+      alert(res.error || "Failed to delete user.");
+    }
+  };
 
   const handleCreateFest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,6 +225,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
                 <th style={{ padding: 'var(--spacing-sm)' }}>Programs</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Staff Users</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Created At</th>
+                <th style={{ padding: 'var(--spacing-sm)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -210,11 +237,28 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
                   <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.programs}</td>
                   <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.users}</td>
                   <td style={{ padding: 'var(--spacing-sm)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(ev.createdAt).toLocaleDateString()}</td>
+                  <td style={{ padding: 'var(--spacing-sm)' }}>
+                    <button 
+                      onClick={() => handleDeleteFest(ev.id, ev.name)}
+                      className="btn"
+                      style={{ 
+                        padding: '4px 10px', 
+                        fontSize: '0.75rem', 
+                        backgroundColor: '#dc2626', 
+                        color: 'white', 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
               {data.events.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No fests created yet.</td>
+                  <td colSpan={7} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No fests created yet.</td>
                 </tr>
               )}
             </tbody>
@@ -233,6 +277,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
                 <th style={{ padding: 'var(--spacing-sm)' }}>Role</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Assigned Fest</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Registered At</th>
+                <th style={{ padding: 'var(--spacing-sm)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -252,11 +297,28 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
                   </td>
                   <td style={{ padding: 'var(--spacing-sm)' }}>{u.event?.name || 'N/A (Global)'}</td>
                   <td style={{ padding: 'var(--spacing-sm)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td style={{ padding: 'var(--spacing-sm)' }}>
+                    <button 
+                      onClick={() => handleDeleteUser(u.id, u.username)}
+                      className="btn"
+                      style={{ 
+                        padding: '4px 10px', 
+                        fontSize: '0.75rem', 
+                        backgroundColor: '#dc2626', 
+                        color: 'white', 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
               {data.users.length === 0 && (
                 <tr>
-                  <td colSpan={4} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No local user accounts created yet.</td>
+                  <td colSpan={5} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No local user accounts created yet.</td>
                 </tr>
               )}
             </tbody>

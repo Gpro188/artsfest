@@ -150,3 +150,44 @@ export async function createFestUser(data: {
     return { success: false, error: error.message || "Failed to create user" };
   }
 }
+
+export async function deleteFest(eventId: string) {
+  try {
+    await ensureSuperAdmin();
+    
+    await prisma.event.delete({
+      where: { id: eventId }
+    });
+
+    revalidatePath("/super-admin");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete fest:", error);
+    return { success: false, error: error.message || "Failed to delete event" };
+  }
+}
+
+export async function deleteUser(userId: string) {
+  try {
+    await ensureSuperAdmin();
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (user && user.role === "SUPER_ADMIN") {
+      return { success: false, error: "Cannot delete the Super Admin account" };
+    }
+
+    await prisma.user.delete({
+      where: { id: userId }
+    });
+
+    revalidatePath("/super-admin");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete user:", error);
+    return { success: false, error: error.message || "Failed to delete user" };
+  }
+}
