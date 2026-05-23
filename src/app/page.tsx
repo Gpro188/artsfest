@@ -35,7 +35,7 @@ export default async function HomePage() {
         top: 0,
         zIndex: 50
       }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1050px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
             <div style={{ 
               width: '40px', 
@@ -70,7 +70,7 @@ export default async function HomePage() {
 
       {/* Main SaaS Showcase */}
       <main style={{ flex: 1, padding: 'var(--spacing-xxl) 0' }}>
-        <div className="container">
+        <div className="container" style={{ maxWidth: '1050px' }}>
           
           {/* Hero Section */}
           <div style={{ textAlign: 'center', maxWidth: '850px', margin: '0 auto var(--spacing-xxl) auto' }}>
@@ -325,7 +325,7 @@ export default async function HomePage() {
         color: 'var(--text-muted)',
         fontSize: '0.8rem'
       }}>
-        <div className="container">
+        <div className="container" style={{ maxWidth: '1050px' }}>
           <p style={{ margin: '0 0 6px 0', color: 'white', fontWeight: 600 }}>ArtsFest Management Suite</p>
           <p style={{ margin: '0 0 12px 0' }}>Developed and powered by **Dpro Technologies**. All rights reserved &copy; 2026.</p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
