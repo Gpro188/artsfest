@@ -73,7 +73,7 @@ export default async function HomePage() {
         <div className="container" style={{ maxWidth: '1050px' }}>
           
           {/* Hero Section */}
-          <div style={{ textAlign: 'center', maxWidth: '850px', margin: '0 auto var(--spacing-xxl) auto' }}>
+          <div style={{ textAlign: 'left', maxWidth: '850px', margin: '0 0 var(--spacing-xxl) 0' }}>
             <div style={{ 
               display: 'inline-block', 
               padding: '6px 16px', 
@@ -92,19 +92,13 @@ export default async function HomePage() {
             <h1 style={{ fontSize: '3.5rem', fontWeight: 800, color: 'white', lineHeight: 1.1, letterSpacing: '-1.5px', marginBottom: 'var(--spacing-md)' }}>
               Organize Your Festival <span style={{ background: 'linear-gradient(135deg, #60a5fa, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>With Confidence</span>
             </h1>
-            <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 'var(--spacing-xl)', maxWidth: '750px', marginInline: 'auto' }}>
+            <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 'var(--spacing-xl)', maxWidth: '750px' }}>
               Complete multi-tenant platform with innovative features like scratch cards, participant cards, team priority sorting, and poster customization.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
-              <Link href="/login" className="btn btn-primary" style={{ padding: '0.8rem 2rem', fontSize: '1rem', background: 'linear-gradient(135deg, #4f46e5, #3b82f6)' }}>
-                Start Free Trial
-              </Link>
-              <Link href="/login" className="btn btn-secondary" style={{ padding: '0.8rem 2rem', fontSize: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
+              <Link href="/login" className="btn btn-primary" style={{ padding: '0.8rem 2.5rem', fontSize: '1rem', background: 'linear-gradient(135deg, #4f46e5, #3b82f6)', fontWeight: 600 }}>
                 Login to Dashboard
               </Link>
-            </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              No credit card required • 1-day free trial • Cancel anytime
             </div>
           </div>
 
