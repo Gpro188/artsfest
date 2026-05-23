@@ -238,6 +238,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Fest Name</th>
+                <th style={{ padding: 'var(--spacing-sm)' }}>Public URL</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Page Views</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Teams</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Programs</th>
@@ -247,36 +248,69 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
               </tr>
             </thead>
             <tbody>
-              {data.events.map(ev => (
-                <tr key={ev.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: 'var(--spacing-sm)', color: 'white', fontWeight: 600 }}>{ev.name}</td>
-                  <td style={{ padding: 'var(--spacing-sm)', color: 'var(--primary)', fontWeight: 700 }}>{ev._count.pageVisits} views</td>
-                  <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.teams}</td>
-                  <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.programs}</td>
-                  <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.users}</td>
-                  <td style={{ padding: 'var(--spacing-sm)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(ev.createdAt).toLocaleDateString()}</td>
-                  <td style={{ padding: 'var(--spacing-sm)' }}>
-                    <button 
-                      onClick={() => handleDeleteFest(ev.id, ev.name)}
-                      className="btn"
-                      style={{ 
-                        padding: '4px 10px', 
-                        fontSize: '0.75rem', 
-                        backgroundColor: '#dc2626', 
-                        color: 'white', 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {data.events.map(ev => {
+                const festUrl = `/fest/${ev.id}`;
+                return (
+                  <tr key={ev.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: 'var(--spacing-sm)', color: 'white', fontWeight: 600 }}>{ev.name}</td>
+                    <td style={{ padding: 'var(--spacing-sm)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <a 
+                          href={festUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--secondary)', textDecoration: 'underline', fontSize: '0.8rem' }}
+                        >
+                          {festUrl}
+                        </a>
+                        <button
+                          onClick={() => {
+                            const fullUrl = `${window.location.origin}${festUrl}`;
+                            navigator.clipboard.writeText(fullUrl);
+                            alert(`Copied URL: ${fullUrl}`);
+                          }}
+                          style={{
+                            padding: '2px 6px',
+                            fontSize: '0.65rem',
+                            backgroundColor: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '4px',
+                            color: 'white',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          📋 Copy
+                        </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: 'var(--spacing-sm)', color: 'var(--primary)', fontWeight: 700 }}>{ev._count.pageVisits} views</td>
+                    <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.teams}</td>
+                    <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.programs}</td>
+                    <td style={{ padding: 'var(--spacing-sm)' }}>{ev._count.users}</td>
+                    <td style={{ padding: 'var(--spacing-sm)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(ev.createdAt).toLocaleDateString()}</td>
+                    <td style={{ padding: 'var(--spacing-sm)' }}>
+                      <button 
+                        onClick={() => handleDeleteFest(ev.id, ev.name)}
+                        className="btn"
+                        style={{ 
+                          padding: '4px 10px', 
+                          fontSize: '0.75rem', 
+                          backgroundColor: '#dc2626', 
+                          color: 'white', 
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {data.events.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No fests created yet.</td>
+                  <td colSpan={8} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No fests created yet.</td>
                 </tr>
               )}
             </tbody>
