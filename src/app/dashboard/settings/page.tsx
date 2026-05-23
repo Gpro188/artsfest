@@ -16,23 +16,39 @@ export default async function SettingsPage() {
 
   const settings = await getSettings();
 
-  // Fetch Pending Assignments
-  // A program is "pending" if it has fewer assignments than expected or 0 assignments
+  // Fetch Pending Assignments (optimized queries to select only necessary fields, omitting photos)
   const programs = await prisma.program.findMany({
-    include: {
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      categoryId: true,
+      candidateLimitPerTeam: true,
       _count: { select: { assignments: true } },
-      category: true,
-      event: true
+      category: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
     }
   });
 
   const teams = await prisma.team.findMany({
-    include: {
+    select: {
+      id: true,
+      name: true,
       _count: { select: { candidates: true } },
       candidates: {
-        include: { 
+        select: {
+          id: true,
+          categoryId: true,
           _count: { select: { programs: true } },
-          programs: true
+          programs: {
+            select: {
+              programId: true
+            }
+          }
         }
       }
     }
