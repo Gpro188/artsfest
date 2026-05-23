@@ -29,12 +29,39 @@ export default async function AssignmentsPage() {
 
   const whereClause = teamId ? { teamId, isApproved: true } : { isApproved: true };
 
-  // Get approved candidates with their category and its point matrix
+  // Get approved candidates with their category and its point matrix (optimized select)
   const candidates = await prisma.candidate.findMany({
     where: whereClause,
-    include: {
-      category: { include: { pointMatrix: true } },
-      programs: { include: { program: true } }
+    select: {
+      id: true,
+      name: true,
+      chestNumber: true,
+      categoryId: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          pointMatrix: {
+            select: {
+              id: true,
+              maxIndividualPrograms: true
+            }
+          }
+        }
+      },
+      programs: {
+        select: {
+          id: true,
+          programId: true,
+          program: {
+            select: {
+              id: true,
+              name: true,
+              type: true
+            }
+          }
+        }
+      }
     }
   });
 

@@ -6,36 +6,103 @@ import { unstable_cache } from 'next/cache';
 
 const getCachedPublicEventData = unstable_cache(
   async (eventId: string) => {
-    // 1. Get Latest Results (Published only)
+    // 1. Get Latest Results (Published only) - Pruned to select only required fields
     const latestResults = await prisma.result.findMany({
       where: { 
         program: { eventId },
         isPublished: true 
       },
-      include: {
-        candidate: { include: { team: true } },
-        team: true, // Crucial for group results
-        program: true
+      select: {
+        id: true,
+        points: true,
+        rank: true,
+        grade: true,
+        updatedAt: true,
+        candidate: {
+          select: {
+            id: true,
+            name: true,
+            chestNumber: true,
+            photo: true,
+            team: {
+              select: {
+                id: true,
+                name: true,
+                flagColor: true
+              }
+            }
+          }
+        },
+        team: {
+          select: {
+            id: true,
+            name: true,
+            flagColor: true,
+            leaderPhoto: true
+          }
+        },
+        program: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       },
       orderBy: { updatedAt: 'desc' },
       take: 10
     });
 
-    // 2. Get Teams with Leader Info
+    // 2. Get Teams with Leader Info - Pruned fields
     const teams = await prisma.team.findMany({
-      where: { eventId }
+      where: { eventId },
+      select: {
+        id: true,
+        name: true,
+        flagColor: true,
+        leaderName: true,
+        leaderPhoto: true
+      }
     });
 
-    // 3. Get Published Results for Calculation
+    // 3. Get Published Results for Calculation - Select only fields required for scoring & leaderboard
     const allPublishedResults = await prisma.result.findMany({
       where: {
         program: { eventId },
         isPublished: true
       },
-      include: {
-        candidate: { include: { team: true, category: true } },
-        team: true, // Crucial for group results
-        program: { include: { category: true } }
+      select: {
+        id: true,
+        points: true,
+        candidateId: true,
+        teamId: true,
+        candidate: {
+          select: {
+            id: true,
+            name: true,
+            photo: true,
+            teamId: true,
+            team: {
+              select: {
+                id: true,
+                name: true,
+                flagColor: true
+              }
+            },
+            category: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        },
+        team: {
+          select: {
+            id: true,
+            name: true,
+            flagColor: true
+          }
+        }
       }
     });
 
@@ -58,34 +125,29 @@ const getCachedPublicEventData = unstable_cache(
       let teamId = null;
       let teamName = "";
       let teamFlag = null;
-      let teamLeader = null;
-      let teamPhoto = null;
 
       if (res.candidate) {
         teamId = res.candidate.team.id;
         teamName = res.candidate.team.name;
         teamFlag = res.candidate.team.flagColor;
-        teamLeader = res.candidate.team.leaderName;
-        teamPhoto = res.candidate.team.leaderPhoto;
       } else if (res.team) {
         teamId = res.team.id;
         teamName = res.team.name;
         teamFlag = res.team.flagColor;
-        teamLeader = res.team.leaderName;
-        teamPhoto = res.team.leaderPhoto;
       }
 
       if (teamId && teamScores[teamId]) {
         teamScores[teamId].points += res.points;
       } else if (teamId) {
          // Fallback if team wasn't in initial list for some reason
+         const matchingTeam = teams.find(t => t.id === teamId);
          teamScores[teamId] = {
            id: teamId,
            name: teamName,
            points: res.points,
            flagColor: teamFlag,
-           leaderName: teamLeader,
-           leaderPhoto: teamPhoto
+           leaderName: matchingTeam?.leaderName || null,
+           leaderPhoto: matchingTeam?.leaderPhoto || null
          };
       }
     });
@@ -113,7 +175,10 @@ const getCachedPublicEventData = unstable_cache(
     const topStars = Object.values(candidateScores).sort((a, b) => b.points - a.points).slice(0, 5);
 
     // --- Category Top 5 Stars ---
-    const categories = await prisma.category.findMany({ where: { eventId } });
+    const categories = await prisma.category.findMany({ 
+      where: { eventId },
+      select: { id: true, name: true }
+    });
     const categoryStars: Record<string, any[]> = {};
 
     categories.forEach(cat => {
@@ -127,12 +192,18 @@ const getCachedPublicEventData = unstable_cache(
       }
     });
 
-    // --- Statistics ---
-    const [totalPrograms, allPrograms, totalCandidates, candidatesWithAssignments] = await Promise.all([
+    // --- Statistics - Optimized program count database aggregates ---
+    const [totalPrograms, publishedProgramsCount, totalCandidates, candidatesWithAssignments] = await Promise.all([
         prisma.program.count({ where: { eventId } }),
-        prisma.program.findMany({ 
-            where: { eventId },
-            include: { results: { where: { isPublished: true } } } 
+        prisma.program.count({
+            where: {
+                eventId,
+                results: {
+                    some: {
+                        isPublished: true
+                    }
+                }
+            }
         }),
         prisma.candidate.count({ where: { category: { eventId } } }),
         prisma.programAssignment.groupBy({
@@ -141,7 +212,6 @@ const getCachedPublicEventData = unstable_cache(
         })
     ]);
 
-    const publishedProgramsCount = allPrograms.filter(p => p.results.length > 0).length;
     const stats = {
         totalPrograms,
         publishedPrograms: publishedProgramsCount,

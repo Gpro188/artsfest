@@ -12,17 +12,31 @@ export async function importScheduleFromExcel(eventId: string, base64Data: strin
     const worksheet = workbook.Sheets[sheetName];
     const data: any[] = XLSX.utils.sheet_to_json(worksheet);
 
+    // Fetch all programs for the event up-front to prevent N+1 select queries
+    const programs = await prisma.program.findMany({
+      where: { eventId },
+      select: {
+        id: true,
+        name: true,
+        venue: true,
+        startTime: true,
+        duration: true,
+        stageType: true
+      }
+    });
+
+    const programMap = new Map(
+      programs.map(p => [p.name.toLowerCase().trim(), p])
+    );
+
+    const updates = [];
+
     // Data format expected: { ProgramName, Venue, StartTime, Duration, StageType }
     for (const row of data) {
       const programName = row.ProgramName || row.Program;
       if (!programName) continue;
 
-      const program = await prisma.program.findFirst({
-        where: { 
-          name: { equals: programName.toString().trim() },
-          eventId 
-        }
-      });
+      const program = programMap.get(programName.toString().toLowerCase().trim());
 
       if (program) {
         let startTime = null;
@@ -32,20 +46,27 @@ export async function importScheduleFromExcel(eventId: string, base64Data: strin
           if (isNaN(startTime.getTime())) startTime = null;
         }
 
-        await prisma.program.update({
-          where: { id: program.id },
-          data: {
-            venue: row.Venue?.toString() || program.venue,
-            startTime: startTime || program.startTime,
-            duration: parseInt(row.Duration) || program.duration,
-            stageType: row.StageType?.toString() || program.stageType,
-          }
-        });
+        updates.push(
+          prisma.program.update({
+            where: { id: program.id },
+            data: {
+              venue: row.Venue?.toString() || program.venue,
+              startTime: startTime || program.startTime,
+              duration: parseInt(row.Duration) || program.duration,
+              stageType: row.StageType?.toString() || program.stageType,
+            }
+          })
+        );
       }
     }
 
+    if (updates.length > 0) {
+      // Execute all updates in a single database transaction
+      await prisma.$transaction(updates);
+    }
+
     revalidatePath("/dashboard/schedule");
-    return { success: true, count: data.length };
+    return { success: true, count: updates.length };
   } catch (error) {
     console.error("Failed to import schedule:", error);
     return { success: false, error: "Failed to import Excel data" };

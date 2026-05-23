@@ -42,7 +42,7 @@ export default async function DashboardPage() {
         <h1 style={{ margin: 0 }}>Management Overview</h1>
         <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
            <Link href="/hub" className="btn btn-primary" style={{ backgroundColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="pulse-dot"></span> Live Management Hub
+              📊 Live Management Hub
            </Link>
         </div>
       </div>
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 'var(--spacing-lg)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-lg)' }}>
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
           <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Welcome Back</h3>
           <p style={{ color: 'var(--text-secondary)' }}>
@@ -100,23 +100,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .pulse-dot {
-          width: 8px;
-          height: 8px;
-          background-color: white;
-          border-radius: 50%;
-          display: inline-block;
-          animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-          70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
-          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -42,6 +42,8 @@ model Category {
   event             Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   pointMatrix       PointMatrix? @relation("CategoryPoints")
   programs          Program[]
+
+  @@index([eventId])
 }
 
 model Team {
@@ -57,8 +59,10 @@ model Team {
   leaderPhoto String?
   candidates  Candidate[]
   results     Result[]
-  manager     User?       @relation("TeamManager", fields: [managerId], references: [id])
-  event       Event       @relation(fields: [eventId], references: [id])
+  manager     User?       @relation("TeamManager", fields: [managerId], references: [id], onDelete: SetNull)
+  event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
 }
 
 model PointMatrix {
@@ -85,10 +89,13 @@ model Candidate {
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   photo       String?
-  team        Team                @relation(fields: [teamId], references: [id])
-  category    Category            @relation(fields: [categoryId], references: [id])
+  team        Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  category    Category            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   programs    ProgramAssignment[]
   results     Result[]
+
+  @@index([categoryId])
+  @@index([teamId])
 }
 
 model Program {
@@ -106,10 +113,13 @@ model Program {
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
   mediaTemplate MediaTemplate?
-  event         Event               @relation(fields: [eventId], references: [id])
-  category      Category?           @relation(fields: [categoryId], references: [id])
+  event         Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category      Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   assignments   ProgramAssignment[]
   results       Result[]
+
+  @@index([eventId])
+  @@index([categoryId])
 }
 
 model ProgramAssignment {
@@ -119,10 +129,11 @@ model ProgramAssignment {
   createdAt     DateTime  @default(now())
   scheduledTime DateTime?
   slotNumber    Int?
-  program       Program   @relation(fields: [programId], references: [id])
-  candidate     Candidate @relation(fields: [candidateId], references: [id])
+  program       Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  candidate     Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 
   @@unique([candidateId, programId])
+  @@index([programId])
 }
 
 model Result {
@@ -137,12 +148,14 @@ model Result {
   isPublished Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  program     Program   @relation(fields: [programId], references: [id])
-  candidate   Candidate? @relation(fields: [candidateId], references: [id])
-  team        Team?      @relation(fields: [teamId], references: [id])
+  program     Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  candidate   Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  team        Team?      @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([candidateId, programId])
   @@unique([teamId, programId])
+  @@index([programId])
+  @@index([isPublished])
 }
 
 model MediaTemplate {
@@ -151,7 +164,7 @@ model MediaTemplate {
   imageUrl  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  program   Program  @relation(fields: [programId], references: [id])
+  program   Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
 }
 
 model GlobalSetting {

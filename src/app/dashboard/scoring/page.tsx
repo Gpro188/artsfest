@@ -36,30 +36,63 @@ export default async function ScoringPage(props: {
 
   const activeEvent = await prisma.event.findUnique({
     where: { id: activeEventId },
-    include: {
-      generalPointMatrix: true,
-      programs: { 
-        include: { 
+    select: {
+      id: true,
+      name: true,
+      generalPointMatrix: {
+        select: {
+          id: true,
+          generalPoints: true
+        }
+      },
+      teams: {
+        select: {
+          id: true,
+          name: true,
+          flagColor: true
+        }
+      },
+      programs: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          categoryId: true,
           category: {
-            include: { pointMatrix: true }
+            select: {
+              id: true,
+              name: true,
+              pointMatrix: {
+                select: {
+                  id: true,
+                  individualPoints: true,
+                  groupPoints: true,
+                  generalPoints: true
+                }
+              }
+            }
           },
           assignments: {
-            include: {
+            select: {
+              id: true,
               candidate: {
-                include: { team: true }
+                select: {
+                  id: true,
+                  name: true,
+                  chestNumber: true
+                }
               }
             }
           }
-        } 
-      },
-      teams: true
+        }
+      }
     }
   });
 
   if (!activeEvent) redirect("/dashboard/scoring");
 
-  // Fetch results, pending programs, and teams in PARALLEL
-  const [results, allPrograms, allTeams] = await Promise.all([
+  // Fetch results, pending programs, and flat results for standings in PARALLEL
+  const [results, allPrograms, allResultsForScore] = await Promise.all([
     prisma.result.findMany({
       where: { program: { eventId: activeEventId } },
       select: {
@@ -89,54 +122,42 @@ export default async function ScoringPage(props: {
         _count: { select: { assignments: true } }
       }
     }),
-    prisma.team.findMany({
-      where: { eventId: activeEventId },
+    prisma.result.findMany({
+      where: { program: { eventId: activeEventId } },
       select: {
-        id: true,
-        name: true,
-        flagColor: true,
-        candidates: {
-            select: {
-                results: { select: { points: true, isPublished: true } }
-            }
-        },
-        results: { select: { points: true, isPublished: true } }
+        points: true,
+        isPublished: true,
+        teamId: true,
+        candidate: { select: { teamId: true } }
       }
     })
   ]);
 
   const pendingPrograms = allPrograms.filter(p => p.results.length === 0);
 
-  const teamScores = allTeams.map(team => {
-    let publishedPoints = 0;
-    let totalPoints = 0;
-
-    // Add individual points
-    team.candidates.forEach(candidate => {
-      candidate.results.forEach(result => {
-        totalPoints += result.points;
-        if (result.isPublished) {
-          publishedPoints += result.points;
-        }
-      });
-    });
-
-    // Add group/general points
-    team.results.forEach(result => {
-      totalPoints += result.points;
-      if (result.isPublished) {
-        publishedPoints += result.points;
-      }
-    });
-
-    return {
-      id: team.id,
-      name: team.name,
-      flagColor: team.flagColor,
-      publishedPoints,
-      totalPoints
-    };
+  const teamScoresMap: Record<string, { publishedPoints: number, totalPoints: number }> = {};
+  const eventTeams = activeEvent.teams || [];
+  eventTeams.forEach(team => {
+    teamScoresMap[team.id] = { publishedPoints: 0, totalPoints: 0 };
   });
+
+  allResultsForScore.forEach(result => {
+    const teamId = result.teamId || result.candidate?.teamId;
+    if (teamId && teamScoresMap[teamId]) {
+      teamScoresMap[teamId].totalPoints += result.points;
+      if (result.isPublished) {
+        teamScoresMap[teamId].publishedPoints += result.points;
+      }
+    }
+  });
+
+  const teamScores = eventTeams.map(team => ({
+    id: team.id,
+    name: team.name,
+    flagColor: team.flagColor,
+    publishedPoints: teamScoresMap[team.id]?.publishedPoints || 0,
+    totalPoints: teamScoresMap[team.id]?.totalPoints || 0
+  }));
 
   return (
     <div className="animate-fade-in">
