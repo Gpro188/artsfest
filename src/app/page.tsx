@@ -73,7 +73,7 @@ export default async function HomePage() {
         <div className="container">
           
           {/* Hero Section */}
-          <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto var(--spacing-xxl) auto' }}>
+          <div style={{ textAlign: 'center', maxWidth: '850px', margin: '0 auto var(--spacing-xxl) auto' }}>
             <div style={{ 
               display: 'inline-block', 
               padding: '6px 16px', 
@@ -90,11 +90,22 @@ export default async function HomePage() {
               ⚡ Next-Generation Arts Fest Software
             </div>
             <h1 style={{ fontSize: '3.5rem', fontWeight: 800, color: 'white', lineHeight: 1.1, letterSpacing: '-1.5px', marginBottom: 'var(--spacing-md)' }}>
-              Powering Creativity & <span style={{ background: 'linear-gradient(135deg, #60a5fa, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Live Standing Results</span>
+              Organize Your Festival <span style={{ background: 'linear-gradient(135deg, #60a5fa, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>With Confidence</span>
             </h1>
-            <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 'var(--spacing-xl)' }}>
-              An all-in-one management, scoring, and live broadcasting suite built by **Dpro Technologies**. Host your institution fests, assign candidates, enter marks rapidly, and display live slide leaderboards.
+            <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 'var(--spacing-xl)', maxWidth: '750px', marginInline: 'auto' }}>
+              Complete multi-tenant platform with innovative features like scratch cards, participant cards, team priority sorting, and poster customization.
             </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
+              <Link href="/login" className="btn btn-primary" style={{ padding: '0.8rem 2rem', fontSize: '1rem', background: 'linear-gradient(135deg, #4f46e5, #3b82f6)' }}>
+                Start Free Trial
+              </Link>
+              <Link href="/login" className="btn btn-secondary" style={{ padding: '0.8rem 2rem', fontSize: '1rem' }}>
+                Login to Dashboard
+              </Link>
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              No credit card required • 1-day free trial • Cancel anytime
+            </div>
           </div>
 
           {/* Active Fests Section */}
@@ -102,7 +113,7 @@ export default async function HomePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--spacing-lg)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 'var(--spacing-sm)' }}>
               <div>
                 <h2 style={{ margin: 0, color: 'white', fontSize: '1.75rem' }}>🚩 Running Events</h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Choose an event below to view its live standings, star candidates, and event schedule.</p>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Choose an event below to view its live standings and dynamic result updates.</p>
               </div>
               <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>{events.length} Active Tenants</span>
             </div>
@@ -145,22 +156,120 @@ export default async function HomePage() {
             )}
           </section>
 
-          {/* Product Facilities Section */}
+          {/* Comprehensive Management Tools Section */}
           <section style={{ marginBottom: 'var(--spacing-xxl)' }}>
-            <h2 style={{ textAlign: 'center', color: 'white', marginBottom: 'var(--spacing-xl)', fontSize: '2rem' }}>⚡ Suite Facilities</h2>
+            <h2 style={{ textAlign: 'center', color: 'white', marginBottom: '8px', fontSize: '2.25rem' }}>🛠️ Comprehensive Festival Management Tools</h2>
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-xl)', fontSize: '1rem', maxWidth: '700px', marginInline: 'auto' }}>
+              Everything you need to organize, evaluate, and showcase your arts festival from start to finish.
+            </p>
+            
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--spacing-lg)' }}>
               {[
-                { title: "🎯 Rapid Results Entry", desc: "Judges can quickly record scorecards, award places/grades, and calculate individual points with automated tie-breaker handling.", icon: "🏆" },
-                { title: "📊 Live Hub (Audience Slides)", desc: "A real-time sliding scoreboard view designed for big screens/projectors, showing team leaderboard standings and category champions.", icon: "🌐" },
-                { title: "📥 Excel Batch Importer", desc: "Seamless onboarding of event schedules, programs, and candidates from Excel files, processed instantly via database transactions.", icon: "📋" },
-                { title: "🛡️ Conflict & Schedule Audit", desc: "Built-in auditing checks program times and durations, identifying scheduling overlaps for candidates before they occur.", icon: "⏳" },
-                { title: "🆔 Bulk Candidate ID Cards", desc: "Generate print-ready layouts for contestant ID cards complete with category descriptors, team flag colors, and unique barcodes.", icon: "💳" },
-                { title: "🛠️ Multi-Fest Scaling", desc: "Host distinct fests with individual configurations, isolated team managers, custom points matrices, and discrete analytics tracking.", icon: "⚙️" }
-              ].map((fac, i) => (
-                <div key={i} className="glass-panel" style={{ padding: 'var(--spacing-lg)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '10px' }}>{fac.icon}</div>
-                  <h3 style={{ color: 'white', margin: '0 0 8px 0', fontSize: '1.1rem' }}>{fac.title}</h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{fac.desc}</p>
+                { title: "Multi-Tenant Architecture", desc: "Secure, isolated data for each organization with dedicated tenant management, role-based access control, and complete data privacy.", icon: "🌐" },
+                { title: "Division Management", desc: "Organize festivals by age groups with unlimited divisions, minimum/maximum age validation, and comprehensive statistics tracking.", icon: "👥" },
+                { title: "Team Management", desc: "Create and manage participating teams with chest number ranges, automatic point calculation, and team-wise performance tracking.", icon: "🛡️" },
+                { title: "Participant Cards", desc: "Print professional participant ID cards with chest numbers, team & division details. Filter by division/team for targeted printing.", icon: "💳", badge: "NEW" },
+                { title: "Program Management", desc: "Define programs by category (Stage/Off-Stage), type (Individual/Group), with point schemes, time limits, and judge requirements.", icon: "📜" },
+                { title: "Program Registration", desc: "Register participants for programs with automatic eligibility checks, conflict detection, and participant limit management.", icon: "📝" },
+                { title: "Code Letters Assignment", desc: "Assign anonymous code letters (A, B, C) to participants for unbiased evaluation with auto-generation and bulk assignment.", icon: "🔑" },
+                { title: "Interactive Scratch Cards", desc: "Generate virtual scratch cards with random code letters (A-Z) for fun, interactive code letter picking. Mouse/touch/keyboard supported.", icon: "🃏", badge: "NEW" },
+                { title: "Event Scheduling", desc: "Create detailed schedules with venue assignment, time slot management, and printable timetables for seamless event coordination.", icon: "📅" },
+                { title: "Evaluation System", desc: "Multi-judge marks entry (0-100), automatic average calculation, real-time validation, and support for up to 5 judges per program.", icon: "⚖️" },
+                { title: "Team Priority Sorting", desc: "Smart result filtering that prioritizes programs where weaker teams perform better, promoting balanced competition and fair opportunities.", icon: "📊", badge: "NEW" },
+                { title: "Results & Rankings", desc: "Auto-generated results with rankings, grade assignment, position points, declaration controls, and comprehensive winner tracking.", icon: "🏆" },
+                { title: "Poster Customizer", desc: "Design custom result posters with drag-and-drop editor, multiple templates, gradient backgrounds, and professional print-ready layouts.", icon: "🎨", badge: "NEW" },
+                { title: "Grade Schemes", desc: "Flexible grading configuration with mark ranges, grade labels (A+, A, B), grade points, and customizable evaluation criteria.", icon: "📈" },
+                { title: "Points & Statistics", desc: "Automated points calculation, team rankings, stage/off-stage categorization, and comprehensive performance analytics.", icon: "📈" },
+                { title: "Role-Based Access", desc: "Five role types (Owner, Committee, Program Leader, Judge, Participant) with granular permissions and activity controls.", icon: "🔒" }
+              ].map((tool, idx) => (
+                <div key={idx} className="glass-panel" style={{ padding: 'var(--spacing-md) var(--spacing-lg)', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                  <div style={{ fontSize: '1.75rem', marginTop: '4px' }}>{tool.icon}</div>
+                  <div>
+                    <h3 style={{ color: 'white', margin: '0 0 6px 0', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {tool.title}
+                      {tool.badge && (
+                        <span style={{ fontSize: '0.6rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.2)', fontWeight: 700 }}>
+                          {tool.badge}
+                        </span>
+                      )}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>{tool.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Innovative Features Showcase Section */}
+          <section style={{ marginBottom: 'var(--spacing-xxl)' }}>
+            <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700, marginBottom: '6px' }}>Innovative Features</div>
+              <h2 style={{ color: 'white', margin: 0, fontSize: '2rem' }}>✨ What Makes Us Different</h2>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--spacing-lg)' }}>
+              {[
+                {
+                  title: "Interactive Scratch Cards",
+                  icon: "🃏",
+                  desc: "Generate interactive virtual scratch cards with random code letters for participants to pick their codes. Fun and engaging way to assign evaluation codes!",
+                  bullets: [
+                    "Random letter generation (1-26 participants)",
+                    "Interactive scratch-to-reveal with mouse/touch/keyboard",
+                    "Auto-reveal at 40% scratch threshold"
+                  ],
+                  color: "linear-gradient(135deg, rgba(236, 72, 153, 0.05), rgba(244, 63, 94, 0.05))",
+                  borderColor: "rgba(236, 72, 153, 0.15)"
+                },
+                {
+                  title: "Participant ID Cards",
+                  icon: "💳",
+                  desc: "Professional participant ID cards with chest numbers, team and division details. Perfect for event identification and festival passes.",
+                  bullets: [
+                    "Filter by division and team for targeted printing",
+                    "Individual programs list on each card",
+                    "Automated card structure layout matching standards"
+                  ],
+                  color: "linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(59, 130, 246, 0.05))",
+                  borderColor: "rgba(79, 70, 229, 0.15)"
+                },
+                {
+                  title: "Team Priority Sorting",
+                  icon: "📊",
+                  desc: "Intelligent result sorting that prioritizes programs where weaker teams perform better, ensuring balanced competition and fair opportunities for all teams.",
+                  bullets: [
+                    "Global team ranking calculation",
+                    "Weakest team performance analysis",
+                    "Strategic result declaration guidance"
+                  ],
+                  color: "linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05))",
+                  borderColor: "rgba(16, 185, 129, 0.15)"
+                },
+                {
+                  title: "Poster Customizer",
+                  icon: "🎨",
+                  desc: "Design stunning result posters with our drag-and-drop visual editor. Multiple templates, gradient backgrounds, and professional layouts ready to print or share.",
+                  bullets: [
+                    "Drag-and-drop element positioning",
+                    "Custom backgrounds & gradient overlays",
+                    "Multiple poster templates per organization"
+                  ],
+                  color: "linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.05))",
+                  borderColor: "rgba(245, 158, 11, 0.15)"
+                }
+              ].map((feat, idx) => (
+                <div key={idx} className="glass-panel" style={{ padding: 'var(--spacing-lg)', border: `1px solid ${feat.borderColor}`, background: feat.color, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>{feat.icon}</div>
+                    <h3 style={{ color: 'white', margin: '0 0 10px 0', fontSize: '1.25rem' }}>{feat.title}</h3>
+                    <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{feat.desc}</p>
+                    
+                    <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      {feat.bullets.map((b, bIdx) => (
+                        <li key={bIdx}>{b}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               ))}
             </div>
