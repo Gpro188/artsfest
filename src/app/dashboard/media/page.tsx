@@ -14,14 +14,20 @@ export default async function MediaPage() {
     redirect("/dashboard");
   }
 
-  const initialSettings = await getSettings();
+  const { eventId } = session.user;
+  const initialSettings = await getSettings(eventId);
+  
+  const eventFilter = eventId ? { eventId } : undefined;
+
   const categories = await prisma.category.findMany({
+    where: eventFilter,
     orderBy: { name: 'asc' }
   });
   
   // Programs that have results and are published - for the download center
   const publishedPrograms = await prisma.program.findMany({
     where: {
+        eventId: eventId || undefined,
         results: {
             some: { isPublished: true }
         }

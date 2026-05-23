@@ -2,9 +2,38 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
 
-export default async function PrintSchedulePage() {
-  const settings = await getSettings();
+export default async function PrintSchedulePage(props: {
+  searchParams: Promise<{ eventId?: string; teamId?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  let eventId = searchParams.eventId;
+  const teamId = searchParams.teamId;
+
+  if (teamId && !eventId) {
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { eventId: true }
+    });
+    if (team) {
+      eventId = team.eventId;
+    }
+  }
+
+  const settings = await getSettings(eventId);
+
+  const whereClause: any = eventId ? { eventId } : {};
+  if (teamId) {
+    whereClause.assignments = {
+      some: {
+        candidate: {
+          teamId
+        }
+      }
+    };
+  }
+
   const programs = await prisma.program.findMany({
+    where: whereClause,
     orderBy: { startTime: 'asc' },
     include: { category: true, event: true }
   });

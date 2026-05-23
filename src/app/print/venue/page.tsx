@@ -2,9 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
 
-export default async function PrintVenuePage() {
-  const settings = await getSettings();
+export default async function PrintVenuePage(props: {
+  searchParams: Promise<{ eventId?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const eventId = searchParams.eventId;
+  const settings = await getSettings(eventId);
+
   const programs = await prisma.program.findMany({
+    where: eventId ? { eventId } : {},
     orderBy: [
       { venue: 'asc' },
       { startTime: 'asc' }

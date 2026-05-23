@@ -3,9 +3,13 @@ import HubClient from "../components/HubClient";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 
-export default async function HubPage() {
-  const settings = await getSettings();
-  const res = await getHubData();
+export default async function HubPage(props: {
+  searchParams: Promise<{ eventId?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const { eventId } = searchParams;
+  const settings = await getSettings(eventId);
+  const res = await getHubData(eventId);
   const events = (res.success && res.data) ? res.data : [];
 
   return (

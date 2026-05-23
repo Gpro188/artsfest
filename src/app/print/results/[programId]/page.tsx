@@ -5,7 +5,6 @@ import PrintButton from "@/components/PrintButton";
 
 export default async function PrintResultsPage({ params }: { params: Promise<{ programId: string }> }) {
   const resolvedParams = await params;
-  const settings = await getSettings();
   const program = await prisma.program.findUnique({
     where: { id: resolvedParams.programId },
     include: {
@@ -20,6 +19,8 @@ export default async function PrintResultsPage({ params }: { params: Promise<{ p
   });
 
   if (!program) notFound();
+
+  const settings = await getSettings(program.eventId);
 
   return (
     <div style={{ padding: '40px', backgroundColor: 'white', color: 'black', minHeight: '100vh' }}>

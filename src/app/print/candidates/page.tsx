@@ -2,8 +2,21 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
 
-export default async function PrintCandidatesPage({ searchParams }: { searchParams: { teamId?: string } }) {
-  const settings = await getSettings();
+export default async function PrintCandidatesPage(props: { searchParams: Promise<{ teamId?: string; eventId?: string }> }) {
+  const searchParams = await props.searchParams;
+  let eventId = searchParams.eventId;
+  
+  if (!eventId && searchParams.teamId) {
+    const team = await prisma.team.findUnique({
+      where: { id: searchParams.teamId },
+      select: { eventId: true }
+    });
+    if (team) {
+      eventId = team.eventId;
+    }
+  }
+
+  const settings = await getSettings(eventId);
   
   const whereClause: any = { isApproved: true };
   if (searchParams.teamId) {

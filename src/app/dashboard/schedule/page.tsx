@@ -45,10 +45,10 @@ export default async function SchedulePage(props: {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
           <h1 style={{ margin: 0 }}>Global Festival Schedule</h1>
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
-            <a href="/print/schedule" target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+            <a href={`/print/schedule?eventId=${activeEventId}`} target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
               🖨️ Print Schedule
             </a>
-            <a href="/print/venue" target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+            <a href={`/print/venue?eventId=${activeEventId}`} target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
               🖨️ Print Venue List
             </a>
           </div>
@@ -83,7 +83,12 @@ export default async function SchedulePage(props: {
 
     return (
       <div className="animate-fade-in">
-        <h1 style={{ marginBottom: 'var(--spacing-lg)' }}>Team Festival Schedule</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+          <h1 style={{ margin: 0 }}>Team Festival Schedule</h1>
+          <a href={`/print/schedule?teamId=${team.id}`} target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+            🖨️ Print Team Schedule
+          </a>
+        </div>
         <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
           View all programs and track your team's assignments.
         </p>

@@ -34,6 +34,7 @@ model Event {
   teams              Team[]
   users              User[]
   pageVisits         PageVisit[]
+  globalSetting      GlobalSetting?
 }
 
 model Category {
@@ -191,6 +192,9 @@ model GlobalSetting {
   posterPrimaryColor            String?   @default("#1e293b")
   posterSecondaryColor          String?   @default("#f97316")
   posterTextColor               String?   @default("#1e293b")
+
+  eventId                       String?   @unique
+  event                         Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model PageVisit {

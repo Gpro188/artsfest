@@ -23,7 +23,7 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
     notFound();
   }
 
-  const settings = await getSettings();
+  const settings = await getSettings(event.id);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

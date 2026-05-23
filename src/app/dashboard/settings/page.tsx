@@ -14,10 +14,14 @@ export default async function SettingsPage() {
     redirect("/dashboard");
   }
 
-  const settings = await getSettings();
+  const { eventId } = session.user;
+  const settings = await getSettings(eventId);
+
+  const eventFilter = eventId ? { eventId } : undefined;
 
   // Fetch Pending Assignments (optimized queries to select only necessary fields, omitting photos)
   const programs = await prisma.program.findMany({
+    where: eventFilter,
     select: {
       id: true,
       name: true,
@@ -35,6 +39,7 @@ export default async function SettingsPage() {
   });
 
   const teams = await prisma.team.findMany({
+    where: eventFilter,
     select: {
       id: true,
       name: true,

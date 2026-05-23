@@ -14,14 +14,14 @@ export default async function SearchPage(props: {
   }>;
 }) {
   const searchParams = await props.searchParams;
-  const settings = await getSettings();
+  const eventId = searchParams.eventId || "";
+  const settings = await getSettings(eventId);
   const festName = settings.festName;
   const query = searchParams.q || "";
   const type = searchParams.type || "chestNumber"; 
   const categoryId = searchParams.categoryId || "";
   const stageType = searchParams.stageType || "";
   const programType = searchParams.programType || "";
-  const eventId = searchParams.eventId || "";
   
   const events = await prisma.event.findMany({
     orderBy: { createdAt: 'desc' }

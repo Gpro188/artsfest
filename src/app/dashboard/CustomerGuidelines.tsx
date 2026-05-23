@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
-export default function CustomerGuidelines() {
+export default function CustomerGuidelines({ role }: { role: string }) {
   const [activeTab, setActiveTab] = useState<string>("setup");
 
   const tabs = [
-    { id: "setup", label: "🚀 Getting Started", icon: "⚙️" },
+    { id: "setup", label: role === "MANAGER" ? "🚀 Getting Started" : "🚀 Getting Started", icon: "⚙️" },
     { id: "scratch", label: "Interactive Scratch Cards", icon: "🃏" },
     { id: "cards", label: "Participant ID Cards", icon: "💳" },
     { id: "sorting", label: "Team Priority Sorting", icon: "📊" },
@@ -63,28 +63,54 @@ export default function CustomerGuidelines() {
         {activeTab === "setup" && (
           <div className="animate-fade-in">
             <h3 style={{ color: 'white', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🚀 Quick-Start Dashboard Setup
+              {role === "MANAGER" ? "🚀 Getting Started as Team Manager" : "🚀 Quick-Start Dashboard Setup"}
             </h3>
-            <p>
-              Setting up your festival is structured logically to prevent configuration conflicts. Follow this progression to get your tenant system up and running with confidence:
-            </p>
-            <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <li>
-                <strong style={{ color: 'white' }}>Configure Divisions & Settings:</strong> Go to <strong>Settings</strong> to customize your festival name, motto, logo, and registration deadlines.
-              </li>
-              <li>
-                <strong style={{ color: 'white' }}>Define Participating Teams:</strong> In the <strong>Teams</strong> section, add teams and associate prefix codes (e.g., TM1, TM2) and flag colors. This enables automated point accumulation.
-              </li>
-              <li>
-                <strong style={{ color: 'white' }}>Build Categories & Programs:</strong> Register categories (e.g., Sub-Junior, Junior) and add individual or group programs (Stage or Off-Stage).
-              </li>
-              <li>
-                <strong style={{ color: 'white' }}>Onboard Candidates:</strong> As Team Managers upload candidates, review and approve them in the <strong>Candidates Approval</strong> dashboard.
-              </li>
-              <li>
-                <strong style={{ color: 'white' }}>Rapid Marks Entry:</strong> Use the <strong>Results & Scoring</strong> interface during the live events to enter scores, assign ranks/grades, and calculate points instantly.
-              </li>
-            </ol>
+            {role === "MANAGER" ? (
+              <p>
+                As a Team Manager, you are in charge of registering your candidates, assigning them to programs, and printing ID cards and schedules. Follow this simple guide to get set up:
+              </p>
+            ) : (
+              <p>
+                Setting up your festival is structured logically to prevent configuration conflicts. Follow this progression to get your tenant system up and running with confidence:
+              </p>
+            )}
+            {role === "MANAGER" ? (
+              <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <li>
+                  <strong style={{ color: 'white' }}>Register Candidates:</strong> Navigate to the <strong>Candidates</strong> tab and register your team's contestants. Be sure to select the correct age group category for each contestant.
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>Assign Programs:</strong> Go to the <strong>Program Assignments</strong> section to enroll your candidates into specific stage or off-stage programs. Candidate limits per team are enforced.
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>Generate ID Cards:</strong> In the <strong>Candidates</strong> list, click the <strong>Bulk ID Cards</strong> button to print passes and credentials in bulk for all of your team's contestants.
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>Print Schedule:</strong> Go to the <strong>Print Team Schedule</strong> section to print a custom, neat overview of when and where your team's candidates are competing.
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>View Live Standings:</strong> Check the public standings pages or the <strong>Live Hub</strong> to see announced results and overall team points in real time.
+                </li>
+              </ol>
+            ) : (
+              <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <li>
+                  <strong style={{ color: 'white' }}>Configure Divisions & Settings:</strong> Go to <strong>Settings</strong> to customize your festival name, motto, logo, and registration deadlines.
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>Define Participating Teams:</strong> In the <strong>Teams</strong> section, add teams and associate prefix codes (e.g., TM1, TM2) and flag colors. This enables automated point accumulation.
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>Build Categories & Programs:</strong> Register categories (e.g., Sub-Junior, Junior) and add individual or group programs (Stage or Off-Stage).
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>Onboard Candidates:</strong> As Team Managers upload candidates, review and approve them in the <strong>Candidates Approval</strong> dashboard.
+                </li>
+                <li>
+                  <strong style={{ color: 'white' }}>Rapid Marks Entry:</strong> Use the <strong>Results & Scoring</strong> interface during the live events to enter scores, assign ranks/grades, and calculate points instantly.
+                </li>
+              </ol>
+            )}
           </div>
         )}
 

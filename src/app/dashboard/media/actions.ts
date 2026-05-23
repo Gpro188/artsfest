@@ -2,9 +2,29 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function saveMediaTemplate(programId: string, imageUrl: string) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "MEDIA")) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { eventId } = session.user;
+
+    if (eventId) {
+      // Verify program belongs to user's event
+      const program = await prisma.program.findUnique({
+        where: { id: programId },
+        select: { eventId: true }
+      });
+      if (!program || program.eventId !== eventId) {
+        return { success: false, error: "Unauthorized" };
+      }
+    }
+
     await prisma.mediaTemplate.upsert({
       where: { programId },
       update: { imageUrl },
@@ -30,15 +50,35 @@ export async function updatePosterSettings(data: {
   posterTextColor?: string
 }) {
   try {
-    await prisma.globalSetting.upsert({
-      where: { id: "default" },
-      update: data,
-      create: {
-        id: "default",
-        festName: "Arts Fest",
-        ...data
-      }
-    });
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "MEDIA")) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { eventId } = session.user;
+
+    if (eventId) {
+      await prisma.globalSetting.upsert({
+        where: { eventId },
+        update: data,
+        create: {
+          eventId,
+          id: `event-${eventId}`,
+          festName: "Arts Fest",
+          ...data
+        }
+      });
+    } else {
+      await prisma.globalSetting.upsert({
+        where: { id: "default" },
+        update: data,
+        create: {
+          id: "default",
+          festName: "Arts Fest",
+          ...data
+        }
+      });
+    }
 
     revalidatePath("/", "layout");
     return { success: true };
@@ -50,6 +90,24 @@ export async function updatePosterSettings(data: {
 
 export async function updateCategoryBranding(categoryId: string, posterBgUrl: string) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || (session.user.role !== "ADMIN" && session.user.role !== "MEDIA")) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const { eventId } = session.user;
+
+        if (eventId) {
+            // Verify category belongs to user's event
+            const category = await prisma.category.findUnique({
+                where: { id: categoryId },
+                select: { eventId: true }
+            });
+            if (!category || category.eventId !== eventId) {
+                return { success: false, error: "Unauthorized" };
+            }
+        }
+
         await prisma.category.update({
             where: { id: categoryId },
             data: { posterBgUrl }

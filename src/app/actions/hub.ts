@@ -2,9 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 
-export async function getHubData() {
+export async function getHubData(eventId?: string) {
   try {
     const events = await prisma.event.findMany({
+      where: eventId ? { id: eventId } : undefined,
       select: {
         id: true,
         name: true,

@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcrypt";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function updateSettings(data: { 
   festName: string, 
@@ -12,24 +14,59 @@ export async function updateSettings(data: {
   programAssignmentDeadline: string | null
 }) {
   try {
-    await prisma.globalSetting.upsert({
-      where: { id: "default" },
-      update: {
-        festName: data.festName,
-        festMoto: data.festMoto,
-        festLogo: data.festLogo,
-        candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
-        programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
-      },
-      create: {
-        id: "default",
-        festName: data.festName,
-        festMoto: data.festMoto,
-        festLogo: data.festLogo,
-        candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
-        programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
-      }
-    });
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { eventId } = session.user;
+
+    if (eventId) {
+      // Update the event name so it stays in sync
+      await prisma.event.update({
+        where: { id: eventId },
+        data: { name: data.festName }
+      });
+
+      await prisma.globalSetting.upsert({
+        where: { eventId },
+        update: {
+          festName: data.festName,
+          festMoto: data.festMoto,
+          festLogo: data.festLogo,
+          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
+          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
+        },
+        create: {
+          eventId,
+          id: `event-${eventId}`,
+          festName: data.festName,
+          festMoto: data.festMoto,
+          festLogo: data.festLogo,
+          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
+          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
+        }
+      });
+    } else {
+      await prisma.globalSetting.upsert({
+        where: { id: "default" },
+        update: {
+          festName: data.festName,
+          festMoto: data.festMoto,
+          festLogo: data.festLogo,
+          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
+          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
+        },
+        create: {
+          id: "default",
+          festName: data.festName,
+          festMoto: data.festMoto,
+          festLogo: data.festLogo,
+          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
+          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
+        }
+      });
+    }
 
     revalidatePath("/dashboard");
     return { success: true };
@@ -41,14 +78,36 @@ export async function updateSettings(data: {
 
 export async function exportAllData() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { eventId } = session.user;
+
     const data = {
-      events: await prisma.event.findMany({ include: { categories: true } }),
-      teams: await prisma.team.findMany(),
-      programs: await prisma.program.findMany(),
-      candidates: await prisma.candidate.findMany(),
-      programAssignments: await prisma.programAssignment.findMany(),
-      results: await prisma.result.findMany(),
-      settings: await prisma.globalSetting.findFirst()
+      events: await prisma.event.findMany({
+        where: eventId ? { id: eventId } : undefined,
+        include: { categories: true }
+      }),
+      teams: await prisma.team.findMany({
+        where: eventId ? { eventId } : undefined
+      }),
+      programs: await prisma.program.findMany({
+        where: eventId ? { eventId } : undefined
+      }),
+      candidates: await prisma.candidate.findMany({
+        where: eventId ? { team: { eventId } } : undefined
+      }),
+      programAssignments: await prisma.programAssignment.findMany({
+        where: eventId ? { program: { eventId } } : undefined
+      }),
+      results: await prisma.result.findMany({
+        where: eventId ? { program: { eventId } } : undefined
+      }),
+      settings: await prisma.globalSetting.findFirst({
+        where: eventId ? { eventId } : { id: "default" }
+      })
     };
     return { success: true, data };
   } catch (error) {
@@ -59,15 +118,30 @@ export async function exportAllData() {
 
 export async function resetSystem() {
   try {
-    // Order matters due to foreign keys
-    await prisma.result.deleteMany({});
-    await prisma.programAssignment.deleteMany({});
-    await prisma.candidate.deleteMany({});
-    await prisma.program.deleteMany({});
-    await prisma.category.deleteMany({});
-    await prisma.team.deleteMany({});
-    await prisma.event.deleteMany({});
-    // We keep GlobalSetting and Users to avoid locking out the admin
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { eventId } = session.user;
+
+    if (eventId) {
+      await prisma.result.deleteMany({ where: { program: { eventId } } });
+      await prisma.programAssignment.deleteMany({ where: { program: { eventId } } });
+      await prisma.candidate.deleteMany({ where: { team: { eventId } } });
+      await prisma.program.deleteMany({ where: { eventId } });
+      await prisma.category.deleteMany({ where: { eventId } });
+      await prisma.team.deleteMany({ where: { eventId } });
+    } else {
+      // Order matters due to foreign keys
+      await prisma.result.deleteMany({});
+      await prisma.programAssignment.deleteMany({});
+      await prisma.candidate.deleteMany({});
+      await prisma.program.deleteMany({});
+      await prisma.category.deleteMany({});
+      await prisma.team.deleteMany({});
+      await prisma.event.deleteMany({});
+    }
     
     revalidatePath("/dashboard");
     return { success: true };

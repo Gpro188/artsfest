@@ -6,7 +6,6 @@ import BackButton from "@/components/BackButton";
 
 export default async function CandidateIdCardPage({ params }: { params: Promise<{ candidateId: string }> }) {
   const resolvedParams = await params;
-  const settings = await getSettings();
   const candidate = await prisma.candidate.findUnique({
     where: { id: resolvedParams.candidateId },
     include: {
@@ -19,6 +18,8 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
   });
 
   if (!candidate) notFound();
+
+  const settings = await getSettings(candidate.team.eventId);
 
   return (
     <div style={{ padding: '40px', backgroundColor: '#f3f4f6', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
