@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createFest, createFestUser, deleteFest, deleteUser } from "../actions/superAdmin";
+import { createFest, createFestUser, deleteFest, deleteUser, resetUserPassword } from "../actions/superAdmin";
 
 interface SuperAdminDashboardProps {
   initialData: {
@@ -49,6 +49,24 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
       window.location.reload();
     } else {
       alert(res.error || "Failed to delete user.");
+    }
+  };
+
+  const handleResetPassword = async (userId: string, username: string) => {
+    const newPassword = prompt(`Enter new password for "${username}":`);
+    if (newPassword === null) return; // User cancelled
+    
+    const passwordTrim = newPassword.trim();
+    if (!passwordTrim) {
+      alert("Password cannot be empty.");
+      return;
+    }
+
+    const res = await resetUserPassword(userId, passwordTrim);
+    if (res.success) {
+      alert(`Password for "${username}" has been reset successfully.`);
+    } else {
+      alert(res.error || "Failed to reset password.");
     }
   };
 
@@ -297,7 +315,22 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
                   </td>
                   <td style={{ padding: 'var(--spacing-sm)' }}>{u.event?.name || 'N/A (Global)'}</td>
                   <td style={{ padding: 'var(--spacing-sm)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
-                  <td style={{ padding: 'var(--spacing-sm)' }}>
+                  <td style={{ padding: 'var(--spacing-sm)', display: 'flex', gap: '8px' }}>
+                    <button 
+                      onClick={() => handleResetPassword(u.id, u.username)}
+                      className="btn"
+                      style={{ 
+                        padding: '4px 10px', 
+                        fontSize: '0.75rem', 
+                        backgroundColor: '#f59e0b', 
+                        color: 'white', 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Reset Pass
+                    </button>
                     <button 
                       onClick={() => handleDeleteUser(u.id, u.username)}
                       className="btn"

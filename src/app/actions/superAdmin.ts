@@ -191,3 +191,26 @@ export async function deleteUser(userId: string) {
     return { success: false, error: error.message || "Failed to delete user" };
   }
 }
+
+export async function resetUserPassword(userId: string, newPassword: string) {
+  try {
+    await ensureSuperAdmin();
+
+    const passwordTrim = newPassword.trim();
+    if (!passwordTrim) {
+      return { success: false, error: "Password cannot be empty" };
+    }
+
+    const hashedPassword = await bcrypt.hash(passwordTrim, 10);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to reset password:", error);
+    return { success: false, error: error.message || "Failed to reset password" };
+  }
+}
