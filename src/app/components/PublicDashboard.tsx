@@ -86,7 +86,7 @@ export default function PublicDashboard({ initialEvents }: { initialEvents: any[
         {data.stats && (
             <div className="mobile-stats-list" style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(5, 1fr)', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', 
                 gap: '15px', 
                 width: '100%', 
                 maxWidth: '1000px' 
@@ -159,7 +159,7 @@ export default function PublicDashboard({ initialEvents }: { initialEvents: any[
         </div>
 
         {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: '10px' }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: '10px', flexWrap: 'wrap' }}>
             {[
                 { id: 'standings', label: '📊 Standings', color: '#FCD34D' },
                 { id: 'hall', label: '⭐ Hall of Fame', color: '#F43F5E' },
@@ -251,7 +251,7 @@ export default function PublicDashboard({ initialEvents }: { initialEvents: any[
                     {/* Team List & Detail Mini Cards */}
                     <div>
                         <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>🚩 Team Detail</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+                        <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
                             {data.leaderboard.map(team => (
                                 <div key={team.id} className="glass-panel" style={{ padding: '15px', textAlign: 'center', borderTop: `4px solid ${team.flagColor}` }}>
                                     {team.leaderPhoto && (

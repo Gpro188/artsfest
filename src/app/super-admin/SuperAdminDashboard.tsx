@@ -115,7 +115,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
       
       {/* Analytics Overview Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-lg)' }}>
+      <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-lg)' }}>
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)', borderLeft: '4px solid #6366f1', textAlign: 'center' }}>
           <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'white' }}>{data.totalVisits}</div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Total Page Views</div>
@@ -127,7 +127,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
       </div>
 
       {/* Forms Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'var(--spacing-lg)' }}>
+      <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'var(--spacing-lg)' }}>
         
         {/* Fest Creation Form */}
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
@@ -177,7 +177,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
               </div>
             )}
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-sm)' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-sm)' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Username</label>
                 <input 
@@ -202,7 +202,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'var(--spacing-sm)' }}>
+            <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'var(--spacing-sm)' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Role</label>
                 <select className="form-input" value={role} onChange={(e) => setRole(e.target.value as any)}>
