@@ -68,7 +68,7 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
           
           <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
             <Link href="/" style={{ color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.9rem' }}>
-              🏠 Dpro Artsfest Home
+              🏠 Dpro_artsfest system Home
             </Link>
             <Link href="/login" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
               Login
@@ -111,7 +111,7 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
             maxWidth: '550px'
           }}>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 6px 0' }}>
-              ⚡ Powered by <strong>Dpro Technologies</strong> ArtsFest Management Suite.
+              ⚡ Powered by <strong>Dpro_artsfest system</strong>.
             </p>
             <Link href="/" style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               Host your own arts fest on this system ➔

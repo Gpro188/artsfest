@@ -36,7 +36,7 @@ export default async function SuperAdminPage() {
         {/* Header Navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-xl)' }}>
           <div>
-            <h1 style={{ color: 'white', margin: 0, fontSize: '2rem', fontWeight: 800 }}>Dpro Super Admin</h1>
+            <h1 style={{ color: 'white', margin: 0, fontSize: '2rem', fontWeight: 800 }}>Dpro_artsfest system Super Admin</h1>
             <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0 0', fontSize: '0.85rem' }}>
               System-wide metrics and tenant provisioning dashboard
             </p>

@@ -41,18 +41,16 @@ export default async function HomePage() {
               width: '40px', 
               height: '40px', 
               borderRadius: 'var(--radius-md)', 
-              background: 'linear-gradient(135deg, #4f46e5, #06b6d4)',
+              background: 'transparent',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
-              fontWeight: 800,
-              fontSize: '1.2rem'
+              overflow: 'hidden'
             }}>
-              D
+              <img src="/logo.png" alt="Dpro Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <div>
-              <h1 style={{ fontSize: '1.3rem', margin: 0, letterSpacing: '-0.5px', color: 'white' }}>Dpro Technologies</h1>
+              <h1 style={{ fontSize: '1.3rem', margin: 0, letterSpacing: '-0.5px', color: 'white' }}>Dpro_artsfest system</h1>
               <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Artsfest Manage Suite</div>
             </div>
           </div>
@@ -273,11 +271,11 @@ export default async function HomePage() {
           <section className="glass-panel" style={{ padding: 'var(--spacing-xl)', border: '1px solid rgba(79, 70, 229, 0.2)' }}>
             <h2 style={{ color: 'white', fontSize: '1.75rem', marginBottom: 'var(--spacing-md)' }}>🚀 Setting Up Your Fest</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: 'var(--spacing-lg)', maxWidth: '800px' }}>
-              Want to run this system for your college, university, or community arts fest? Follow these steps to get onboarding from Dpro Technologies:
+              Want to run this system for your college, university, or community arts fest? Follow these steps to get onboarding from Dpro_artsfest system:
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-lg)' }}>
               {[
-                { step: "1", title: "Provision Fest URL", desc: "Contact Dpro Technologies to initialize your event database and receive your dedicated URL path." },
+                { step: "1", title: "Provision Fest URL", desc: "Contact Dpro_artsfest system support to initialize your event database and receive your dedicated URL path." },
                 { step: "2", title: "Setup Rules", desc: "Define category metrics, team allocations, manager accounts, and point templates inside the Admin Panel." },
                 { step: "3", title: "Batch Import", desc: "Upload candidate data and scheduled program times directly using our spreadsheet templates." },
                 { step: "4", title: "Go Live!", desc: "Open the Rapid Scoring entry and connect your Live projector to stream immediate stats to the audience." }
@@ -321,7 +319,7 @@ export default async function HomePage() {
       }}>
         <div className="container" style={{ maxWidth: '1050px' }}>
           <p style={{ margin: '0 0 6px 0', color: 'white', fontWeight: 600 }}>ArtsFest Management Suite</p>
-          <p style={{ margin: '0 0 12px 0' }}>Developed and powered by **Dpro Technologies**. All rights reserved &copy; 2026.</p>
+          <p style={{ margin: '0 0 12px 0' }}>Developed and powered by **Dpro_artsfest system**. All rights reserved &copy; 2026.</p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
             <Link href="/login" style={{ color: 'var(--primary)' }}>Manager Login</Link>
             <span>•</span>
