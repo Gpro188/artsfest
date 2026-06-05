@@ -6,105 +6,59 @@ import { unstable_cache } from 'next/cache';
 
 const getCachedPublicEventData = unstable_cache(
   async (eventId: string) => {
-    // 1. Get Latest Results (Published only) - Pruned to select only required fields
-    const latestResults = await prisma.result.findMany({
-      where: { 
-        program: { eventId },
-        isPublished: true 
-      },
-      select: {
-        id: true,
-        points: true,
-        rank: true,
-        grade: true,
-        updatedAt: true,
-        candidate: {
-          select: {
-            id: true,
-            name: true,
-            chestNumber: true,
-            photo: true,
-            team: {
-              select: {
-                id: true,
-                name: true,
-                flagColor: true
-              }
-            }
-          }
+    // Execute all independent database queries in a single parallel batch
+    // This reduces cross-continent network roundtrips from 5 sequential trips to 1
+    const [
+      latestResults,
+      teams,
+      allPublishedResults,
+      categories,
+      totalPrograms,
+      publishedProgramsCount,
+      totalCandidates,
+      candidatesWithAssignments
+    ] = await Promise.all([
+      // 1. Get Latest Results
+      prisma.result.findMany({
+        where: { program: { eventId }, isPublished: true },
+        select: {
+          id: true, points: true, rank: true, grade: true, updatedAt: true,
+          candidate: { select: { id: true, name: true, chestNumber: true, photo: true, team: { select: { id: true, name: true, flagColor: true } } } },
+          team: { select: { id: true, name: true, flagColor: true, leaderPhoto: true } },
+          program: { select: { id: true, name: true } }
         },
-        team: {
-          select: {
-            id: true,
-            name: true,
-            flagColor: true,
-            leaderPhoto: true
-          }
-        },
-        program: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 10
-    });
+        orderBy: { updatedAt: 'desc' },
+        take: 10
+      }),
 
-    // 2. Get Teams with Leader Info - Pruned fields
-    const teams = await prisma.team.findMany({
-      where: { eventId },
-      select: {
-        id: true,
-        name: true,
-        flagColor: true,
-        leaderName: true,
-        leaderPhoto: true
-      }
-    });
+      // 2. Get Teams
+      prisma.team.findMany({
+        where: { eventId },
+        select: { id: true, name: true, flagColor: true, leaderName: true, leaderPhoto: true }
+      }),
 
-    // 3. Get Published Results for Calculation - Select only fields required for scoring & leaderboard
-    const allPublishedResults = await prisma.result.findMany({
-      where: {
-        program: { eventId },
-        isPublished: true
-      },
-      select: {
-        id: true,
-        points: true,
-        candidateId: true,
-        teamId: true,
-        candidate: {
-          select: {
-            id: true,
-            name: true,
-            photo: true,
-            teamId: true,
-            team: {
-              select: {
-                id: true,
-                name: true,
-                flagColor: true
-              }
-            },
-            category: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        },
-        team: {
-          select: {
-            id: true,
-            name: true,
-            flagColor: true
-          }
+      // 3. Get All Published Results for Leaderboard
+      prisma.result.findMany({
+        where: { program: { eventId }, isPublished: true },
+        select: {
+          id: true, points: true, candidateId: true, teamId: true,
+          candidate: { select: { id: true, name: true, photo: true, teamId: true, team: { select: { id: true, name: true, flagColor: true } }, category: { select: { id: true, name: true } } } },
+          team: { select: { id: true, name: true, flagColor: true } }
         }
-      }
-    });
+      }),
+
+      // 4. Get Categories
+      prisma.category.findMany({ 
+        where: { eventId },
+        select: { id: true, name: true }
+      }),
+
+      // 5. Stats
+      prisma.program.count({ where: { eventId } }),
+      prisma.program.count({ where: { eventId, results: { some: { isPublished: true } } } }),
+      prisma.candidate.count({ where: { category: { eventId } } }),
+      prisma.programAssignment.groupBy({ by: ['candidateId'], where: { program: { eventId } } })
+    ]);
 
     // --- Team Leaderboard ---
     const teamScores: Record<string, { id: string, name: string, points: number, flagColor: string | null, leaderName: string | null, leaderPhoto: string | null }> = {};
@@ -175,10 +129,6 @@ const getCachedPublicEventData = unstable_cache(
     const topStars = Object.values(candidateScores).sort((a, b) => b.points - a.points).slice(0, 5);
 
     // --- Category Top 5 Stars ---
-    const categories = await prisma.category.findMany({ 
-      where: { eventId },
-      select: { id: true, name: true }
-    });
     const categoryStars: Record<string, any[]> = {};
 
     categories.forEach(cat => {
@@ -191,26 +141,6 @@ const getCachedPublicEventData = unstable_cache(
         categoryStars[cat.name] = catScores;
       }
     });
-
-    // --- Statistics - Optimized program count database aggregates ---
-    const [totalPrograms, publishedProgramsCount, totalCandidates, candidatesWithAssignments] = await Promise.all([
-        prisma.program.count({ where: { eventId } }),
-        prisma.program.count({
-            where: {
-                eventId,
-                results: {
-                    some: {
-                        isPublished: true
-                    }
-                }
-            }
-        }),
-        prisma.candidate.count({ where: { category: { eventId } } }),
-        prisma.programAssignment.groupBy({
-            by: ['candidateId'],
-            where: { program: { eventId } }
-        })
-    ]);
 
     const stats = {
         totalPrograms,
