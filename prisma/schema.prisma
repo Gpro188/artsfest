@@ -39,6 +39,10 @@ model Event {
   pageVisits         PageVisit[]
   globalSetting      GlobalSetting?
   customDomain       String?      @unique
+  registrationStart  DateTime?
+  registrationEnd    DateTime?
+  assignmentStart    DateTime?
+  assignmentEnd      DateTime?
 }
 
 model Category {

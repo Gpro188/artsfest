@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { addCandidate } from "./actions";
 
-export default function CandidateForm({ teamId, categories, isRegistrationOpen = true }: { teamId: string, categories: any[], isRegistrationOpen?: boolean }) {
+export default function CandidateForm({ teamId, categories, isRegistrationOpen = true, statusMessage = "" }: { teamId: string, categories: any[], isRegistrationOpen?: boolean, statusMessage?: string }) {
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [photo, setPhoto] = useState("");
@@ -22,8 +22,8 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
         color: 'var(--error)'
       }}>
         <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🕒</div>
-        <strong>Registration Closed</strong>
-        <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>The deadline for adding candidates has passed. Please contact the administrator for any urgent changes.</p>
+        <strong>Registration Closed / Not Started</strong>
+        <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{statusMessage || "The deadline for adding candidates has passed. Please contact the administrator for any urgent changes."}</p>
       </div>
     );
   }

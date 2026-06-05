@@ -76,6 +76,36 @@ export async function updateSettings(data: {
   }
 }
 
+export async function updateEventDeadlines(eventId: string, data: {
+  registrationStart: string | null;
+  registrationEnd: string | null;
+  assignmentStart: string | null;
+  assignmentEnd: string | null;
+}) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        registrationStart: data.registrationStart ? new Date(data.registrationStart) : null,
+        registrationEnd: data.registrationEnd ? new Date(data.registrationEnd) : null,
+        assignmentStart: data.assignmentStart ? new Date(data.assignmentStart) : null,
+        assignmentEnd: data.assignmentEnd ? new Date(data.assignmentEnd) : null,
+      }
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update event deadlines:", error);
+    return { success: false, error: "Failed to update event deadlines" };
+  }
+}
+
 export async function exportAllData() {
   try {
     const session = await getServerSession(authOptions);

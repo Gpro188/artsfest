@@ -14,18 +14,28 @@ export default async function AssignmentsPage() {
 
   let teamId = null;
   let isAssignmentOpen = true;
-
-  const settings = await prisma.globalSetting.findUnique({ where: { id: "default" } });
-  if (session.user.role !== "ADMIN" && settings?.programAssignmentDeadline) {
-    isAssignmentOpen = new Date() <= new Date(settings.programAssignmentDeadline);
-  }
+  let assignmentStatusMessage = "";
 
   if (session.user.role === "MANAGER") {
     const team = await prisma.team.findUnique({
-      where: { managerId: session.user.id }
+      where: { managerId: session.user.id },
+      include: { event: true }
     });
     if (!team) return <div>You are not assigned to any team.</div>;
     teamId = team.id;
+
+    // Check event-specific assignment window
+    const now = new Date();
+    const start = team.event.assignmentStart;
+    const end = team.event.assignmentEnd;
+    
+    if (start && now < start) {
+      isAssignmentOpen = false;
+      assignmentStatusMessage = `Program assignments will open on ${start.toLocaleString()}.`;
+    } else if (end && now > end) {
+      isAssignmentOpen = false;
+      assignmentStatusMessage = `Program assignments closed on ${end.toLocaleString()}.`;
+    }
   }
 
   const whereClause = teamId ? { teamId, isApproved: true } : { isApproved: true };
@@ -99,7 +109,7 @@ export default async function AssignmentsPage() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)', fontSize: '0.85rem' }}>
             Select a candidate below to see available programs and make assignments. Validations enforce category rules and entry limits.
           </p>
-          <AssignmentForm candidates={candidates as any} programs={programs as any} isAssignmentOpen={isAssignmentOpen} />
+          <AssignmentForm candidates={candidates as any} programs={programs as any} isAssignmentOpen={isAssignmentOpen} statusMessage={assignmentStatusMessage} />
         </div>
       )}
     </div>

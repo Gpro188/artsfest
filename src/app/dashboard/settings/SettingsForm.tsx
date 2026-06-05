@@ -1,42 +1,58 @@
 "use client";
 
-import { useState } from "react";
-import { updateSettings } from "./actions";
+import { useState, useEffect } from "react";
+import { updateSettings, updateEventDeadlines } from "./actions";
 
-export default function SettingsForm({ initialSettings }: { initialSettings: any }) {
+export default function SettingsForm({ initialSettings, events }: { initialSettings: any, events: any[] }) {
   const [festName, setFestName] = useState(initialSettings?.festName || "Arts Fest");
   const [festMoto, setFestMoto] = useState(initialSettings?.festMoto || "Celebrating Creativity");
   const [festLogo, setFestLogo] = useState(initialSettings?.festLogo || "");
-  const [candidateRegistrationDeadline, setCandidateRegistrationDeadline] = useState(
-    initialSettings?.candidateRegistrationDeadline 
-      ? new Date(initialSettings.candidateRegistrationDeadline).toISOString().slice(0, 16) 
-      : ""
-  );
-  const [programAssignmentDeadline, setProgramAssignmentDeadline] = useState(
-    initialSettings?.programAssignmentDeadline 
-      ? new Date(initialSettings.programAssignmentDeadline).toISOString().slice(0, 16) 
-      : ""
-  );
+  
+  // Event Deadline State
+  const [selectedEventId, setSelectedEventId] = useState(events[0]?.id || "");
+  
+  const [registrationStart, setRegistrationStart] = useState("");
+  const [registrationEnd, setRegistrationEnd] = useState("");
+  const [assignmentStart, setAssignmentStart] = useState("");
+  const [assignmentEnd, setAssignmentEnd] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  useEffect(() => {
+    const selectedEvent = events.find(e => e.id === selectedEventId);
+    if (selectedEvent) {
+      setRegistrationStart(selectedEvent.registrationStart ? new Date(selectedEvent.registrationStart).toISOString().slice(0, 16) : "");
+      setRegistrationEnd(selectedEvent.registrationEnd ? new Date(selectedEvent.registrationEnd).toISOString().slice(0, 16) : "");
+      setAssignmentStart(selectedEvent.assignmentStart ? new Date(selectedEvent.assignmentStart).toISOString().slice(0, 16) : "");
+      setAssignmentEnd(selectedEvent.assignmentEnd ? new Date(selectedEvent.assignmentEnd).toISOString().slice(0, 16) : "");
+    }
+  }, [selectedEventId, events]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setStatus(null);
     
+    // Save global settings
     const result = await updateSettings({ 
       festName, 
       festMoto, 
-      festLogo,
-      candidateRegistrationDeadline: candidateRegistrationDeadline || null,
-      programAssignmentDeadline: programAssignmentDeadline || null
+      festLogo
     });
-    if (result.success) {
+
+    // Save event deadlines
+    const deadlineResult = await updateEventDeadlines(selectedEventId, {
+      registrationStart: registrationStart || null,
+      registrationEnd: registrationEnd || null,
+      assignmentStart: assignmentStart || null,
+      assignmentEnd: assignmentEnd || null,
+    });
+
+    if (result.success && deadlineResult.success) {
       setStatus({ type: 'success', message: 'Settings saved successfully.' });
-      window.location.reload();
     } else {
-      setStatus({ type: 'error', message: 'Failed to save settings' });
+      setStatus({ type: 'error', message: 'Failed to save some settings' });
     }
     setLoading(false);
   };
@@ -105,29 +121,71 @@ export default function SettingsForm({ initialSettings }: { initialSettings: any
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
-        <div className="form-group">
-          <label className="form-label">Registration Deadline</label>
-          <input 
-            type="datetime-local" 
-            className="form-input" 
-            value={candidateRegistrationDeadline}
-            onChange={(e) => setCandidateRegistrationDeadline(e.target.value)}
-          />
-          <span className="field-helper">Managers cannot add new candidates after this deadline.</span>
-        </div>
+      <hr style={{ margin: 'var(--spacing-lg) 0', borderColor: 'var(--border-color)' }} />
+      <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Event Timelines & Deadlines</h3>
 
-        <div className="form-group">
-          <label className="form-label">Assignment Deadline</label>
-          <input 
-            type="datetime-local" 
-            className="form-input" 
-            value={programAssignmentDeadline}
-            onChange={(e) => setProgramAssignmentDeadline(e.target.value)}
-          />
-          <span className="field-helper">Managers cannot assign programs after this deadline.</span>
-        </div>
-      </div>
+      {events.length > 0 ? (
+        <>
+          <div className="form-group">
+            <label className="form-label">Select Event</label>
+            <select 
+              className="form-input"
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
+            >
+              {events.map((ev) => (
+                <option key={ev.id} value={ev.id}>{ev.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+            <div className="form-group">
+              <label className="form-label">Registration Start Time</label>
+              <input 
+                type="datetime-local" 
+                className="form-input" 
+                value={registrationStart}
+                onChange={(e) => setRegistrationStart(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Registration Deadline</label>
+              <input 
+                type="datetime-local" 
+                className="form-input" 
+                value={registrationEnd}
+                onChange={(e) => setRegistrationEnd(e.target.value)}
+              />
+            </div>
+          </div>
+          <span className="field-helper" style={{ display: 'block', marginBottom: 'var(--spacing-md)' }}>Managers cannot add new candidates outside this window.</span>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+            <div className="form-group">
+              <label className="form-label">Assignment Start Time</label>
+              <input 
+                type="datetime-local" 
+                className="form-input" 
+                value={assignmentStart}
+                onChange={(e) => setAssignmentStart(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Assignment Deadline</label>
+              <input 
+                type="datetime-local" 
+                className="form-input" 
+                value={assignmentEnd}
+                onChange={(e) => setAssignmentEnd(e.target.value)}
+              />
+            </div>
+          </div>
+          <span className="field-helper">Managers cannot assign programs outside this window.</span>
+        </>
+      ) : (
+        <p style={{ color: 'var(--text-muted)' }}>No events created yet.</p>
+      )}
       
       <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 'var(--spacing-md)' }} disabled={loading}>
         {loading ? "Saving..." : "Save Configuration"}

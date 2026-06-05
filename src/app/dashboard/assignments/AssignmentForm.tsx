@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { assignProgram, unassignProgram } from "./actions";
 
-export default function AssignmentForm({ candidates, programs, isAssignmentOpen = true }: { candidates: any[], programs: any[], isAssignmentOpen?: boolean }) {
+export default function AssignmentForm({ candidates, programs, isAssignmentOpen = true, statusMessage = "" }: { candidates: any[], programs: any[], isAssignmentOpen?: boolean, statusMessage?: string }) {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>(candidates[0]?.id || "");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null);
@@ -24,8 +24,8 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
         marginBottom: 'var(--spacing-xl)'
       }}>
         <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🕒</div>
-        <strong>Assignment Closed</strong>
-        <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>The deadline for assigning programs has passed. Please contact the administrator for any urgent changes.</p>
+        <strong>Assignment Closed / Not Started</strong>
+        <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{statusMessage || "The deadline for assigning programs has passed. Please contact the administrator for any urgent changes."}</p>
       </div>
     );
   }

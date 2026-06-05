@@ -19,17 +19,12 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
   let categories: any[] = [];
   let teams: any[] = [];
   let isRegistrationOpen = true;
+  let registrationStatusMessage = "";
 
-  // Parallelize basic lookups
-  const [settings, allTeams, allCategories] = await Promise.all([
-    prisma.globalSetting.findUnique({ where: { id: "default" }, select: { candidateRegistrationDeadline: true } }),
+  const [allTeams, allCategories] = await Promise.all([
     session.user.role === "ADMIN" ? prisma.team.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
     session.user.role === "ADMIN" ? prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([])
   ]);
-
-  if (session.user.role !== "ADMIN" && settings?.candidateRegistrationDeadline) {
-    isRegistrationOpen = new Date() <= new Date(settings.candidateRegistrationDeadline);
-  }
 
   if (session.user.role === "MANAGER") {
     const team = await prisma.team.findUnique({
@@ -41,6 +36,19 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
     }
     userTeamId = team.id;
     categories = team.event.categories;
+    
+    // Check event-specific registration window
+    const now = new Date();
+    const start = team.event.registrationStart;
+    const end = team.event.registrationEnd;
+    
+    if (start && now < start) {
+      isRegistrationOpen = false;
+      registrationStatusMessage = `Registration will open on ${start.toLocaleString()}.`;
+    } else if (end && now > end) {
+      isRegistrationOpen = false;
+      registrationStatusMessage = `Registration closed on ${end.toLocaleString()}.`;
+    }
   } else {
     categories = allCategories;
     teams = allTeams;
@@ -89,7 +97,7 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
             {categories.length === 0 ? (
               <p style={{ color: 'var(--warning)' }}>No categories created for this event. Please ask Admin to add categories.</p>
             ) : (
-              <CandidateForm teamId={userTeamId} categories={categories} isRegistrationOpen={isRegistrationOpen} />
+              <CandidateForm teamId={userTeamId} categories={categories} isRegistrationOpen={isRegistrationOpen} statusMessage={registrationStatusMessage} />
             )}
           </div>
         </div>

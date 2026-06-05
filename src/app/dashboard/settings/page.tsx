@@ -19,6 +19,25 @@ export default async function SettingsPage() {
 
   const eventFilter = eventId ? { eventId } : undefined;
 
+  // Fetch events for deadline configuration
+  const events = await prisma.event.findMany({
+    where: eventId ? { 
+      OR: [
+        { id: eventId },
+        { parentId: eventId }
+      ]
+    } : undefined,
+    select: {
+      id: true,
+      name: true,
+      registrationStart: true,
+      registrationEnd: true,
+      assignmentStart: true,
+      assignmentEnd: true,
+    },
+    orderBy: { createdAt: 'asc' }
+  });
+
   // Fetch Pending Assignments (optimized queries to select only necessary fields, omitting photos)
   const programs = await prisma.program.findMany({
     where: eventFilter,
@@ -71,7 +90,7 @@ export default async function SettingsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-xl)' }}>
         <div data-tour="settings-config" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
           <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.25rem' }}>General Configuration</h2>
-          <SettingsForm initialSettings={settings} />
+          <SettingsForm initialSettings={settings} events={events as any} />
         </div>
 
         <div data-tour="settings-audit" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
