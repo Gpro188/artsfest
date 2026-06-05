@@ -25,23 +25,24 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
   }
 
   // Gather all related events for the dynamic tab switcher
-  const allEvents = [];
+  const allEvents: any[] = [];
   let mainEventName = event.name;
 
   if (event.parentId) {
-    // It's a sub-event, so include the main event and sibling sub-events
+    // It's a sub-event, so include sibling sub-events
     mainEventName = event.parent!.name;
-    allEvents.push({ id: event.parent!.id, name: "Overall (" + event.parent!.name + ")" });
     event.parent!.subEvents.forEach(sub => {
       allEvents.push({ id: sub.id, name: sub.name });
     });
   } else {
     // It's a main event, so include all its sub-events
-    allEvents.push({ id: event.id, name: "Overall (" + event.name + ")" });
     event.subEvents.forEach(sub => {
       allEvents.push({ id: sub.id, name: sub.name });
     });
   }
+
+  // If the user landed on the main event page directly, default to showing the first sub-event instead of the empty main event
+  const initialActiveId = event.parentId ? event.id : (allEvents[0]?.id || event.id);
 
   const settings = await getSettings(event.id);
 
@@ -102,7 +103,7 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
              <p style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>Live Results Dashboard</p>
           </div>
           
-          <PublicDashboard initialEvents={allEvents} initialActiveId={event.id} />
+          <PublicDashboard initialEvents={allEvents} initialActiveId={initialActiveId} />
         </div>
       </main>
 
