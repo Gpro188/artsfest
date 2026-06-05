@@ -52,10 +52,12 @@ export default function PosterSettingsForm({ initialSettings }: { initialSetting
             onChange={(e) => setFormData({...formData, posterBgUrl: e.target.value})}
             placeholder="Recommended: 800x1128 PNG/JPG (A4 Ratio)"
           />
+          <span className="field-helper">This image is used as the base background for all result announcement posters. Use a high-resolution PNG or JPG in A4 portrait ratio.</span>
         </div>
 
         <div className="form-group">
           <label className="form-label">Primary Color (Program Name)</label>
+          <span className="field-helper">Used for the program name heading on result posters.</span>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <input 
                 type="color" 
@@ -75,6 +77,7 @@ export default function PosterSettingsForm({ initialSettings }: { initialSetting
 
         <div className="form-group">
           <label className="form-label">Secondary Color (Category & Prize)</label>
+          <span className="field-helper">Applied to category labels, prize/rank badges, and decorative accents.</span>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <input 
                 type="color" 
@@ -94,6 +97,7 @@ export default function PosterSettingsForm({ initialSettings }: { initialSetting
 
         <div className="form-group">
           <label className="form-label">Text Color (Participant Names)</label>
+          <span className="field-helper">The color used for candidate/participant names in the results table on posters.</span>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <input 
                 type="color" 
@@ -129,6 +133,7 @@ export default function PosterSettingsForm({ initialSettings }: { initialSetting
             value={formData.posterCongratulationUrl}
             onChange={(e) => setFormData({...formData, posterCongratulationUrl: e.target.value})}
           />
+          <span className="field-helper">An overlay image (e.g., confetti or banner) shown on top of the poster for winner celebrations.</span>
         </div>
 
         <div style={{ gridColumn: 'span 2', display: 'none' }}>

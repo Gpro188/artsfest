@@ -66,6 +66,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: any
           placeholder="e.g. Hifz Fest 2024"
           required
         />
+        <span className="field-helper">Displayed across the dashboard, login page, and public-facing pages.</span>
       </div>
 
       <div className="form-group">
@@ -78,6 +79,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: any
           placeholder="e.g. Celebrating Creativity"
           required
         />
+        <span className="field-helper">A short tagline shown below the festival name in the sidebar and login.</span>
       </div>
       
       <div className="form-group">
@@ -94,6 +96,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: any
           onChange={(e) => setFestLogo(e.target.value)}
           placeholder="Direct link (ends in .png/.jpg)"
         />
+        <span className="field-helper">Upload your logo to a free image host and paste the direct URL here.</span>
         {festLogo && (
           <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Current Logo:</span>
@@ -111,7 +114,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: any
             value={candidateRegistrationDeadline}
             onChange={(e) => setCandidateRegistrationDeadline(e.target.value)}
           />
-          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>Managers cannot add candidates after this time.</p>
+          <span className="field-helper">Managers cannot add new candidates after this deadline.</span>
         </div>
 
         <div className="form-group">
@@ -122,7 +125,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: any
             value={programAssignmentDeadline}
             onChange={(e) => setProgramAssignmentDeadline(e.target.value)}
           />
-          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>Managers cannot assign programs after this time.</p>
+          <span className="field-helper">Managers cannot assign programs after this deadline.</span>
         </div>
       </div>
       

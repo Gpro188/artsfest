@@ -70,6 +70,7 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
             placeholder="Full Name"
             required
           />
+          <span className="field-helper">Enter the participant's full name as it should appear on certificates.</span>
         </div>
         
         <div className="form-group" style={{ marginBottom: 0 }}>
@@ -82,6 +83,7 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
           >
             {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
           </select>
+          <span className="field-helper">Age-group division this candidate competes in.</span>
         </div>
 
         <div className="form-group" style={{ marginBottom: 0 }}>

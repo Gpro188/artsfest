@@ -14,7 +14,7 @@ export default function CustomerGuidelines({ role }: { role: string }) {
   ];
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: 'var(--spacing-lg)', border: '1px solid rgba(255,255,255,0.05)', marginTop: 'var(--spacing-lg)' }}>
+    <div data-tour="dash-guidelines" className="glass-panel animate-fade-in" style={{ padding: 'var(--spacing-lg)', border: '1px solid rgba(255,255,255,0.05)', marginTop: 'var(--spacing-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 'var(--spacing-md)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
         <div style={{ fontSize: '1.5rem' }}>📖</div>
         <div>

@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getSettings } from "@/lib/settings";
 import DashboardSidebar from "./DashboardSidebar";
+import TourWrapper from "@/components/TourWrapper";
 
 export default async function DashboardLayout({
   children,
@@ -34,6 +35,9 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* Onboarding Tour - auto-detects page from URL */}
+      <TourWrapper />
     </div>
   );
 }

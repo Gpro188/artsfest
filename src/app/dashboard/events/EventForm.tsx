@@ -29,6 +29,7 @@ export default function EventForm() {
           placeholder="e.g. Hifz Fest 2026"
           required
         />
+        <span className="field-helper">A unique name for this festival event. This creates an isolated tenant with its own data.</span>
       </div>
       
       <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>

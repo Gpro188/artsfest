@@ -1,12 +1,17 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getBranding } from "./branding";
+import OnboardingTour from "@/components/OnboardingTour";
+import { getTourSteps } from "@/lib/tourSteps";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSuperAdmin = searchParams.get("callbackUrl")?.includes("super-admin");
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,8 +19,12 @@ export default function LoginPage() {
   const [branding, setBranding] = useState({ name: "Arts Fest", moto: "Celebrating Creativity" });
 
   useEffect(() => {
-    getBranding().then(setBranding);
-  }, []);
+    if (isSuperAdmin) {
+      setBranding({ name: "Super Admin", moto: "System Administrator Access" });
+    } else {
+      getBranding().then(setBranding);
+    }
+  }, [isSuperAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +41,8 @@ export default function LoginPage() {
       setError("Invalid username or password");
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+      router.push(callbackUrl);
       router.refresh();
     }
   };
@@ -40,9 +50,14 @@ export default function LoginPage() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: 'var(--spacing-md)' }}>
       <div className="glass-panel animate-fade-in" style={{ padding: 'var(--spacing-xl)', width: '100%', maxWidth: '400px', boxSizing: 'border-box' }}>
-        <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
+        <div data-tour="login-branding" style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
           <h1 style={{ color: 'var(--primary)', marginBottom: 'var(--spacing-xs)', fontSize: 'clamp(1.5rem, 8vw, 2.5rem)', fontWeight: 800 }}>{branding.name}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{branding.moto}</p>
+          {!isSuperAdmin && (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '8px' }}>
+              Sign in to access your festival management dashboard.
+            </p>
+          )}
         </div>
 
         {error && (
@@ -52,7 +67,7 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div data-tour="login-username" className="form-group">
             <label className="form-label" htmlFor="username">Username</label>
             <input
               id="username"
@@ -64,8 +79,9 @@ export default function LoginPage() {
               disabled={loading}
               placeholder="Enter your username"
             />
+            <span className="field-helper">The username assigned to you by your festival administrator.</span>
           </div>
-          <div className="form-group">
+          <div data-tour="login-password" className="form-group">
             <label className="form-label" htmlFor="password">Password</label>
             <input
               id="password"
@@ -75,14 +91,35 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
-              placeholder="••••••••"
+              placeholder="Enter your password"
             />
+            <span className="field-helper">Your secure password. Credentials are encrypted.</span>
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 'var(--spacing-sm)' }} disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
+          <div data-tour="login-submit">
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 'var(--spacing-sm)' }} disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </div>
         </form>
+
+        <div style={{ marginTop: 'var(--spacing-lg)', paddingTop: 'var(--spacing-md)', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: 0 }}>
+            Need help? Contact your festival administrator for login credentials or password reset.
+          </p>
+        </div>
       </div>
+
+      {!isSuperAdmin && (
+        <OnboardingTour pageId="login" steps={getTourSteps("login")} />
+      )}
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -61,20 +61,25 @@ export default async function SettingsPage() {
 
   return (
     <div className="animate-fade-in">
-      <h1 style={{ marginBottom: 'var(--spacing-lg)' }}>System Settings & Audit</h1>
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>System Settings & Audit</h1>
+        <p className="page-description">
+          Configure festival-wide settings, audit program assignments, and manage data maintenance operations.
+        </p>
+      </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-xl)' }}>
-        <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+        <div data-tour="settings-config" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
           <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.25rem' }}>General Configuration</h2>
           <SettingsForm initialSettings={settings} />
         </div>
 
-        <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+        <div data-tour="settings-audit" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
           <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.25rem' }}>Program Assignment Audit (Pending List)</h2>
           <PendingList programs={programs as any} teams={teams as any} />
         </div>
 
-        <div className="glass-panel" style={{ padding: 'var(--spacing-lg)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+        <div data-tour="settings-maintenance" className="glass-panel" style={{ padding: 'var(--spacing-lg)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.25rem', color: 'var(--error)' }}>Data Management & Maintenance</h2>
           <MaintenanceActions />
         </div>

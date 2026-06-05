@@ -39,21 +39,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       </div>
       
       <h1 style={{ marginBottom: 'var(--spacing-sm)' }}>{event.name}</h1>
-      <div style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
-        Manage categories and point matrices for this event.
-      </div>
+      <p className="page-description">
+        Manage categories, point schemes, and division settings for this event. Configure how ranks convert to points for championship scoring.
+      </p>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-lg)' }}>
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-          <CategoryManager eventId={event.id} categories={event.categories} />
+          <div data-tour="event-categories">
+            <CategoryManager eventId={event.id} categories={event.categories} />
+          </div>
           
           <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: 'var(--spacing-xl) 0' }} />
           
-          <GeneralPointForm eventId={event.id} initialData={event.generalPointMatrix} />
+          <div data-tour="event-general-points">
+            <GeneralPointForm eventId={event.id} initialData={event.generalPointMatrix} />
+          </div>
 
           <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: 'var(--spacing-xl) 0' }} />
           
-          <PointMatrixForm eventId={event.id} categories={event.categories} />
+          <div data-tour="event-point-matrix">
+            <PointMatrixForm eventId={event.id} categories={event.categories} />
+          </div>
         </div>
       </div>
     </div>

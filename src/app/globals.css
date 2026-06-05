@@ -241,6 +241,81 @@ img, picture, video, canvas, svg {
   }
 }
 
+/* Page description subtitle */
+.page-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: var(--spacing-lg);
+  max-width: 800px;
+}
+
+/* Form field helper text */
+.field-helper {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Sidebar nav link subtitle */
+.nav-link-subtitle {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+/* Nav link wrapper for subtitle support */
+.nav-link-wrapper {
+  padding: 0.6rem 1.5rem;
+  display: block;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.nav-link-wrapper:hover {
+  background-color: rgba(255,255,255,0.05);
+  border-left-color: var(--primary);
+}
+
+.nav-link-wrapper .nav-link-main {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.nav-link-wrapper:hover .nav-link-main {
+  color: var(--primary);
+}
+
+/* Tour floating button pulse */
+@keyframes tourPulse {
+  0% { box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); }
+  50% { box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4), 0 0 0 8px rgba(79, 70, 229, 0.1); }
+  100% { box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); }
+}
+
+/* Enhanced empty state */
+.empty-state-guidance {
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.empty-state-guidance p {
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-state-guidance .empty-state-action {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
 /* Dashboard Layout Styles */
 .dashboard-container {
   display: flex;

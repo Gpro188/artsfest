@@ -41,17 +41,17 @@ export default async function MediaPage() {
   return (
     <div className="animate-fade-in">
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h1>Media Center</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Manage event branding, category styles, and official result media.</p>
+        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Media Center</h1>
+        <p className="page-description">Design result posters, manage branding assets, set category styles, and download result media templates.</p>
       </div>
 
       <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 'var(--spacing-xl)', alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
-            <PosterSettingsForm initialSettings={initialSettings} />
-            <CategoryBrandingForm categories={categories} />
+            <div data-tour="media-poster"><PosterSettingsForm initialSettings={initialSettings} /></div>
+            <div data-tour="media-category"><CategoryBrandingForm categories={categories} /></div>
         </div>
 
-        <div className="glass-panel" style={{ padding: 'var(--spacing-lg)', position: 'sticky', top: '20px' }}>
+        <div data-tour="media-downloads" className="glass-panel" style={{ padding: 'var(--spacing-lg)', position: 'sticky', top: '20px' }}>
             <h3 style={{ marginBottom: 'var(--spacing-md)' }}>🖼️ Template Download Center</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: 'var(--spacing-lg)' }}>
                 Quickly access program result boards to download "Clean Body" templates for your manual designs.

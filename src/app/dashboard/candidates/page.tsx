@@ -75,11 +75,16 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
 
   return (
     <div className="animate-fade-in">
-      <h1 style={{ marginBottom: 'var(--spacing-lg)' }}>Candidates Management</h1>
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Candidates Management</h1>
+        <p className="page-description">
+          Register and approve candidates for competition. Managers add candidates to their team; Admins review, approve, and assign chest numbers.
+        </p>
+      </div>
       
       {session.user.role === "MANAGER" && userTeamId && (
         <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+          <div data-tour="candidates-form" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
             <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Add Candidate</h3>
             {categories.length === 0 ? (
               <p style={{ color: 'var(--warning)' }}>No categories created for this event. Please ask Admin to add categories.</p>
@@ -90,13 +95,13 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
         </div>
       )}
 
-      <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+      <div data-tour="candidates-list" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--spacing-md)' }}>
           <div>
             <h3 style={{ margin: 0 }}>Candidate List</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Showing {candidates.length} candidates</p>
           </div>
-          <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+          <div data-tour="candidates-filters" style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
              <CandidateFilter 
                 teams={teams} 
                 categories={categories} 
@@ -105,15 +110,16 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
                 showTeamFilter={session.user.role === "ADMIN"}
              />
             <a href="/print/candidates" target="_blank" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
-              🖨️ Print List
+              Print List
             </a>
             <a 
+              data-tour="candidates-idcards"
               href={`/print/id-cards?${session.user.role === "MANAGER" ? `teamId=${userTeamId}` : (filterTeamId ? `teamId=${filterTeamId}` : '')}${filterCategoryId ? `&categoryId=${filterCategoryId}` : ''}`} 
               target="_blank" 
               className="btn btn-primary" 
               style={{ padding: '0.4rem 1rem', fontSize: '0.875rem', backgroundColor: 'var(--primary)', color: 'white' }}
             >
-              🆔 Bulk ID Cards
+              Bulk ID Cards
             </a>
           </div>
         </div>

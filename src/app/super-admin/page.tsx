@@ -11,7 +11,7 @@ export default async function SuperAdminPage() {
 
   // Access Guard: Only allow SUPER_ADMIN role
   if (!session || session.user.role !== "SUPER_ADMIN") {
-    redirect("/login");
+    redirect("/login?callbackUrl=/super-admin");
   }
 
   const res = await getSuperAdminData();

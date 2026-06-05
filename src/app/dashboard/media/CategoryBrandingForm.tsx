@@ -26,6 +26,9 @@ export default function CategoryBrandingForm({ categories }: { categories: any[]
             <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)', fontSize: '0.9rem' }}>
                 Set unique background styles for different categories. Category backgrounds take priority over the global background.
             </p>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)', fontSize: '0.8rem' }}>
+                Paste an image URL for each category's poster background. Leave blank to use the global default.
+            </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 {categories.map(category => (

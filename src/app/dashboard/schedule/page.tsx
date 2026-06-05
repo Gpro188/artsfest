@@ -20,7 +20,8 @@ export default async function SchedulePage(props: {
 
   if (role === "ADMIN") {
     const events = await prisma.event.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, name: true, createdAt: true }
     });
 
     const activeEventId = searchParams.eventId || events[0]?.id;
@@ -43,20 +44,29 @@ export default async function SchedulePage(props: {
     return (
       <div className="animate-fade-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
-          <h1 style={{ margin: 0 }}>Global Festival Schedule</h1>
-          <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+          <div>
+            <h1 style={{ margin: '0 0 var(--spacing-xs) 0' }}>Global Festival Schedule</h1>
+            <p className="page-description" style={{ marginBottom: 0 }}>
+              Plan and manage the festival timeline. Assign time slots and venues for each program.
+            </p>
+          </div>
+          <div data-tour="schedule-print" style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
             <a href={`/print/schedule?eventId=${activeEventId}`} target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-              🖨️ Print Schedule
+              Print Schedule
             </a>
             <a href={`/print/venue?eventId=${activeEventId}`} target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-              🖨️ Print Venue List
+              Print Venue List
             </a>
           </div>
         </div>
 
-        <EventSwitcher events={events} activeEventId={activeEventId || ""} />
+        <div data-tour="schedule-switcher">
+          <EventSwitcher events={events} activeEventId={activeEventId || ""} />
+        </div>
 
-        <AdminScheduler initialPrograms={programs as any} eventId={activeEventId || "default"} />
+        <div data-tour="schedule-grid">
+          <AdminScheduler initialPrograms={programs as any} eventId={activeEventId || "default"} />
+        </div>
       </div>
     );
   }
@@ -84,14 +94,16 @@ export default async function SchedulePage(props: {
     return (
       <div className="animate-fade-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
-          <h1 style={{ margin: 0 }}>Team Festival Schedule</h1>
+          <div>
+            <h1 style={{ margin: '0 0 var(--spacing-xs) 0' }}>Team Festival Schedule</h1>
+            <p className="page-description" style={{ marginBottom: 0 }}>
+              View all programs and track your team's assignments and time slots.
+            </p>
+          </div>
           <a href={`/print/schedule?teamId=${team.id}`} target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-            🖨️ Print Team Schedule
+            Print Team Schedule
           </a>
         </div>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
-          View all programs and track your team's assignments.
-        </p>
         <ManagerScheduler initialPrograms={programs as any} teamId={team.id} />
       </div>
     );

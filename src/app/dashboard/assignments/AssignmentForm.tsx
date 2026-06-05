@@ -87,6 +87,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
             </option>
           ))}
         </select>
+        <span className="field-helper">Choose a candidate to view and manage their program assignments. Only approved candidates appear in this list.</span>
         <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
           Category: <strong>{selectedCandidate.category?.name}</strong> • Individual Limit: <strong style={{ color: currentIndividualCount >= maxIndividualLimit ? 'var(--error)' : 'var(--success)' }}>{currentIndividualCount} / {maxIndividualLimit}</strong>
         </div>
@@ -95,6 +96,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-lg)' }}>
         <div>
           <h4 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--primary)' }}>Available Programs</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '0 0 var(--spacing-sm) 0' }}>Programs that match the candidate's category. Click "Assign" to register them.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
             {programs.filter(p => !assignedProgramIds.includes(p.id)).map(program => {
               // Validations
@@ -139,6 +141,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
 
         <div>
           <h4 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--success)' }}>Assigned Programs</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '0 0 var(--spacing-sm) 0' }}>Programs this candidate is registered for. Click "Remove" to unassign.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
             {selectedCandidate.programs.length === 0 ? (
               <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No programs assigned yet.</div>

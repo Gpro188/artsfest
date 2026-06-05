@@ -79,6 +79,7 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
             onChange={(e) => setProgramCode(e.target.value)}
             placeholder="e.g. P101"
           />
+          <span className="field-helper">Short reference code (optional). Useful for schedules and reports.</span>
         </div>
 
         <div className="form-group">
@@ -91,6 +92,7 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
             placeholder="e.g. Quran Recitation"
             required
           />
+          <span className="field-helper">Full name displayed on results and schedules.</span>
         </div>
       </div>
 
@@ -106,6 +108,7 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
           <option value="GROUP">Group</option>
           <option value="GENERAL">General</option>
         </select>
+        <span className="field-helper">Individual = scored per candidate. Group = scored as a team. General = non-category program.</span>
       </div>
 
       {type !== "GENERAL" && (
@@ -138,6 +141,7 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
           min="1"
           required
         />
+        <span className="field-helper">Time allocated in minutes. Used for schedule planning.</span>
       </div>
 
       <div className="form-group">
@@ -150,9 +154,7 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
           min="1"
           required
         />
-        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-          Maximum number of candidates a single team can assign to this program.
-        </p>
+        <span className="field-helper">Maximum number of candidates a single team can assign to this program.</span>
       </div>
       
       <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>

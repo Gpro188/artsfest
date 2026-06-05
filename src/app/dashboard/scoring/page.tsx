@@ -20,7 +20,8 @@ export default async function ScoringPage(props: {
   }
 
   const events = await prisma.event.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, name: true, createdAt: true }
   });
 
   const activeEventId = searchParams.eventId || events[0]?.id;
@@ -29,7 +30,10 @@ export default async function ScoringPage(props: {
     return (
         <div className="animate-fade-in" style={{ padding: 'var(--spacing-xl)', textAlign: 'center' }}>
             <h2>No Events Found</h2>
-            <p>Create an event first to manage scoring.</p>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
+              Create an event and add programs with candidate assignments to begin scoring.
+            </p>
+            <a href="/dashboard/events" className="btn btn-primary">Go to Events</a>
         </div>
     );
   }
@@ -162,11 +166,18 @@ export default async function ScoringPage(props: {
   return (
     <div className="animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
-        <h1 style={{ margin: 0 }}>Live Scoring & Results Hub</h1>
+        <div>
+          <h1 style={{ margin: '0 0 var(--spacing-xs) 0' }}>Live Scoring & Results Hub</h1>
+          <p className="page-description" style={{ marginBottom: 0 }}>
+            Enter marks, assign ranks and grades, calculate points, and publish results for live standings.
+          </p>
+        </div>
         <ExcelExport results={results} />
       </div>
 
-      <EventSwitcher events={events} activeEventId={activeEventId} />
+      <div data-tour="scoring-switcher">
+        <EventSwitcher events={events} activeEventId={activeEventId} />
+      </div>
       
       {events.length === 0 ? (
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
@@ -178,25 +189,27 @@ export default async function ScoringPage(props: {
         <div style={{ display: 'grid', gridTemplateColumns: '2.8fr 1.2fr', gap: 'var(--spacing-lg)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
             {/* Primary Entry Area */}
-            <div className="glass-panel" style={{ padding: 'var(--spacing-xl)', border: '1px solid var(--primary)', position: 'relative', overflow: 'hidden' }}>
+            <div data-tour="scoring-form" className="glass-panel" style={{ padding: 'var(--spacing-xl)', border: '1px solid var(--primary)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: 'var(--primary)' }}></div>
               <h2 style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                 🎯 Rapid Result Entry
+                 Rapid Result Entry
               </h2>
               <ScoringForm events={[activeEvent]} />
             </div>
 
             {/* Results Management Section */}
-            <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-              <h3 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--secondary)' }}>📋 Results Management Hub</h3>
+            <div data-tour="scoring-results" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+              <h3 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--secondary)' }}>Results Management Hub</h3>
               <ResultList results={results as any} role={session.user.role} />
             </div>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
-            <TeamScorePreview scores={teamScores} />
+            <div data-tour="scoring-teams">
+              <TeamScorePreview scores={teamScores} />
+            </div>
             
-            <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+            <div data-tour="scoring-pending" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
               <h3 style={{ marginBottom: 'var(--spacing-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 Pending Entries
                 <span style={{ fontSize: '0.8rem', backgroundColor: 'var(--error)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{pendingPrograms.length}</span>

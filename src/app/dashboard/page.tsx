@@ -167,15 +167,15 @@ export default async function DashboardPage() {
         <h1 style={{ margin: 0 }}>
           {role === "MANAGER" ? "Team Dashboard" : "Management Overview"}
         </h1>
-        <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+        <div data-tour="dash-hub-btn" style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
            <Link href="/hub" className="btn btn-primary" style={{ backgroundColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              📊 Live Management Hub
+              Live Management Hub
            </Link>
         </div>
       </div>
       
       {/* Stats Grid */}
-      <div style={{ 
+      <div data-tour="dash-stats" style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
         gap: 'var(--spacing-lg)',
@@ -204,9 +204,9 @@ export default async function DashboardPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-lg)' }}>
-        <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+        <div data-tour="dash-welcome" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
           <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Welcome Back</h3>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 'var(--spacing-md)' }}>
             {role === "MANAGER" ? (
               <>
                 You are currently logged in as <strong>{username}</strong>, managing team <strong>{userTeam?.name}</strong> for <strong>{userTeam?.event?.name}</strong>. 

@@ -19,38 +19,86 @@ export default function DashboardSidebar({ role, username, festName, festMoto }:
 
   const NavLinks = () => (
     <>
-      <Link href="/dashboard" onClick={close} className="nav-link">Dashboard Home</Link>
-      <Link href="/hub" onClick={close} className="nav-link" style={{ color: 'var(--primary)', fontWeight: 700 }}>🌐 Live Hub (Slides)</Link>
+      <Link href="/dashboard" onClick={close} className="nav-link-wrapper">
+        <span className="nav-link-main">Dashboard Home</span>
+        <span className="nav-link-subtitle">Overview & quick stats</span>
+      </Link>
+      <Link href="/hub" onClick={close} className="nav-link-wrapper" style={{ borderLeftColor: 'transparent' }}>
+        <span className="nav-link-main" style={{ color: 'var(--primary)', fontWeight: 700 }}>Live Hub (Slides)</span>
+        <span className="nav-link-subtitle">Real-time public standings</span>
+      </Link>
 
       {role === 'ADMIN' && (
         <>
           <div className="nav-section-title">Admin Setup</div>
-          <Link href="/dashboard/events" onClick={close} className="nav-link">Events</Link>
-          <Link href="/dashboard/teams" onClick={close} className="nav-link">Teams</Link>
-          <Link href="/dashboard/candidates" onClick={close} className="nav-link">Candidates (Approval)</Link>
-          <Link href="/dashboard/programs" onClick={close} className="nav-link">Programs</Link>
-          <Link href="/dashboard/scoring" onClick={close} className="nav-link">Results & Scoring</Link>
-          <Link href="/dashboard/schedule" onClick={close} className="nav-link">Global Schedule</Link>
-          <Link href="/dashboard/media" onClick={close} className="nav-link media-link">Media Branding</Link>
-          <Link href="/dashboard/settings" onClick={close} className="nav-link">Settings</Link>
+          <Link href="/dashboard/events" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Events</span>
+            <span className="nav-link-subtitle">Create & manage festival events</span>
+          </Link>
+          <Link href="/dashboard/teams" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Teams</span>
+            <span className="nav-link-subtitle">Teams, managers & flag colors</span>
+          </Link>
+          <Link href="/dashboard/candidates" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Candidates (Approval)</span>
+            <span className="nav-link-subtitle">Register & approve participants</span>
+          </Link>
+          <Link href="/dashboard/programs" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Programs</span>
+            <span className="nav-link-subtitle">Competition programs & rules</span>
+          </Link>
+          <Link href="/dashboard/scoring" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Results & Scoring</span>
+            <span className="nav-link-subtitle">Enter marks & publish results</span>
+          </Link>
+          <Link href="/dashboard/schedule" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Global Schedule</span>
+            <span className="nav-link-subtitle">Timeline & venue planning</span>
+          </Link>
+          <Link href="/dashboard/media" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main" style={{ color: 'var(--secondary)', fontWeight: 700 }}>Media Branding</span>
+            <span className="nav-link-subtitle">Posters, logos & branding</span>
+          </Link>
+          <Link href="/dashboard/settings" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Settings</span>
+            <span className="nav-link-subtitle">Config, audit & maintenance</span>
+          </Link>
         </>
       )}
 
       {role === 'MEDIA' && (
         <>
           <div className="nav-section-title">Media Center</div>
-          <Link href="/dashboard/media" onClick={close} className="nav-link media-link">Poster Branding</Link>
-          <Link href="/hub" onClick={close} className="nav-link">🌐 Live Hub (Slides)</Link>
-          <Link href="/dashboard/scoring" onClick={close} className="nav-link">View Results</Link>
+          <Link href="/dashboard/media" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main" style={{ color: 'var(--secondary)', fontWeight: 700 }}>Poster Branding</span>
+            <span className="nav-link-subtitle">Design result posters</span>
+          </Link>
+          <Link href="/hub" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Live Hub (Slides)</span>
+            <span className="nav-link-subtitle">Real-time public standings</span>
+          </Link>
+          <Link href="/dashboard/scoring" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">View Results</span>
+            <span className="nav-link-subtitle">Browse published results</span>
+          </Link>
         </>
       )}
 
       {role === 'MANAGER' && (
         <>
           <div className="nav-section-title">Team Manager</div>
-          <Link href="/dashboard/candidates" onClick={close} className="nav-link">Candidates</Link>
-          <Link href="/dashboard/assignments" onClick={close} className="nav-link">Program Assignments</Link>
-          <Link href="/dashboard/schedule" onClick={close} className="nav-link">Print Team Schedule</Link>
+          <Link href="/dashboard/candidates" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Candidates</span>
+            <span className="nav-link-subtitle">Register your team's participants</span>
+          </Link>
+          <Link href="/dashboard/assignments" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Program Assignments</span>
+            <span className="nav-link-subtitle">Enroll candidates in programs</span>
+          </Link>
+          <Link href="/dashboard/schedule" onClick={close} className="nav-link-wrapper">
+            <span className="nav-link-main">Print Team Schedule</span>
+            <span className="nav-link-subtitle">View & print team timetable</span>
+          </Link>
         </>
       )}
     </>
@@ -130,17 +178,38 @@ export default function DashboardSidebar({ role, username, festName, festMoto }:
           border-radius: var(--radius-md);
         }
 
-        .nav-link {
-          padding: 0.75rem 1.5rem;
+        .nav-link-wrapper {
+          padding: 0.6rem 1.5rem;
           display: block;
           transition: all 0.2s;
-          color: var(--text-secondary);
-          font-weight: 500;
+          border-left: 3px solid transparent;
+          text-decoration: none;
         }
 
-        .nav-link:hover {
+        .nav-link-wrapper:hover {
           background-color: rgba(255,255,255,0.05);
+          border-left-color: var(--primary);
+        }
+
+        .nav-link-main {
+          display: block;
+          color: var(--text-secondary);
+          font-weight: 500;
+          font-size: 0.9rem;
+          transition: color 0.2s;
+        }
+
+        .nav-link-wrapper:hover .nav-link-main {
           color: var(--primary);
+        }
+
+        .nav-link-subtitle {
+          display: block;
+          font-size: 0.65rem;
+          color: var(--text-muted);
+          margin-top: 2px;
+          line-height: 1.3;
+          font-weight: 400;
         }
 
         .media-link {

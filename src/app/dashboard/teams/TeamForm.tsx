@@ -67,6 +67,7 @@ export default function TeamForm({ events }: { events: EventType[] }) {
         >
           {events.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
         </select>
+        <span className="field-helper">Select which festival event this team belongs to.</span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
@@ -80,6 +81,7 @@ export default function TeamForm({ events }: { events: EventType[] }) {
             placeholder="e.g. Al-Fatah"
             required
           />
+          <span className="field-helper">Display name shown in standings and results.</span>
         </div>
 
         <div className="form-group">
@@ -92,6 +94,7 @@ export default function TeamForm({ events }: { events: EventType[] }) {
             placeholder="e.g. 1"
             required
           />
+          <span className="field-helper">Used to generate chest numbers (e.g., prefix "1" = 101, 102...).</span>
         </div>
       </div>
 
@@ -105,6 +108,7 @@ export default function TeamForm({ events }: { events: EventType[] }) {
             onChange={(e) => setLeaderName(e.target.value)}
             placeholder="e.g. Abdullah"
           />
+          <span className="field-helper">Optional. Name displayed on team profile.</span>
         </div>
         <div className="form-group">
           <label className="form-label">Flag Color</label>
@@ -115,6 +119,7 @@ export default function TeamForm({ events }: { events: EventType[] }) {
             onChange={(e) => setFlagColor(e.target.value)}
             style={{ height: '42px', padding: '2px' }}
           />
+          <span className="field-helper">Team color used in charts and ID cards.</span>
         </div>
       </div>
 
@@ -127,11 +132,15 @@ export default function TeamForm({ events }: { events: EventType[] }) {
           onChange={(e) => setLeaderPhoto(e.target.value)}
           placeholder="https://example.com/photo.jpg"
         />
+        <span className="field-helper">Optional. Upload to ImgBB or PostImages for a direct image link.</span>
       </div>
 
       <h4 style={{ marginTop: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)', color: 'var(--text-secondary)' }}>
         Team Manager Credentials
       </h4>
+      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 'var(--spacing-md)' }}>
+        Create login credentials for this team's manager. They will use these to access their dashboard.
+      </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
         <div className="form-group">
@@ -143,6 +152,7 @@ export default function TeamForm({ events }: { events: EventType[] }) {
             onChange={(e) => setManagerUsername(e.target.value)}
             required
           />
+          <span className="field-helper">Unique login username for the team manager.</span>
         </div>
 
         <div className="form-group">
@@ -155,6 +165,7 @@ export default function TeamForm({ events }: { events: EventType[] }) {
             required
             minLength={6}
           />
+          <span className="field-helper">Minimum 6 characters. Share this securely with the manager.</span>
         </div>
       </div>
       

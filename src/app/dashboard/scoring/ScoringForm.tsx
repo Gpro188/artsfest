@@ -145,6 +145,9 @@ export default function ScoringForm({ events }: { events: any[] }) {
       )}
       
       {/* 5-Step Selection Flow */}
+      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 var(--spacing-sm) 0' }}>
+        Follow the 5 steps below to record a result: select the event, program type, category, specific program, and then the participant.
+      </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.5fr 1.2fr', gap: 'var(--spacing-sm)' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label" style={{ fontSize: '0.65rem', fontWeight: 800 }}>1. EVENT</label>
@@ -252,6 +255,9 @@ export default function ScoringForm({ events }: { events: any[] }) {
       </div>
 
       {/* Entry Row */}
+      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 var(--spacing-sm) 0' }}>
+        Assign a place (1st/2nd/3rd) and/or a grade (A/B). Points are calculated automatically from the event's point matrix and can be manually adjusted.
+      </p>
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: '1fr 1fr 1.2fr 1.5fr', 

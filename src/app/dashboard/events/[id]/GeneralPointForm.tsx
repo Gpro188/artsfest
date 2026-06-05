@@ -24,7 +24,10 @@ export default function GeneralPointForm({ eventId, initialData }: { eventId: st
 
   return (
     <form onSubmit={handleSubmit} style={{ marginBottom: 'var(--spacing-xl)' }}>
-      <h3 style={{ marginBottom: 'var(--spacing-md)' }}>General Program Points (Event Level)</h3>
+      <h3 style={{ marginBottom: 'var(--spacing-sm)' }}>General Program Points (Event Level)</h3>
+      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
+        Define the default point values for "General" type programs. These points contribute to overall team championship scoring.
+      </p>
       {status && (
         <div style={{ 
           padding: 'var(--spacing-sm)', 

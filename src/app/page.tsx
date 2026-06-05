@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import VisitTracker from "./components/VisitTracker";
+import LandingTourWrapper from "./components/LandingTourWrapper";
 
 export const revalidate = 60; // Revalidate landing page every 60 seconds
 
@@ -101,7 +102,7 @@ export default async function HomePage() {
           </div>
 
           {/* Active Fests Section */}
-          <section style={{ marginBottom: 'var(--spacing-xxl)' }}>
+          <section data-tour="landing-events" style={{ marginBottom: 'var(--spacing-xxl)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--spacing-lg)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 'var(--spacing-sm)' }}>
               <div>
                 <h2 style={{ margin: 0, color: 'white', fontSize: '1.75rem' }}>🚩 Running Events</h2>
@@ -149,7 +150,7 @@ export default async function HomePage() {
           </section>
 
           {/* Comprehensive Management Tools Section */}
-          <section style={{ marginBottom: 'var(--spacing-xxl)' }}>
+          <section data-tour="landing-tools" style={{ marginBottom: 'var(--spacing-xxl)' }}>
             <h2 style={{ textAlign: 'center', color: 'white', marginBottom: '8px', fontSize: '2.25rem' }}>🛠️ Comprehensive Festival Management Tools</h2>
             <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-xl)', fontSize: '1rem', maxWidth: '700px', marginInline: 'auto' }}>
               Everything you need to organize, evaluate, and showcase your arts festival from start to finish.
@@ -327,6 +328,7 @@ export default async function HomePage() {
           </div>
         </div>
       </footer>
+      <LandingTourWrapper />
     </div>
   );
 }

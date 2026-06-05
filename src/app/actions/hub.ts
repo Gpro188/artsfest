@@ -1,9 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 
-export async function getHubData(eventId?: string) {
-  try {
+const getCachedHubData = unstable_cache(
+  async (eventId?: string) => {
     const events = await prisma.event.findMany({
       where: eventId ? { id: eventId } : undefined,
       select: {
@@ -26,15 +27,10 @@ export async function getHubData(eventId?: string) {
             id: true,
             name: true,
             categoryId: true,
-            results: {
-              where: { isPublished: true },
+            _count: {
               select: {
-                id: true
-              }
-            },
-            assignments: {
-              select: {
-                id: true
+                results: { where: { isPublished: true } },
+                assignments: true
               }
             }
           }
@@ -44,13 +40,10 @@ export async function getHubData(eventId?: string) {
     });
 
     const hubEvents = events.map(event => {
-      // stats.totalPrograms and stats.totalTeams are loaded via _count
-      // stats.publishedPrograms matches programs that have at least one published result
-      const publishedProgramsCount = event.programs.filter(p => p.results.length > 0).length;
+      const publishedProgramsCount = event.programs.filter(p => p._count.results > 0).length;
       
-      // stats.pendingPrograms matches programs that have assignments but no published results
       const pendingProgramsCount = event.programs.filter(
-        p => p.assignments.length > 0 && p.results.length === 0
+        p => p._count.assignments > 0 && p._count.results === 0
       ).length;
 
       const stats = {
@@ -62,12 +55,12 @@ export async function getHubData(eventId?: string) {
       };
 
       const pendingList = event.programs
-        .filter(p => p.assignments.length > 0 && p.results.length === 0)
+        .filter(p => p._count.assignments > 0 && p._count.results === 0)
         .map(p => ({
           id: p.id,
           name: p.name,
           category: event.categories.find(c => c.id === p.categoryId)?.name || 'General',
-          assignmentCount: p.assignments.length
+          assignmentCount: p._count.assignments
         }));
 
       return {
@@ -78,7 +71,16 @@ export async function getHubData(eventId?: string) {
       };
     });
 
-    return { success: true, data: hubEvents || [] };
+    return hubEvents || [];
+  },
+  ['hub-data'],
+  { revalidate: 30, tags: ['hub-data'] }
+);
+
+export async function getHubData(eventId?: string) {
+  try {
+    const data = await getCachedHubData(eventId);
+    return { success: true, data };
   } catch (error) {
     console.error("Hub data fetch failed:", error);
     return { success: false, error: "Failed to load hub data" };

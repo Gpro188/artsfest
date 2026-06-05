@@ -23,20 +23,23 @@ export default async function EventsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
-        <h1>Events Management</h1>
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Events Management</h1>
+        <p className="page-description">
+          Create and manage festival events. Each event operates as an isolated tenant with its own teams, programs, categories, and results.
+        </p>
       </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--spacing-lg)' }}>
         <div>
-          <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+          <div data-tour="events-form" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
             <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Create New Event</h3>
             <EventForm />
           </div>
         </div>
         
         <div>
-          <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+          <div data-tour="events-list" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
             <h3 style={{ marginBottom: 'var(--spacing-md)' }}>All Events</h3>
             <EventList events={events} />
           </div>

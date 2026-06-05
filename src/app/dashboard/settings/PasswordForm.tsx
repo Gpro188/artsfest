@@ -56,6 +56,7 @@ export default function PasswordForm({ userId }: { userId: string }) {
           required
           minLength={6}
         />
+        <span className="field-helper">Minimum 6 characters. Use a strong, unique password.</span>
       </div>
       <div className="form-group">
         <label className="form-label">Confirm Password</label>
@@ -67,6 +68,7 @@ export default function PasswordForm({ userId }: { userId: string }) {
           required
           minLength={6}
         />
+        <span className="field-helper">Re-enter the same password to confirm.</span>
       </div>
       
       <button type="submit" className="btn btn-primary" disabled={loading}>

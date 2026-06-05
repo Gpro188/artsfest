@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AssignmentForm from "./AssignmentForm";
+import Link from "next/link";
 
 export default async function AssignmentsPage() {
   const session = await getServerSession(authOptions);
@@ -29,7 +30,6 @@ export default async function AssignmentsPage() {
 
   const whereClause = teamId ? { teamId, isApproved: true } : { isApproved: true };
 
-  // Get approved candidates with their category and its point matrix (optimized select)
   const candidates = await prisma.candidate.findMany({
     where: whereClause,
     select: {
@@ -65,7 +65,6 @@ export default async function AssignmentsPage() {
     }
   });
 
-  // Get all programs with their category info
   const programs = await prisma.program.findMany({
     include: { 
       event: true,
@@ -75,21 +74,31 @@ export default async function AssignmentsPage() {
 
   return (
     <div className="animate-fade-in">
-      <h1 style={{ marginBottom: 'var(--spacing-lg)' }}>Program Assignments</h1>
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Program Assignments</h1>
+        <p className="page-description">
+          Enroll approved candidates into competition programs. Category limits and eligibility rules are enforced automatically.
+        </p>
+      </div>
       
       {candidates.length === 0 ? (
-        <div className="glass-panel" style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
-          <p style={{ color: 'var(--warning)', marginBottom: 'var(--spacing-sm)' }}>
-            No approved candidates found. Ensure candidates have been approved by the Admin and generated Chest Numbers.
+        <div className="glass-panel empty-state-guidance">
+          <p style={{ color: 'var(--warning)', marginBottom: 'var(--spacing-sm)', fontWeight: 600 }}>
+            No approved candidates found.
           </p>
+          <p>Candidates must be registered and approved by the Admin before program assignments can be made.</p>
+          {session.user.role === "MANAGER" ? (
+            <Link href="/dashboard/candidates" className="empty-state-action">Go to Candidates &rarr;</Link>
+          ) : (
+            <Link href="/dashboard/candidates" className="empty-state-action">Review Candidates &rarr;</Link>
+          )}
         </div>
       ) : (
-        <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+        <div data-tour="assignments-form" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
           <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Assign Candidates to Programs</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
-            Select a candidate to assign them to programs. Validations will automatically enforce category rules and limits.
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)', fontSize: '0.85rem' }}>
+            Select a candidate below to see available programs and make assignments. Validations enforce category rules and entry limits.
           </p>
-          
           <AssignmentForm candidates={candidates as any} programs={programs as any} isAssignmentOpen={isAssignmentOpen} />
         </div>
       )}

@@ -115,6 +115,7 @@ export default function PointMatrixForm({ eventId, categories }: { eventId: stri
           <option value="">-- Select Category --</option>
           {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
         </select>
+        <span className="field-helper">Choose a category to configure its specific point scheme for individual and group programs.</span>
       </div>
 
       {selectedCategoryId && (
@@ -129,9 +130,13 @@ export default function PointMatrixForm({ eventId, categories }: { eventId: stri
               min={1}
               style={{ maxWidth: '200px' }}
             />
+            <span className="field-helper">Maximum number of individual programs a single candidate can enter in this category.</span>
           </div>
 
-          <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Scoring Matrix for Selected Category</h3>
+          <h3 style={{ marginBottom: 'var(--spacing-sm)' }}>Scoring Matrix for Selected Category</h3>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
+            Set how many points each rank and grade awards. These values determine team championship standings.
+          </p>
           {renderPointInputs("Individual", individual, setIndividual)}
           {renderPointInputs("Group", group, setGroup)}
           
