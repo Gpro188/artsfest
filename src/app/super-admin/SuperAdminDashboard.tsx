@@ -248,6 +248,25 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
       {/* Events Table Listing */}
       <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
         <h2 style={{ color: 'white', fontSize: '1.5rem', marginBottom: 'var(--spacing-md)' }}>🎭 Running Main Events Breakdown</h2>
+        
+        <div style={{ 
+          marginBottom: 'var(--spacing-lg)', 
+          padding: '12px 16px', 
+          backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+          borderLeft: '4px solid #3b82f6',
+          borderRadius: '4px',
+          fontSize: '0.85rem',
+          lineHeight: '1.5'
+        }}>
+          <strong style={{ color: '#60a5fa', display: 'block', marginBottom: '4px' }}>ℹ️ How Custom Domains Work</strong>
+          <ol style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)' }}>
+            <li>First, go to your <strong>Vercel Dashboard</strong> ({`->`} Settings {`->`} Domains).</li>
+            <li>Add your domain there to get the <strong>DNS Records (A Record or CNAME)</strong>.</li>
+            <li>Add those records to your domain provider (e.g., GoDaddy). Wait for Vercel to verify it (✅).</li>
+            <li>Finally, click <strong>Set Domain</strong> below and type exactly what you added to Vercel.</li>
+          </ol>
+        </div>
+
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
