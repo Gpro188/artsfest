@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createFest, createFestUser, deleteFest, deleteUser, resetUserPassword } from "../actions/superAdmin";
+import { createFest, createFestUser, deleteFest, deleteUser, resetUserPassword, updateFestDomain } from "../actions/superAdmin";
 
 interface SuperAdminDashboardProps {
   initialData: {
@@ -67,6 +67,21 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
       alert(`Password for "${username}" has been reset successfully.`);
     } else {
       alert(res.error || "Failed to reset password.");
+    }
+  };
+
+  const handleSetDomain = async (eventId: string, currentDomain: string | null, name: string) => {
+    const newDomain = prompt(`Enter custom domain for "${name}" (e.g. www.mehfil26.com) or leave empty to remove:`, currentDomain || "");
+    if (newDomain === null) return; // User cancelled
+    
+    const domainTrim = newDomain.trim();
+
+    const res = await updateFestDomain(eventId, domainTrim || null);
+    if (res.success) {
+      alert(`Domain for "${name}" updated successfully.`);
+      window.location.reload();
+    } else {
+      alert(res.error || "Failed to update domain.");
     }
   };
 
@@ -238,6 +253,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Main Event Name</th>
+                <th style={{ padding: 'var(--spacing-sm)' }}>Custom Domain</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Public URL</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Page Views</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Teams</th>
@@ -253,6 +269,31 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
                 return (
                   <tr key={ev.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: 'var(--spacing-sm)', color: 'white', fontWeight: 600 }}>{ev.name}</td>
+                    <td style={{ padding: 'var(--spacing-sm)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                        {ev.customDomain ? (
+                          <a href={`https://${ev.customDomain}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'underline', fontSize: '0.85rem' }}>
+                            {ev.customDomain}
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>None</span>
+                        )}
+                        <button
+                          onClick={() => handleSetDomain(ev.id, ev.customDomain, ev.name)}
+                          style={{
+                            padding: '2px 8px',
+                            fontSize: '0.7rem',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            border: '1px solid rgba(99, 102, 241, 0.3)',
+                            borderRadius: '4px',
+                            color: '#a5b4fc',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {ev.customDomain ? 'Edit Domain' : 'Set Domain'}
+                        </button>
+                      </div>
+                    </td>
                     <td style={{ padding: 'var(--spacing-sm)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <a 

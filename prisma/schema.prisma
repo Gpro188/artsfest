@@ -38,6 +38,7 @@ model Event {
   users              User[]
   pageVisits         PageVisit[]
   globalSetting      GlobalSetting?
+  customDomain       String?      @unique
 }
 
 model Category {

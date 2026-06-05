@@ -26,6 +26,7 @@ export async function getSuperAdminData() {
         select: {
           id: true,
           name: true,
+          customDomain: true,
           createdAt: true,
           _count: {
             select: {
@@ -212,5 +213,47 @@ export async function resetUserPassword(userId: string, newPassword: string) {
   } catch (error: any) {
     console.error("Failed to reset password:", error);
     return { success: false, error: error.message || "Failed to reset password" };
+  }
+}
+
+export async function updateFestDomain(eventId: string, domain: string | null) {
+  try {
+    await ensureSuperAdmin();
+
+    // Basic domain validation
+    let sanitizedDomain = null;
+    if (domain && domain.trim() !== "") {
+      sanitizedDomain = domain.trim().toLowerCase();
+      // Remove http:// or https:// if provided
+      sanitizedDomain = sanitizedDomain.replace(/^https?:\/\//, '');
+      // Remove trailing slashes
+      sanitizedDomain = sanitizedDomain.replace(/\/+$/, '');
+    }
+
+    // Check if domain is already in use by another event
+    if (sanitizedDomain) {
+      const existing = await prisma.event.findFirst({
+        where: {
+          customDomain: sanitizedDomain,
+          id: { not: eventId }
+        }
+      });
+      if (existing) {
+        return { success: false, error: "This domain is already mapped to another event" };
+      }
+    }
+
+    await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        customDomain: sanitizedDomain
+      }
+    });
+
+    revalidatePath("/super-admin");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to update custom domain:", error);
+    return { success: false, error: error.message || "Failed to update custom domain" };
   }
 }
