@@ -5,7 +5,7 @@ import VisitTracker from "./components/VisitTracker";
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  let events = [];
+  let events: any[] = [];
   let dbError = null;
   try {
     events = await prisma.event.findMany({
