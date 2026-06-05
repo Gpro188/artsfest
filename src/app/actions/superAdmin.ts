@@ -23,6 +23,7 @@ export async function getSuperAdminData() {
       prisma.pageVisit.count(),
       prisma.event.count(),
       prisma.event.findMany({
+        where: { parentId: null },
         select: {
           id: true,
           name: true,
