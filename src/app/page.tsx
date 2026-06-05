@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import VisitTracker from "./components/VisitTracker";
 
-export const revalidate = 60; // Revalidate landing page every 60 seconds
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const events = await prisma.event.findMany({
