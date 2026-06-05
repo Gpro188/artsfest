@@ -11,8 +11,17 @@ export async function assignProgram(candidateId: string, programId: string) {
     if (!session) return { success: false, error: "Unauthorized" };
 
     if (session.user.role === "MANAGER") {
-      const settings = await prisma.globalSetting.findUnique({ where: { id: "default" } });
-      if (settings?.programAssignmentDeadline && new Date() > new Date(settings.programAssignmentDeadline)) {
+      const team = await prisma.team.findUnique({
+        where: { managerId: session.user.id },
+        include: { event: true }
+      });
+      if (!team) return { success: false, error: "Team not found" };
+      
+      const now = new Date();
+      if (team.event.assignmentStart && now < team.event.assignmentStart) {
+        return { success: false, error: `Program assignments open on ${team.event.assignmentStart.toLocaleString()}` };
+      }
+      if (team.event.assignmentEnd && now > team.event.assignmentEnd) {
         return { success: false, error: "Assignment deadline has passed. Please contact Admin." };
       }
     }
@@ -80,8 +89,11 @@ export async function unassignProgram(candidateId: string, programId: string) {
     if (!session) return { success: false, error: "Unauthorized" };
 
     if (session.user.role === "MANAGER") {
-      const settings = await prisma.globalSetting.findUnique({ where: { id: "default" } });
-      if (settings?.programAssignmentDeadline && new Date() > new Date(settings.programAssignmentDeadline)) {
+      const team = await prisma.team.findUnique({
+        where: { managerId: session.user.id },
+        include: { event: true }
+      });
+      if (team && team.event.assignmentEnd && new Date() > team.event.assignmentEnd) {
         return { success: false, error: "Assignment deadline has passed. Cannot unassign program." };
       }
     }
