@@ -91,6 +91,22 @@ export default function CandidateList({ candidates, role, categories }: { candid
                   </button>
                 )}
 
+                {role === "ADMIN" && candidate.isApproved && (
+                  <span 
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '4px', 
+                      padding: '0.2rem 0.5rem', 
+                      fontSize: '0.75rem', 
+                      color: 'var(--success)',
+                      fontWeight: 600
+                    }}
+                  >
+                    ✅ Approved
+                  </span>
+                )}
+
                 {/* Only allow editing if not approved (for Manager) or always (for Admin) */}
                 {(role === "ADMIN" || !candidate.isApproved) && (
                   <button 
