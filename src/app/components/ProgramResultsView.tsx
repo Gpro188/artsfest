@@ -215,7 +215,7 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                                 <div style={{ 
                                     fontSize: '1.4rem', 
                                     fontWeight: 900, 
-                                    color: settings?.posterBgUrl ? 'white' : (settings?.posterSecondaryColor || '#f97316'), 
+                                    color: settings?.posterSecondaryColor || '#f97316', 
                                     textTransform: 'uppercase', 
                                     letterSpacing: '3px',
                                     marginBottom: '10px'
@@ -225,7 +225,7 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                                 <div style={{ 
                                     fontSize: '6rem', 
                                     fontWeight: 900, 
-                                    color: settings?.posterBgUrl ? 'white' : (settings?.posterPrimaryColor || '#1e293b'), 
+                                    color: settings?.posterPrimaryColor || '#1e293b', 
                                     letterSpacing: '-2px', 
                                     margin: '0', 
                                     lineHeight: 0.9,
