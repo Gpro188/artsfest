@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { getPublicEventData } from "../actions/public";
 import Link from "next/link";
 
-export default function PublicDashboard({ initialEvents }: { initialEvents: any[] }) {
-  const [activeEventId, setActiveEventId] = useState(initialEvents[0]?.id || "");
+export default function PublicDashboard({ initialEvents, initialActiveId }: { initialEvents: any[], initialActiveId?: string }) {
+  const [activeEventId, setActiveEventId] = useState(initialActiveId || initialEvents[0]?.id || "");
   const [activeTab, setActiveTab] = useState<"standings" | "hall" | "live">("standings");
   const [searchQuery, setSearchQuery] = useState("");
   const [data, setData] = useState<{ 

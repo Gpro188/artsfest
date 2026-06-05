@@ -24,20 +24,22 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
     notFound();
   }
 
-  // Gather related events for switching
-  const relatedEvents = [];
+  // Gather all related events for the dynamic tab switcher
+  const allEvents = [];
+  let mainEventName = event.name;
+
   if (event.parentId) {
     // It's a sub-event, so include the main event and sibling sub-events
-    relatedEvents.push({ id: event.parent!.id, name: event.parent!.name, type: 'Main Event' });
+    mainEventName = event.parent!.name;
+    allEvents.push({ id: event.parent!.id, name: "Overall (" + event.parent!.name + ")" });
     event.parent!.subEvents.forEach(sub => {
-      if (sub.id !== event.id) {
-        relatedEvents.push({ id: sub.id, name: sub.name, type: 'Sub Event' });
-      }
+      allEvents.push({ id: sub.id, name: sub.name });
     });
   } else {
     // It's a main event, so include all its sub-events
+    allEvents.push({ id: event.id, name: "Overall (" + event.name + ")" });
     event.subEvents.forEach(sub => {
-      relatedEvents.push({ id: sub.id, name: sub.name, type: 'Sub Event' });
+      allEvents.push({ id: sub.id, name: sub.name });
     });
   }
 
@@ -75,17 +77,16 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
               {settings.festLogo ? (
                 <img src={settings.festLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               ) : (
-                event.name.charAt(0)
+                mainEventName.charAt(0)
               )}
             </div>
             <div>
-              <h1 style={{ fontSize: '1.5rem', margin: 0, letterSpacing: '-0.5px', color: 'white' }}>{event.name}</h1>
+              <h1 style={{ fontSize: '1.5rem', margin: 0, letterSpacing: '-0.5px', color: 'white' }}>{mainEventName}</h1>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{settings.festMoto}</div>
             </div>
           </div>
           
           <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-
             <Link href="/login" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
               Login
             </Link>
@@ -97,27 +98,11 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
       <main style={{ flex: 1, padding: 'var(--spacing-xl) 0' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
-             <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'white' }}>{event.name}</h2>
+             <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'white' }}>{mainEventName}</h2>
              <p style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>Live Results Dashboard</p>
-             
-             {relatedEvents.length > 0 && (
-               <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                 {relatedEvents.map(re => (
-                   <Link key={re.id} href={`/fest/${re.id}`} className="btn" style={{ 
-                     background: 'rgba(255, 255, 255, 0.1)', 
-                     color: 'white', 
-                     padding: '0.3rem 0.8rem', 
-                     fontSize: '0.8rem',
-                     border: '1px solid rgba(255, 255, 255, 0.2)'
-                   }}>
-                     View {re.name} ({re.type})
-                   </Link>
-                 ))}
-               </div>
-             )}
           </div>
           
-          <PublicDashboard initialEvents={[event]} />
+          <PublicDashboard initialEvents={allEvents} initialActiveId={event.id} />
         </div>
       </main>
 
