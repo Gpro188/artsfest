@@ -10,8 +10,6 @@ export async function updateSettings(data: {
   festName: string, 
   festMoto: string, 
   festLogo: string,
-  candidateRegistrationDeadline: string | null,
-  programAssignmentDeadline: string | null
 }) {
   try {
     const session = await getServerSession(authOptions);
@@ -34,8 +32,6 @@ export async function updateSettings(data: {
           festName: data.festName,
           festMoto: data.festMoto,
           festLogo: data.festLogo,
-          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
-          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
         },
         create: {
           eventId,
@@ -43,8 +39,6 @@ export async function updateSettings(data: {
           festName: data.festName,
           festMoto: data.festMoto,
           festLogo: data.festLogo,
-          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
-          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
         }
       });
     } else {
@@ -54,16 +48,12 @@ export async function updateSettings(data: {
           festName: data.festName,
           festMoto: data.festMoto,
           festLogo: data.festLogo,
-          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
-          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
         },
         create: {
           id: "default",
           festName: data.festName,
           festMoto: data.festMoto,
           festLogo: data.festLogo,
-          candidateRegistrationDeadline: data.candidateRegistrationDeadline ? new Date(data.candidateRegistrationDeadline) : null,
-          programAssignmentDeadline: data.programAssignmentDeadline ? new Date(data.programAssignmentDeadline) : null,
         }
       });
     }
