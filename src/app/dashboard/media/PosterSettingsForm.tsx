@@ -148,6 +148,82 @@ export default function PosterSettingsForm({ initialSettings }: { initialSetting
           </button>
         </div>
       </form>
+
+      {/* Live Color Preview */}
+      <div style={{ marginTop: 'var(--spacing-xl)', paddingTop: 'var(--spacing-lg)', borderTop: '1px solid var(--border-color)' }}>
+        <h4 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>🎨 Live Color Preview</h4>
+        <div style={{ 
+          backgroundColor: '#ffffff', 
+          borderRadius: 'var(--radius-md)', 
+          padding: '40px 20px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+        }}>
+           <div style={{ 
+               fontSize: '0.9rem', 
+               fontWeight: 900, 
+               color: formData.posterSecondaryColor || '#f97316', 
+               textTransform: 'uppercase', 
+               letterSpacing: '2px',
+               marginBottom: '5px'
+           }}>
+               Category Name
+           </div>
+           <div style={{ 
+               fontSize: '3.5rem', 
+               fontWeight: 900, 
+               color: formData.posterPrimaryColor || '#1e293b', 
+               letterSpacing: '-1px', 
+               margin: '0 0 30px 0', 
+               lineHeight: 1,
+               textTransform: 'uppercase'
+           }}>
+               PROGRAM
+           </div>
+
+           {/* Dummy Winner Card */}
+           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <div style={{ 
+                   width: '120px', 
+                   height: '120px', 
+                   borderRadius: '50%', 
+                   border: `5px solid ${formData.posterSecondaryColor || '#f97316'}`,
+                   backgroundColor: '#f1f5f9',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   fontSize: '2.5rem',
+                   color: '#cbd5e1'
+               }}>
+                   👤
+               </div>
+               <div style={{
+                   marginTop: '-15px',
+                   backgroundColor: formData.posterSecondaryColor || '#f97316',
+                   color: 'white',
+                   padding: '4px 12px',
+                   borderRadius: '6px',
+                   fontWeight: 900,
+                   fontSize: '0.7rem',
+                   textTransform: 'uppercase',
+                   border: '2px solid white',
+                   zIndex: 2
+               }}>
+                   1st Prize
+               </div>
+               <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                   <div style={{ fontSize: '1.1rem', fontWeight: 900, color: formData.posterTextColor || '#1e293b', textTransform: 'uppercase' }}>
+                       PARTICIPANT
+                   </div>
+                   <div style={{ fontSize: '0.7rem', fontWeight: 700, color: formData.posterTextColor || '#1e293b', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                       TEAM NAME
+                   </div>
+               </div>
+           </div>
+        </div>
+      </div>
     </div>
   );
 }
