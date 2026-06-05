@@ -15,6 +15,7 @@ export default async function ProgramsPage() {
   }
 
   const events = await prisma.event.findMany({
+    where: { parentId: session.user.eventId },
     select: {
       id: true,
       name: true,
@@ -27,6 +28,7 @@ export default async function ProgramsPage() {
   });
 
   const programs = await prisma.program.findMany({
+    where: { event: { parentId: session.user.eventId } },
     include: {
       event: true,
       category: true,

@@ -13,6 +13,7 @@ export default async function EventsPage() {
   }
 
   const events = await prisma.event.findMany({
+    where: { parentId: session.user.eventId },
     orderBy: { createdAt: 'desc' },
     include: {
       _count: {

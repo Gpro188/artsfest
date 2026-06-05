@@ -3,10 +3,21 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+
 export async function createEvent(name: string) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user || !session.user.eventId) {
+      return { success: false, error: "Unauthorized or no Main Event assigned" };
+    }
+
     await prisma.event.create({
-      data: { name },
+      data: { 
+        name,
+        parentId: session.user.eventId
+      },
     });
     revalidatePath("/dashboard/events");
     return { success: true };

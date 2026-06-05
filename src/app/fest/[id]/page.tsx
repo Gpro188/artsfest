@@ -12,15 +12,33 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
 
   const event = await prisma.event.findUnique({
     where: { id },
-    select: {
-      id: true,
-      name: true,
-      createdAt: true
+    include: {
+      parent: {
+        include: { subEvents: true }
+      },
+      subEvents: true
     }
   });
 
   if (!event) {
     notFound();
+  }
+
+  // Gather related events for switching
+  const relatedEvents = [];
+  if (event.parentId) {
+    // It's a sub-event, so include the main event and sibling sub-events
+    relatedEvents.push({ id: event.parent!.id, name: event.parent!.name, type: 'Main Event' });
+    event.parent!.subEvents.forEach(sub => {
+      if (sub.id !== event.id) {
+        relatedEvents.push({ id: sub.id, name: sub.name, type: 'Sub Event' });
+      }
+    });
+  } else {
+    // It's a main event, so include all its sub-events
+    event.subEvents.forEach(sub => {
+      relatedEvents.push({ id: sub.id, name: sub.name, type: 'Sub Event' });
+    });
   }
 
   const settings = await getSettings(event.id);
@@ -67,9 +85,7 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
           </div>
           
           <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-            <Link href="/" style={{ color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.9rem' }}>
-              🏠 Dpro_artsfest system Home
-            </Link>
+
             <Link href="/login" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
               Login
             </Link>
@@ -83,6 +99,22 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
           <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
              <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'white' }}>{event.name}</h2>
              <p style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>Live Results Dashboard</p>
+             
+             {relatedEvents.length > 0 && (
+               <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                 {relatedEvents.map(re => (
+                   <Link key={re.id} href={`/fest/${re.id}`} className="btn" style={{ 
+                     background: 'rgba(255, 255, 255, 0.1)', 
+                     color: 'white', 
+                     padding: '0.3rem 0.8rem', 
+                     fontSize: '0.8rem',
+                     border: '1px solid rgba(255, 255, 255, 0.2)'
+                   }}>
+                     View {re.name} ({re.type})
+                   </Link>
+                 ))}
+               </div>
+             )}
           </div>
           
           <PublicDashboard initialEvents={[event]} />

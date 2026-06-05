@@ -28,6 +28,9 @@ model Event {
   endDate            DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
+  parentId           String?
+  parent             Event?       @relation("SubEvents", fields: [parentId], references: [id], onDelete: Cascade)
+  subEvents          Event[]      @relation("SubEvents")
   categories         Category[]
   generalPointMatrix PointMatrix? @relation("EventGeneralPoints")
   programs           Program[]

@@ -131,7 +131,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
         
         {/* Fest Creation Form */}
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-          <h2 style={{ color: 'white', fontSize: '1.25rem', marginBottom: 'var(--spacing-md)' }}>🎭 Register New Fest</h2>
+          <h2 style={{ color: 'white', fontSize: '1.25rem', marginBottom: 'var(--spacing-md)' }}>🎭 Register New Main Event</h2>
           <form onSubmit={handleCreateFest} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
             {festMessage && (
               <div style={{ 
@@ -145,7 +145,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
               </div>
             )}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Fest/Event Name</label>
+              <label className="form-label">Main Event Name</label>
               <input 
                 type="text" 
                 className="form-input" 
@@ -156,7 +156,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
               />
             </div>
             <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={festLoading}>
-              {festLoading ? "Creating..." : "Add Fest"}
+              {festLoading ? "Creating..." : "Add Main Event"}
             </button>
           </form>
         </div>
@@ -232,12 +232,12 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
 
       {/* Events Table Listing */}
       <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-        <h2 style={{ color: 'white', fontSize: '1.5rem', marginBottom: 'var(--spacing-md)' }}>🎭 Running Fests Breakdown</h2>
+        <h2 style={{ color: 'white', fontSize: '1.5rem', marginBottom: 'var(--spacing-md)' }}>🎭 Running Main Events Breakdown</h2>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                <th style={{ padding: 'var(--spacing-sm)' }}>Fest Name</th>
+                <th style={{ padding: 'var(--spacing-sm)' }}>Main Event Name</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Public URL</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Page Views</th>
                 <th style={{ padding: 'var(--spacing-sm)' }}>Teams</th>
@@ -310,7 +310,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
               })}
               {data.events.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No fests created yet.</td>
+                  <td colSpan={8} style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)' }}>No Main Events created yet.</td>
                 </tr>
               )}
             </tbody>

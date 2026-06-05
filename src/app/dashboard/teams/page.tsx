@@ -14,11 +14,13 @@ export default async function TeamsPage() {
   }
 
   const events = await prisma.event.findMany({
+    where: { parentId: session.user.eventId },
     orderBy: { createdAt: 'desc' },
     select: { id: true, name: true, createdAt: true }
   });
 
   const teams = await prisma.team.findMany({
+    where: { event: { parentId: session.user.eventId } },
     include: {
       event: true,
       manager: true,
