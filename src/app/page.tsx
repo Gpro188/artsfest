@@ -5,18 +5,25 @@ import VisitTracker from "./components/VisitTracker";
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const events = await prisma.event.findMany({
-    where: { parentId: null },
-    select: {
-      id: true,
-      name: true,
-      createdAt: true,
-      _count: {
-        select: { teams: true, programs: true, categories: true }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  let events = [];
+  let dbError = null;
+  try {
+    events = await prisma.event.findMany({
+      where: { parentId: null },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        _count: {
+          select: { teams: true, programs: true, categories: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  } catch (error: any) {
+    dbError = error.message || "Unknown Database Error";
+    console.error("Database Error on Landing Page:", error);
+  }
 
   return (
     <div style={{ 
@@ -88,7 +95,15 @@ export default async function HomePage() {
               <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>{events.length} Live</span>
             </div>
             
-            {events.length === 0 ? (
+            {dbError && (
+              <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: '#fee2e2', borderRadius: '12px', color: '#991b1b', marginBottom: '2rem' }}>
+                <h3 style={{ margin: '0 0 0.5rem 0' }}>Database Connection Error</h3>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>{dbError}</p>
+                <p style={{ margin: '1rem 0 0 0', fontSize: '0.8rem', fontWeight: 'bold' }}>Please check Vercel Environment Variables.</p>
+              </div>
+            )}
+            
+            {!dbError && events.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: '#f8fafc', borderRadius: '12px', color: '#64748b' }}>
                 No active fests right now. Check back later!
               </div>
