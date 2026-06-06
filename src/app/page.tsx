@@ -186,6 +186,12 @@ export default async function HomePage() {
           <img src="/logo.png" alt="Logo" style={{ width: '24px', height: '24px', filter: 'grayscale(100%) opacity(50%)' }} />
           <p style={{ margin: 0, color: '#94a3b8', fontWeight: 600, letterSpacing: '1px' }}>DPRO ARTSFEST SYSTEM</p>
         </div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p style={{ margin: '0 0 0.5rem 0', color: '#cbd5e1', fontSize: '0.95rem' }}>For Enquiries & Support</p>
+          <a href="https://wa.me/918592888137" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#22c55e', textDecoration: 'none', fontWeight: 600, fontSize: '1.1rem', background: 'rgba(34, 197, 94, 0.1)', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid rgba(34, 197, 94, 0.2)', transition: 'all 0.2s' }}>
+            <span style={{ fontSize: '1.2rem' }}>💬</span> +91 8592888137
+          </a>
+        </div>
         <p style={{ margin: 0, color: '#475569', fontSize: '0.85rem' }}>&copy; {new Date().getFullYear()} All rights reserved. Designed for excellence.</p>
       </footer>
       <style>{`
