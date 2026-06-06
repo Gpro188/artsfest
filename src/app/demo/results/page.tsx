@@ -1,3 +1,5 @@
+"use client";
+
 export default function DemoResultsPage() {
   const teams = [
     { rank: 1, name: "Team Alpha", points: 145, color: "#f59e0b" },

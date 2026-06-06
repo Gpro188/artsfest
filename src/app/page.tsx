@@ -38,6 +38,7 @@ export default async function HomePage() {
       <style>{`
         .glass-header { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .hero-gradient { background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, rgba(5, 5, 5, 1) 70%); }
+        .demo-link:hover { background: rgba(255,255,255,0.15) !important; }
         .hover-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); }
         .hover-card:hover { transform: translateY(-5px); border-color: rgba(56, 189, 248, 0.4); background: rgba(255, 255, 255, 0.05); box-shadow: 0 20px 40px -10px rgba(37,99,235,0.1); }
         .btn-primary { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); transition: opacity 0.2s; }
@@ -112,7 +113,7 @@ export default async function HomePage() {
               </p>
             </div>
             <div style={{ flex: '0 0 auto' }}>
-              <Link href="/demo" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '10px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'} onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
+              <Link href="/demo" className="demo-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 600, backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '10px', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)', transition: 'background 0.2s' }}>
                 Explore Demo Modules &rarr;
               </Link>
             </div>

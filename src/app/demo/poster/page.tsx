@@ -1,3 +1,5 @@
+"use client";
+
 export default function DemoPosterPage() {
   return (
     <div style={{ padding: '3rem 1.5rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
