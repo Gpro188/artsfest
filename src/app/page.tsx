@@ -50,6 +50,12 @@ export default async function HomePage() {
         .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; }
         .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.4); }
         .text-gradient { background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        @media (max-width: 768px) {
+          .glass-header .container { flex-direction: column !important; padding: 1rem !important; gap: 1rem !important; }
+          .nav-links { flex-wrap: wrap; justify-content: center !important; width: 100%; gap: 0.75rem !important; }
+          .nav-links a { font-size: 0.8rem !important; padding: 0.4rem 0.8rem !important; }
+          .hero-gradient h1 { font-size: 3rem !important; }
+        }
       `}</style>
       <VisitTracker eventId={null} />
 
@@ -68,7 +74,7 @@ export default async function HomePage() {
               <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>Dpro Artsfest</h1>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          <div className="nav-links" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <Link href="/demo" style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>
               Explore Demo Fest
             </Link>

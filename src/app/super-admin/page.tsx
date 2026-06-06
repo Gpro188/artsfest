@@ -29,12 +29,20 @@ export default async function SuperAdminPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e1b4b, #0f172a)', padding: 'var(--spacing-xxl) 0' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .sa-header { flex-direction: column !important; align-items: flex-start !important; }
+          .sa-header h1 { font-size: 1.5rem !important; }
+          .sa-header-actions { width: 100%; display: grid !important; grid-template-columns: 1fr 1fr; }
+          .sa-header-actions a { text-align: center; justify-content: center; }
+        }
+      `}</style>
       <VisitTracker eventId={null} />
 
       <div className="container">
         
         {/* Header Navigation */}
-        <div style={{ 
+        <div className="sa-header" style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
@@ -48,7 +56,7 @@ export default async function SuperAdminPage() {
               System-wide metrics and tenant provisioning dashboard
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+          <div className="sa-header-actions" style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
             <Link href="/" className="btn btn-secondary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.85rem' }}>
               🏠 Brand Home
             </Link>
