@@ -37,7 +37,10 @@ export default async function HomePage() {
     }}>
       <style>{`
         .glass-header { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .hero-gradient { background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, rgba(5, 5, 5, 1) 70%); }
+        .hero-gradient { background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, rgba(5, 5, 5, 1) 70%); background-size: 200% 200%; animation: bg-shift 15s ease infinite; }
+        @keyframes bg-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes float-slow { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } }
+        @keyframes float-medium { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(-40px, 30px) rotate(180deg); } }
         .demo-link:hover { background: rgba(255,255,255,0.15) !important; }
         .hover-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); }
         .hover-card:hover { transform: translateY(-5px); border-color: rgba(56, 189, 248, 0.4); background: rgba(255, 255, 255, 0.05); box-shadow: 0 20px 40px -10px rgba(37,99,235,0.1); }
@@ -80,8 +83,12 @@ export default async function HomePage() {
 
       <main style={{ flex: 1, paddingTop: '70px' }}>
         {/* Hero Section */}
-        <section className="hero-gradient" style={{ padding: '8rem 1.5rem', textAlign: 'center', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%, -50%)', width: '60vw', height: '40vw', background: 'radial-gradient(circle, rgba(37,99,235,0.1) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none' }}></div>
+        <section className="hero-gradient" style={{ padding: '8rem 1.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          {/* Animated Background Orbs */}
+          <div style={{ position: 'absolute', top: '10%', left: '20%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 60%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none', animation: 'float-slow 20s infinite alternate ease-in-out' }}></div>
+          <div style={{ position: 'absolute', bottom: '-10%', right: '10%', width: '35vw', height: '35vw', background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 60%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none', animation: 'float-medium 15s infinite alternate ease-in-out' }}></div>
+          <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', width: '60vw', height: '40vw', background: 'radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none', animation: 'float-slow 25s infinite alternate-reverse ease-in-out' }}></div>
+          
           <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
             <span style={{ display: 'inline-block', padding: '0.35rem 1rem', borderRadius: '20px', border: '1px solid rgba(56, 189, 248, 0.3)', backgroundColor: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2rem', letterSpacing: '1px', textTransform: 'uppercase' }}>
               Premium Festival Management
