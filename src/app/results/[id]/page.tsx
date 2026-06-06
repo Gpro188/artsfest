@@ -52,9 +52,9 @@ export default async function ProgramResultsPage({ params }: { params: Promise<{
               fontWeight: 'bold',
               fontSize: '1rem'
             }}>
-              {settings.festName.charAt(0)}
+              {(program.event?.name || settings.festName).charAt(0)}
             </div>
-            <h1 style={{ fontSize: '1.2rem', margin: 0 }}>{settings.festName} Results</h1>
+            <h1 style={{ fontSize: '1.2rem', margin: 0 }}>{program.event?.name || settings.festName} Results</h1>
           </Link>
           <Link href="/search" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
             🔍 Search
@@ -70,7 +70,7 @@ export default async function ProgramResultsPage({ params }: { params: Promise<{
 
       <footer style={{ padding: 'var(--spacing-lg) 0', borderTop: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-muted)' }} className="no-print">
         <div className="container">
-          <p>&copy; 2026 {settings.festName} • Official Results Feed</p>
+          <p>&copy; {new Date().getFullYear()} {program.event?.name || settings.festName} • Official Results Feed</p>
         </div>
       </footer>
     </div>
