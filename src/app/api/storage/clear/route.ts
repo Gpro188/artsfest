@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
         totalDeleted += listResponse.Contents.length;
       }
 
-      isTruncated = listResponse.IsTruncated ?? false;
-      continuationToken = listResponse.NextContinuationToken;
+      isTruncated = (listResponse as any).IsTruncated ?? false;
+      continuationToken = (listResponse as any).NextContinuationToken;
     }
 
     return NextResponse.json({
