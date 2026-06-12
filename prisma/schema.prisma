@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -43,6 +44,8 @@ model Event {
   registrationEnd    DateTime?
   assignmentStart    DateTime?
   assignmentEnd      DateTime?
+  homepageSetting    HomepageSetting?
+  contactMessages    ContactMessage[]
 }
 
 model Category {
@@ -211,6 +214,51 @@ model PageVisit {
   path      String
   createdAt DateTime @default(now())
   event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model HomepageSetting {
+  id                  String   @id @default(uuid())
+  eventId             String   @unique
+  heroTitle           String?
+  heroSubtitle        String?
+  heroBgUrl           String?
+  aboutText           String?
+  aboutTitle          String?
+  primaryColor        String?  @default("#2075BC")
+  secondaryColor      String?  @default("#119398")
+  bgColor             String?  @default("#FFFFFF")
+  stat1Label          String?  @default("Candidates")
+  stat1Value          String?
+  stat2Label          String?  @default("Institutions")
+  stat2Value          String?
+  stat3Label          String?  @default("Programs")
+  stat3Value          String?
+  stat4Label          String?  @default("States")
+  stat4Value          String?
+  contactEmail        String?
+  contactPhone        String?
+  socialFacebook      String?
+  socialInstagram     String?
+  socialYoutube       String?
+  pinnedButtonText    String?  @default("Results")
+  pinnedButtonLogoUrl String?
+  committeeMembers    Json?
+  galleryImages       Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  event               Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  eventId   String
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
 }

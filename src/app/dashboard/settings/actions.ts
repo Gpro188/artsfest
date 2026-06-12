@@ -161,6 +161,7 @@ export async function resetSystem() {
       await prisma.category.deleteMany({});
       await prisma.team.deleteMany({});
       await prisma.event.deleteMany({});
+      await prisma.user.deleteMany({ where: { role: { not: "ADMIN" } } });
     }
     
     revalidatePath("/dashboard");

@@ -1,62 +1,109 @@
 "use client";
 
 import { useState } from "react";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
 
 interface ImageUploadProps {
   onUploadComplete: (url: string) => void;
   folder?: string;
   label?: string;
+  initialUrl?: string | null;
 }
 
-export default function ImageUpload({ onUploadComplete, folder = "general", label = "Upload Image" }: ImageUploadProps) {
+export default function ImageUpload({ onUploadComplete, folder = "general", label = "Upload Image", initialUrl }: ImageUploadProps) {
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [preview, setPreview] = useState<string | null>(initialUrl || null);
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (limit to 100KB as requested)
-    if (file.size > 100 * 1024) {
-      setError("File is too large. Max size is 100KB to save space.");
+    // Check file size (limit to 500KB as requested)
+    if (file.size > 500 * 1024) {
+      setError("File is too large. Max size is 500KB to save space.");
       return;
     }
 
+    // Set local preview
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+
     setUploading(true);
     setError("");
-    
-    const fileName = `${folder}/${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    setProgress(10); // initial progress
 
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setProgress(Math.round(p));
-      },
-      (err) => {
-        console.error("Upload error:", err);
-        setError("Upload failed. Check your Firebase permissions.");
-        setUploading(false);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          onUploadComplete(downloadURL);
+    try {
+      // 1. Send FormData directly to our API route
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folder);
+
+      return new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            // progress from 10 to 100
+            const p = 10 + Math.round((event.loaded / event.total) * 90);
+            setProgress(p);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.finalUrl) {
+                onUploadComplete(data.finalUrl);
+                setUploading(false);
+                setProgress(0);
+                resolve();
+              } else {
+                 setError("Upload failed: No URL returned.");
+                 setUploading(false);
+                 reject(new Error("Upload failed"));
+              }
+            } catch (err) {
+              setError("Upload failed: Invalid server response.");
+              setUploading(false);
+              reject(new Error("Invalid response"));
+            }
+          } else {
+            console.error("Upload error:", xhr.statusText);
+            setError("Upload failed. Server returned an error.");
+            setUploading(false);
+            reject(new Error("Upload failed"));
+          }
+        };
+
+        xhr.onerror = () => {
+          console.error("Upload error: Network Error");
+          setError("Upload failed due to a network error.");
           setUploading(false);
-          setProgress(0);
-        });
-      }
-    );
+          reject(new Error("Network Error"));
+        };
+
+        xhr.open("POST", "/api/upload", true);
+        xhr.send(formData);
+      });
+      
+    } catch (err) {
+      console.error("Upload error:", err);
+      setError("Failed to start upload. Check your connection.");
+      setUploading(false);
+    }
   };
 
   return (
     <div className="form-group">
       <label className="form-label">{label}</label>
       <div style={{ position: 'relative' }}>
+        {preview && (
+          <div style={{ marginBottom: '12px', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-color)', width: 'fit-content' }}>
+            <img src={preview} alt="Preview" style={{ display: 'block', maxHeight: '150px', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+          </div>
+        )}
         <input 
           type="file" 
           accept="image/*"

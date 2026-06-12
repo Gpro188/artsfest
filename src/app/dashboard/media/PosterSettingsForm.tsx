@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updatePosterSettings } from "./actions";
+import ImageUpload from "../../components/ImageUpload";
 
 export default function PosterSettingsForm({ initialSettings }: { initialSettings: any }) {
   const [loading, setLoading] = useState(false);
@@ -44,13 +45,11 @@ export default function PosterSettingsForm({ initialSettings }: { initialSetting
 
       <form onSubmit={handleSubmit} className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
         <div className="form-group" style={{ gridColumn: 'span 2' }}>
-          <label className="form-label">Default Poster Background URL (Global)</label>
-          <input 
-            type="text" 
-            className="form-input" 
-            value={formData.posterBgUrl}
-            onChange={(e) => setFormData({...formData, posterBgUrl: e.target.value})}
-            placeholder="Recommended: 800x1128 PNG/JPG (A4 Ratio)"
+          <ImageUpload 
+            label="Default Poster Background (Global)" 
+            folder="posters" 
+            initialUrl={formData.posterBgUrl}
+            onUploadComplete={(url) => setFormData({...formData, posterBgUrl: url})} 
           />
           <span className="field-helper">This image is used as the base background for all result announcement posters. Use a high-resolution PNG or JPG in A4 portrait ratio.</span>
         </div>
@@ -116,22 +115,20 @@ export default function PosterSettingsForm({ initialSettings }: { initialSetting
         </div>
 
         <div className="form-group">
-          <label className="form-label">Logo URL (Optional)</label>
-          <input 
-            type="text" 
-            className="form-input" 
-            value={formData.posterLogoUrl}
-            onChange={(e) => setFormData({...formData, posterLogoUrl: e.target.value})}
+          <ImageUpload 
+            label="Logo (Optional)" 
+            folder="logos" 
+            initialUrl={formData.posterLogoUrl}
+            onUploadComplete={(url) => setFormData({...formData, posterLogoUrl: url})} 
           />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Congratulations PNG (Optional)</label>
-          <input 
-            type="text" 
-            className="form-input" 
-            value={formData.posterCongratulationUrl}
-            onChange={(e) => setFormData({...formData, posterCongratulationUrl: e.target.value})}
+          <ImageUpload 
+            label="Congratulations PNG (Optional)" 
+            folder="posters" 
+            initialUrl={formData.posterCongratulationUrl}
+            onUploadComplete={(url) => setFormData({...formData, posterCongratulationUrl: url})} 
           />
           <span className="field-helper">An overlay image (e.g., confetti or banner) shown on top of the poster for winner celebrations.</span>
         </div>

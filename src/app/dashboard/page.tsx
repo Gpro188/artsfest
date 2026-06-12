@@ -139,7 +139,7 @@ export default async function DashboardPage() {
 
   // Quick Action Links config
   const quickLinks: { label: string; href: string }[] = [];
-  if (role === "ADMIN") {
+  if (['ADMIN', 'SUPER_ADMIN'].includes(role)) {
     quickLinks.push(
       { label: "Results Entry", href: "/dashboard/scoring" },
       { label: "Manage Schedule", href: "/dashboard/schedule" }

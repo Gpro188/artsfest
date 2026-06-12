@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updateCandidate } from "./actions";
+import ImageUpload from "../../components/ImageUpload";
 
 export default function EditCandidateModal({ candidate, categories, role, onClose }: { candidate: any, categories: any[], role: string, onClose: () => void }) {
   const [name, setName] = useState(candidate.name);
@@ -88,21 +89,12 @@ export default function EditCandidateModal({ candidate, categories, role, onClos
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              Photo URL
-              <span style={{ fontSize: '0.65rem', fontWeight: 400 }}>
-                Free Hosting: <a href="https://imgbb.com" target="_blank" style={{ color: 'var(--primary)' }}>ImgBB</a>
-              </span>
-            </label>
-            <input 
-              type="text" 
-              className="form-input" 
-              value={photo} 
-              onChange={(e) => setPhoto(e.target.value)} 
-              placeholder="Direct image link"
-            />
-          </div>
+          <ImageUpload 
+            label="Photo (Optional)" 
+            folder="candidates" 
+            initialUrl={photo}
+            onUploadComplete={(url) => setPhoto(url)} 
+          />
 
           {candidate.isApproved && (
             <button 

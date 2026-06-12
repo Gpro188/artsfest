@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createTeam } from "./actions";
+import ImageUpload from "../../components/ImageUpload";
 
 type EventType = { id: string; name: string };
 
@@ -124,15 +125,12 @@ export default function TeamForm({ events }: { events: EventType[] }) {
       </div>
 
       <div className="form-group">
-        <label className="form-label">Leader Photo URL</label>
-        <input 
-          type="text" 
-          className="form-input" 
-          value={leaderPhoto}
-          onChange={(e) => setLeaderPhoto(e.target.value)}
-          placeholder="https://example.com/photo.jpg"
+        <ImageUpload 
+          label="Leader Photo (Optional)" 
+          folder="teams" 
+          initialUrl={leaderPhoto}
+          onUploadComplete={(url) => setLeaderPhoto(url)} 
         />
-        <span className="field-helper">Optional. Upload to ImgBB or PostImages for a direct image link.</span>
       </div>
 
       <h4 style={{ marginTop: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)', color: 'var(--text-secondary)' }}>

@@ -18,6 +18,10 @@ export default async function ProgramResultsPage({ params }: { params: Promise<{
   }
 
   const { program, settings: rawSettings } = res.data;
+
+  if (!program) {
+    notFound();
+  }
   const userRole = session?.user?.role;
 
   const settings = rawSettings || {

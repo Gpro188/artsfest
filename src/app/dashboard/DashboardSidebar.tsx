@@ -28,7 +28,7 @@ export default function DashboardSidebar({ role, username, festName, festMoto }:
         <span className="nav-link-subtitle">Real-time public standings</span>
       </Link>
 
-      {role === 'ADMIN' && (
+      {['ADMIN', 'SUPER_ADMIN'].includes(role) && (
         <>
           <div className="nav-section-title">Admin Setup</div>
           <Link href="/dashboard/events" onClick={close} className="nav-link-wrapper">

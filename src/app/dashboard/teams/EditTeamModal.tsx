@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updateTeam } from "./actions";
+import ImageUpload from "../../components/ImageUpload";
 
 export default function EditTeamModal({ team, onClose }: { team: any, onClose: () => void }) {
   const [name, setName] = useState(team.name);
@@ -61,8 +62,12 @@ export default function EditTeamModal({ team, onClose }: { team: any, onClose: (
           </div>
 
           <div className="form-group">
-            <label className="form-label">Leader Photo URL</label>
-            <input type="text" className="form-input" value={leaderPhoto} onChange={(e) => setLeaderPhoto(e.target.value)} />
+            <ImageUpload 
+              label="Leader Photo (Optional)" 
+              folder="teams" 
+              initialUrl={leaderPhoto}
+              onUploadComplete={(url) => setLeaderPhoto(url)} 
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>

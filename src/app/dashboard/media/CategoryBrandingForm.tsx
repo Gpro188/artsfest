@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updateCategoryBranding } from "./actions";
+import ImageUpload from "../../components/ImageUpload";
 
 export default function CategoryBrandingForm({ categories }: { categories: any[] }) {
     const [loading, setLoading] = useState<string | null>(null);
@@ -9,9 +10,10 @@ export default function CategoryBrandingForm({ categories }: { categories: any[]
         categories.reduce((acc, cat) => ({ ...acc, [cat.id]: cat.posterBgUrl || "" }), {})
     );
 
-    const handleUpdate = async (categoryId: string) => {
+    const handleUpdate = async (categoryId: string, newUrl: string) => {
         setLoading(categoryId);
-        const res = await updateCategoryBranding(categoryId, urls[categoryId]);
+        setUrls({ ...urls, [categoryId]: newUrl });
+        const res = await updateCategoryBranding(categoryId, newUrl);
         if (res.success) {
             alert("Category branding updated!");
         } else {
@@ -33,30 +35,21 @@ export default function CategoryBrandingForm({ categories }: { categories: any[]
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 {categories.map(category => (
                     <div key={category.id} className="mobile-stack" style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: '150px 1fr 100px', 
+                        display: 'flex', 
                         gap: '15px', 
-                        alignItems: 'center',
+                        flexDirection: 'column',
                         paddingBottom: '10px',
                         borderBottom: '1px solid rgba(255,255,255,0.05)'
                     }}>
-                        <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{category.name}</div>
-                        <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder="Background Image URL"
-                            value={urls[category.id]}
-                            onChange={(e) => setUrls({ ...urls, [category.id]: e.target.value })}
-                            style={{ margin: 0 }}
-                        />
-                        <button 
-                            className="btn btn-secondary" 
-                            disabled={loading === category.id}
-                            onClick={() => handleUpdate(category.id)}
-                            style={{ padding: '8px', fontSize: '0.8rem' }}
-                        >
-                            {loading === category.id ? 'Saving...' : 'Update'}
-                        </button>
+                        <div style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--primary)' }}>{category.name}</div>
+                        <div style={{ flex: 1 }}>
+                            <ImageUpload 
+                                label={`Upload Background (${category.name})`} 
+                                folder="posters" 
+                                initialUrl={urls[category.id]}
+                                onUploadComplete={(url) => handleUpdate(category.id, url)} 
+                            />
+                        </div>
                     </div>
                 ))}
             </div>

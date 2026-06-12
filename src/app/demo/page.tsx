@@ -14,6 +14,23 @@ export default function DemoGuidePage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
         
+        {/* Interactive Experience Guide */}
+        <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(249,115,22,0.3)', borderRadius: '16px', display: 'flex', gap: '2rem', alignItems: 'center', boxShadow: '0 10px 30px -10px rgba(249,115,22,0.2)' }}>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              Interactive Demo Wizard <span style={{ fontSize: '0.8rem', padding: '4px 8px', background: '#f97316', borderRadius: '20px', fontWeight: 800 }}>NEW</span>
+            </h2>
+            <p style={{ fontSize: '1.05rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+              Create a custom live festival preview right now! Input your own fest name, program, and candidates to instantly see the generated ID cards, point tables, and posters in action.
+            </p>
+            <Link href="/demo/experience" style={{ display: 'inline-block', padding: '0.75rem 1.5rem', background: 'linear-gradient(45deg, #f97316, #ea580c)', color: '#fff', fontWeight: 600, borderRadius: '8px', textDecoration: 'none', boxShadow: '0 4px 14px rgba(249,115,22,0.4)' }}>
+              Launch Interactive Demo &rarr;
+            </Link>
+          </div>
+          <div style={{ flex: 1, height: '200px', background: 'linear-gradient(45deg, rgba(249,115,22,0.1), rgba(234,88,12,0.2))', borderRadius: '12px', border: '1px dashed rgba(249,115,22,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '4rem' }}>🚀</span>
+          </div>
+        </div>
         {/* Results Guide */}
         <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', display: 'flex', gap: '2rem', alignItems: 'center' }}>
           <div style={{ flex: 1 }}>

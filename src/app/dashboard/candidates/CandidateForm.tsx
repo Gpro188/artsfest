@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { addCandidate } from "./actions";
+import ImageUpload from "../../components/ImageUpload";
 
 export default function CandidateForm({ teamId, categories, isRegistrationOpen = true, statusMessage = "" }: { teamId: string, categories: any[], isRegistrationOpen?: boolean, statusMessage?: string }) {
   const [name, setName] = useState("");
@@ -86,38 +87,17 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
           <span className="field-helper">Age-group division this candidate competes in.</span>
         </div>
 
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-            Photo URL
-            <span style={{ fontSize: '0.65rem', fontWeight: 400 }}>
-              Free Hosting: <a href="https://imgbb.com" target="_blank" style={{ color: 'var(--primary)' }}>ImgBB</a> • <a href="https://postimages.org" target="_blank" style={{ color: 'var(--primary)' }}>PostImages</a>
-            </span>
-          </label>
-          <input 
-            type="text" 
-            className="form-input" 
-            value={photo}
-            onChange={(e) => setPhoto(e.target.value)}
-            placeholder="Direct link (ends in .jpg/.png)"
-          />
-        </div>
+        <ImageUpload 
+          label="Photo (Optional)" 
+          folder="candidates" 
+          initialUrl={photo}
+          onUploadComplete={(url) => setPhoto(url)} 
+        />
         
-        <button type="submit" className="btn btn-primary" disabled={loading} style={{ height: '42px' }}>
+        <button type="submit" className="btn btn-primary" disabled={loading} style={{ height: '42px', marginBottom: 'var(--spacing-md)' }}>
           {loading ? "Adding..." : "Add Candidate"}
         </button>
       </div>
-      
-      {photo && (
-        <div style={{ marginTop: 'var(--spacing-sm)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Preview:</span>
-          <img 
-            src={photo} 
-            alt="Preview" 
-            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)' }}
-            onError={(e) => (e.currentTarget.style.display = 'none')}
-          />
-        </div>
-      )}
     </form>
   );
 }

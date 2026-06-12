@@ -1,9 +1,11 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { getSettings } from "@/lib/settings";
+import { getSettings, getHomepageSettings } from "@/lib/settings";
 import DashboardSidebar from "./DashboardSidebar";
 import TourWrapper from "@/components/TourWrapper";
+import ThemeApplicator from "@/app/components/ThemeApplicator";
 
 export default async function DashboardLayout({
   children,
@@ -20,13 +22,20 @@ export default async function DashboardLayout({
 
   const { role, username } = session.user;
 
+  const homepageSettings = await getHomepageSettings(session.user.eventId);
+
   return (
     <div className="dashboard-container">
+      <ThemeApplicator 
+        primaryColor={homepageSettings?.primaryColor}
+        secondaryColor={homepageSettings?.secondaryColor}
+        bgColor={homepageSettings?.bgColor}
+      />
       <DashboardSidebar 
         role={role} 
         username={username} 
-        festName={settings.festName} 
-        festMoto={settings.festMoto} 
+        festName={role === "SUPER_ADMIN" ? "Artsfest Central" : settings.festName} 
+        festMoto={role === "SUPER_ADMIN" ? "System Administration" : settings.festMoto} 
       />
 
       {/* Main Content */}
