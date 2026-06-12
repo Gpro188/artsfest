@@ -22,7 +22,7 @@ export default async function DashboardLayout({
 
   const { role, username } = session.user;
 
-  const homepageSettings = await getHomepageSettings(session.user.eventId);
+  const homepageSettings = session.user.eventId ? await getHomepageSettings(session.user.eventId) : null;
 
   return (
     <div className="dashboard-container">
