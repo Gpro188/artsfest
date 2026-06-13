@@ -35,6 +35,29 @@ export default async function HomePage() {
       fontFamily: 'var(--font-sans)',
       overflowX: 'hidden'
     }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Dpro ArtsFes System",
+            "operatingSystem": "Web",
+            "applicationCategory": "BusinessApplication",
+            "description": "Premium multi-tenant festival management suite by Dpro Technologies.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "author": {
+              "@type": "Organization",
+              "name": "Dpro Technologies",
+              "url": "https://dpro-artsfest.vercel.app/"
+            }
+          })
+        }}
+      />
       <style>{`
         .glass-header { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .hero-gradient { background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, rgba(5, 5, 5, 1) 70%); background-size: 200% 200%; animation: bg-shift 15s ease infinite; }
