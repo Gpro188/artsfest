@@ -62,7 +62,7 @@ export default async function HomePage() {
       />
       <style>{`
         .glass-header { background: var(--hero-glass-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); transition: background 0.3s; }
-        .hero-gradient { background: radial-gradient(circle at 50% 0%, var(--hero-orb-1) 0%, var(--hero-gradient-center) 70%); background-size: 200% 200%; animation: bg-shift 15s ease infinite; transition: background 0.3s; }
+        .hero-gradient { background: radial-gradient(circle at 50% 0%, var(--hero-orb-1) 0%, var(--hero-gradient-center) 70%); background-size: 200% 200%; animation: bg-shift 8s ease infinite; transition: background 0.3s; }
         @keyframes bg-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes float-slow { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(20vw, -15vh) scale(1.2); } 66% { transform: translate(-15vw, 20vh) scale(0.8); } }
         @keyframes float-medium { 0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); } 50% { transform: translate(-25vw, 15vh) rotate(180deg) scale(1.1); } }
@@ -89,9 +89,9 @@ export default async function HomePage() {
         {/* Hero Section */}
         <section className="hero-gradient" style={{ padding: '8rem 1.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           {/* Animated Background Orbs */}
-          <div style={{ position: 'absolute', top: '10%', left: '15%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, var(--hero-orb-1) 0%, transparent 60%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none', animation: 'float-slow 12s infinite alternate ease-in-out', opacity: 0.8 }}></div>
-          <div style={{ position: 'absolute', bottom: '-20%', right: '5%', width: '45vw', height: '45vw', background: 'radial-gradient(circle, var(--hero-orb-2) 0%, transparent 60%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none', animation: 'float-medium 10s infinite alternate ease-in-out', opacity: 0.8 }}></div>
-          <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', width: '70vw', height: '50vw', background: 'radial-gradient(circle, var(--hero-orb-3) 0%, transparent 70%)', filter: 'blur(50px)', zIndex: 0, pointerEvents: 'none', animation: 'float-fast 15s infinite alternate-reverse ease-in-out', opacity: 0.8 }}></div>
+          <div style={{ position: 'absolute', top: '10%', left: '15%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, var(--hero-orb-1) 0%, transparent 60%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none', animation: 'float-slow 6s infinite alternate ease-in-out', opacity: 0.8 }}></div>
+          <div style={{ position: 'absolute', bottom: '-20%', right: '5%', width: '45vw', height: '45vw', background: 'radial-gradient(circle, var(--hero-orb-2) 0%, transparent 60%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none', animation: 'float-medium 5s infinite alternate ease-in-out', opacity: 0.8 }}></div>
+          <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', width: '70vw', height: '50vw', background: 'radial-gradient(circle, var(--hero-orb-3) 0%, transparent 70%)', filter: 'blur(50px)', zIndex: 0, pointerEvents: 'none', animation: 'float-fast 7s infinite alternate-reverse ease-in-out', opacity: 0.8 }}></div>
           
           <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
             <span style={{ display: 'inline-block', padding: '0.35rem 1rem', borderRadius: '20px', border: '1px solid rgba(56, 189, 248, 0.3)', backgroundColor: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2rem', letterSpacing: '1px', textTransform: 'uppercase' }}>
