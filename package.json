@@ -14,8 +14,10 @@
     "bcrypt": "^6.0.0",
     "firebase": "^12.13.0",
     "html-to-image": "^1.11.13",
+    "lucide-react": "^1.18.0",
     "next": "16.2.4",
     "next-auth": "^4.24.14",
+    "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "xlsx": "^0.18.5"
