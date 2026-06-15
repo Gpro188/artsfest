@@ -13,12 +13,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const globalSetting = await getSettings(id);
   const homepage = await getHomepageSettings(id);
   
-  const title = `${homepage?.heroTitle || globalSetting.festName || event.name} | Dpro Artsfest System`;
-  const description = homepage?.heroSubtitle || homepage?.aboutText || "Join us in this wonderful celebration of arts and creativity.";
+  const festName = homepage?.heroTitle || globalSetting.festName || event.name;
+  const title = `${festName} | Dpro Artsfest System`;
+  const description = homepage?.heroSubtitle || homepage?.aboutText || `Join us in the wonderful celebration of arts and creativity at ${festName}.`;
   
   return {
     title,
     description,
+    keywords: [
+      festName,
+      "dpro",
+      "dpro technologies",
+      "artsfest management system",
+      "arts fest system"
+    ],
     openGraph: {
       title,
       description,

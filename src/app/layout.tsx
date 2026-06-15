@@ -15,7 +15,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Dpro ArtsFes System | Premium Festival Management",
   description: "Dpro ArtsFes System is a premium multi-tenant festival management suite by Dpro Technologies. Manage teams, programs, and live standings.",
-  keywords: ["dpro artsfes system", "dpro artsfes", "artsfes system", "artsfest system", "dpro artsfest", "festival management software"],
+  keywords: [
+    "dpro",
+    "dpro technologies",
+    "dpro artsfes system", 
+    "dpro artsfest", 
+    "artsfes system", 
+    "artsfest system", 
+    "artsfest management system",
+    "arts fest system",
+    "festival management software"
+  ],
   openGraph: {
     title: "Dpro ArtsFes System",
     description: "Premium Multi-Tenant Festival Management Suite by Dpro Technologies",
