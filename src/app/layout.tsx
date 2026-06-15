@@ -39,6 +39,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://dpro-artsfest.vercel.app/",
     siteName: "Dpro ArtsFes",
+    images: [
+      {
+        url: "/logo.png",
+        width: 800,
+        height: 600,
+        alt: "Dpro ArtsFes Logo",
+      },
+    ],
   },
   appleWebApp: {
     title: "Dpro ArtsFes",
