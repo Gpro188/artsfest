@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit, Inter } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -18,24 +20,26 @@ export const metadata: Metadata = {
     template: "%s | Dpro ArtsFes",
     default: "Dpro ArtsFes | Premium Festival Management",
   },
-  description: "Dpro ArtsFes is a premium multi-tenant festival management suite by Dpro Technologies. Manage teams, programs, and live standings.",
+  description:
+    "Dpro ArtsFes is a premium multi-tenant festival management suite by Dpro Technologies. Manage teams, programs, and live standings.",
   applicationName: "Dpro ArtsFes",
   keywords: [
     "dpro",
     "dpro technologies",
-    "dpro artsfest system", 
-    "dpro artsfest", 
-    "artsfest system", 
+    "dpro artsfest system",
+    "dpro artsfest",
+    "artsfest system",
     "artsfest management system",
     "arts fest system",
-    "festival management software"
+    "festival management software",
   ],
   openGraph: {
     title: {
       template: "%s | Dpro ArtsFes",
       default: "Dpro ArtsFes",
     },
-    description: "Premium Multi-Tenant Festival Management Suite by Dpro Technologies",
+    description:
+      "Premium Multi-Tenant Festival Management Suite by Dpro Technologies",
     type: "website",
     url: "https://dpro-artsfest.vercel.app/",
     siteName: "Dpro ArtsFes",
@@ -51,7 +55,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     title: "Dpro ArtsFes",
     statusBarStyle: "default",
-  }
+  },
 };
 
 export default function RootLayout({
@@ -62,12 +66,16 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Dpro ArtsFes",
-    "url": "https://dpro-artsfest.vercel.app/"
+    name: "Dpro ArtsFes",
+    url: "https://dpro-artsfest.vercel.app/",
   };
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${outfit.variable} ${inter.variable} font-outfit`}
+      suppressHydrationWarning
+    >
       <head>
         <script
           type="application/ld+json"
@@ -75,9 +83,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

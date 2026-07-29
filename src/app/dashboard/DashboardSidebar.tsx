@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 
 interface SidebarProps {
@@ -11,277 +12,341 @@ interface SidebarProps {
   festMoto: string;
 }
 
-export default function DashboardSidebar({ role, username, festName, festMoto }: SidebarProps) {
+interface NavItem {
+  name: string;
+  subtitle: string;
+  icon: string;
+  href: string;
+  highlight?: boolean;
+}
+
+function getNavItems(role: string): { section: string; items: NavItem[] }[] {
+  const groups: { section: string; items: NavItem[] }[] = [];
+
+  // Always shown
+  groups.push({
+    section: "Overview",
+    items: [
+      {
+        name: "Dashboard",
+        subtitle: "Overview & quick stats",
+        icon: "📊",
+        href: "/dashboard",
+      },
+      {
+        name: "Live Hub",
+        subtitle: "Real-time public standings",
+        icon: "📡",
+        href: "/hub",
+        highlight: true,
+      },
+    ],
+  });
+
+  if (["ADMIN", "SUPER_ADMIN"].includes(role)) {
+    groups.push({
+      section: "Admin Setup",
+      items: [
+        {
+          name: "Events",
+          subtitle: "Create & manage festival events",
+          icon: "🎭",
+          href: "/dashboard/events",
+        },
+        {
+          name: "Teams",
+          subtitle: "Teams, managers & flag colors",
+          icon: "🛡️",
+          href: "/dashboard/teams",
+        },
+        {
+          name: "Candidates",
+          subtitle: "Register & approve participants",
+          icon: "👤",
+          href: "/dashboard/candidates",
+        },
+        {
+          name: "Programs",
+          subtitle: "Competition programs & rules",
+          icon: "📜",
+          href: "/dashboard/programs",
+        },
+        {
+          name: "Results & Scoring",
+          subtitle: "Enter marks & publish results",
+          icon: "🏆",
+          href: "/dashboard/scoring",
+        },
+        {
+          name: "Global Schedule",
+          subtitle: "Timeline & venue planning",
+          icon: "📅",
+          href: "/dashboard/schedule",
+        },
+        {
+          name: "Media Branding",
+          subtitle: "Posters, logos & branding",
+          icon: "🎨",
+          href: "/dashboard/media",
+          highlight: true,
+        },
+        {
+          name: "Settings",
+          subtitle: "Config, audit & maintenance",
+          icon: "⚙️",
+          href: "/dashboard/settings",
+        },
+      ],
+    });
+  }
+
+  if (role === "MEDIA") {
+    groups.push({
+      section: "Media Center",
+      items: [
+        {
+          name: "Poster Branding",
+          subtitle: "Design result posters",
+          icon: "🎨",
+          href: "/dashboard/media",
+          highlight: true,
+        },
+        {
+          name: "View Results",
+          subtitle: "Browse published results",
+          icon: "🏆",
+          href: "/dashboard/scoring",
+        },
+      ],
+    });
+  }
+
+  if (role === "MANAGER") {
+    groups.push({
+      section: "Team Manager",
+      items: [
+        {
+          name: "Candidates",
+          subtitle: "Register your team's participants",
+          icon: "👤",
+          href: "/dashboard/candidates",
+        },
+        {
+          name: "Program Assignments",
+          subtitle: "Enroll candidates in programs",
+          icon: "📜",
+          href: "/dashboard/assignments",
+        },
+        {
+          name: "Print Schedule",
+          subtitle: "View & print team timetable",
+          icon: "🖨️",
+          href: "/dashboard/schedule",
+        },
+      ],
+    });
+  }
+
+  return groups;
+}
+
+function roleColor(role: string) {
+  switch (role) {
+    case "SUPER_ADMIN":
+      return "#f59e0b";
+    case "ADMIN":
+      return "#6366f1";
+    case "JUDGE":
+      return "#10b981";
+    case "MEDIA":
+      return "#0ea5e9";
+    case "MANAGER":
+      return "#f43f5e";
+    default:
+      return "#98a2b3";
+  }
+}
+
+export default function DashboardSidebar({
+  role,
+  username,
+  festName,
+  festMoto,
+}: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggle = () => setIsOpen(!isOpen);
   const close = () => setIsOpen(false);
 
-  const NavLinks = () => (
-    <>
-      <Link href="/dashboard" onClick={close} className="nav-link-wrapper">
-        <span className="nav-link-main">Dashboard Home</span>
-        <span className="nav-link-subtitle">Overview & quick stats</span>
-      </Link>
-      <Link href="/hub" onClick={close} className="nav-link-wrapper" style={{ borderLeftColor: 'transparent' }}>
-        <span className="nav-link-main" style={{ color: 'var(--primary)', fontWeight: 700 }}>Live Hub (Slides)</span>
-        <span className="nav-link-subtitle">Real-time public standings</span>
-      </Link>
+  const isActive = useCallback(
+    (href: string) => {
+      if (href === "/dashboard") return pathname === "/dashboard";
+      return pathname.startsWith(href);
+    },
+    [pathname]
+  );
 
-      {['ADMIN', 'SUPER_ADMIN'].includes(role) && (
-        <>
-          <div className="nav-section-title">Admin Setup</div>
-          <Link href="/dashboard/events" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Events</span>
-            <span className="nav-link-subtitle">Create & manage festival events</span>
-          </Link>
-          <Link href="/dashboard/teams" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Teams</span>
-            <span className="nav-link-subtitle">Teams, managers & flag colors</span>
-          </Link>
-          <Link href="/dashboard/candidates" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Candidates (Approval)</span>
-            <span className="nav-link-subtitle">Register & approve participants</span>
-          </Link>
-          <Link href="/dashboard/programs" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Programs</span>
-            <span className="nav-link-subtitle">Competition programs & rules</span>
-          </Link>
-          <Link href="/dashboard/scoring" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Results & Scoring</span>
-            <span className="nav-link-subtitle">Enter marks & publish results</span>
-          </Link>
-          <Link href="/dashboard/schedule" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Global Schedule</span>
-            <span className="nav-link-subtitle">Timeline & venue planning</span>
-          </Link>
-          <Link href="/dashboard/media" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main" style={{ color: 'var(--secondary)', fontWeight: 700 }}>Media Branding</span>
-            <span className="nav-link-subtitle">Posters, logos & branding</span>
-          </Link>
-          <Link href="/dashboard/settings" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Settings</span>
-            <span className="nav-link-subtitle">Config, audit & maintenance</span>
-          </Link>
-        </>
-      )}
+  const navGroups = getNavItems(role);
 
-      {role === 'MEDIA' && (
-        <>
-          <div className="nav-section-title">Media Center</div>
-          <Link href="/dashboard/media" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main" style={{ color: 'var(--secondary)', fontWeight: 700 }}>Poster Branding</span>
-            <span className="nav-link-subtitle">Design result posters</span>
-          </Link>
-          <Link href="/hub" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Live Hub (Slides)</span>
-            <span className="nav-link-subtitle">Real-time public standings</span>
-          </Link>
-          <Link href="/dashboard/scoring" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">View Results</span>
-            <span className="nav-link-subtitle">Browse published results</span>
-          </Link>
-        </>
-      )}
+  const SidebarContent = () => (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Logo Area */}
+      <div className="sidebar-logo-area">
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              boxShadow: "0 2px 8px rgba(99,102,241,0.35)",
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="Logo"
+              style={{ width: "26px", height: "26px", objectFit: "contain" }}
+            />
+          </div>
+          <div>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: "1rem",
+                color: "var(--text-primary)",
+                lineHeight: 1.2,
+              }}
+            >
+              {festName}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "2px" }}>
+              {festMoto}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {role === 'MANAGER' && (
-        <>
-          <div className="nav-section-title">Team Manager</div>
-          <Link href="/dashboard/candidates" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Candidates</span>
-            <span className="nav-link-subtitle">Register your team's participants</span>
-          </Link>
-          <Link href="/dashboard/assignments" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Program Assignments</span>
-            <span className="nav-link-subtitle">Enroll candidates in programs</span>
-          </Link>
-          <Link href="/dashboard/schedule" onClick={close} className="nav-link-wrapper">
-            <span className="nav-link-main">Print Team Schedule</span>
-            <span className="nav-link-subtitle">View & print team timetable</span>
-          </Link>
-        </>
-      )}
-    </>
+      {/* User Area */}
+      <div className="sidebar-user-area">
+        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${roleColor(role)}, ${roleColor(role)}aa)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              fontSize: "0.875rem",
+              fontWeight: 700,
+              color: "white",
+            }}
+          >
+            {username.charAt(0).toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: "0.85rem",
+                color: "var(--text-primary)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {username}
+            </div>
+            <div style={{ marginTop: "2px" }}>
+              <span className="role-badge">{role.replace("_", " ").toLowerCase()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="sidebar-nav no-scrollbar">
+        {navGroups.map((group) => (
+          <div key={group.section}>
+            <div className="nav-section-title">{group.section}</div>
+            {group.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={close}
+                className={`nav-link-wrapper ${isActive(item.href) ? "active" : ""}`}
+                style={item.highlight && !isActive(item.href) ? { borderLeftColor: "rgba(14,165,233,0.3)" } : undefined}
+              >
+                <div className="nav-icon">
+                  <span style={{ fontSize: "0.95rem" }}>{item.icon}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span
+                    className="nav-link-main"
+                    style={
+                      item.highlight && !isActive(item.href)
+                        ? { color: "#0ea5e9", fontWeight: 600 }
+                        : undefined
+                    }
+                  >
+                    {item.name}
+                  </span>
+                  <span className="nav-link-subtitle">{item.subtitle}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="sidebar-footer">
+        <LogoutButton />
+      </div>
+    </div>
   );
 
   return (
     <>
-      {/* Mobile Header */}
+      {/* Mobile Top Header */}
       <header className="mobile-header no-print">
-        <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary)' }}>{festName}</h3>
-        <button onClick={toggle} className="burger-btn">
-          {isOpen ? '✕' : '☰'}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <img src="/logo.png" alt="" style={{ width: "20px", height: "20px", objectFit: "contain" }} />
+          </div>
+          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>
+            {festName}
+          </span>
+        </div>
+        <button onClick={toggle} className="burger-btn" aria-label="Toggle menu">
+          {isOpen ? "✕" : "☰"}
         </button>
       </header>
 
-      {/* Sidebar Overlay */}
-      {isOpen && <div className="sidebar-overlay" onClick={close}></div>}
+      {/* Overlay */}
+      {isOpen && <div className="sidebar-overlay" onClick={close} />}
 
-      {/* Sidebar Content */}
-      <aside className={`dashboard-sidebar no-print ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <h2 style={{ color: 'var(--primary)', margin: 0, fontSize: '1.5rem' }}>{festName}</h2>
-          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{festMoto}</div>
-          <div className="user-profile">
-            Logged in as <strong style={{ color: 'var(--text-primary)' }}>{username}</strong>
-            <br />
-            <span className="role-badge">{role.toLowerCase()}</span>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          <NavLinks />
-        </nav>
-
-        <div className="sidebar-footer">
-          <LogoutButton />
-        </div>
+      {/* Sidebar */}
+      <aside className={`dashboard-sidebar no-print ${isOpen ? "open" : ""}`}>
+        <SidebarContent />
       </aside>
-
-      <style jsx global>{`
-        .dashboard-sidebar {
-          width: 260px;
-          background-color: var(--surface-color);
-          border-right: 1px solid var(--border-color);
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          position: sticky;
-          top: 0;
-          transition: transform 0.3s ease;
-          z-index: 1000;
-        }
-
-        .mobile-header {
-          display: none;
-          padding: 1rem;
-          background-color: var(--surface-color);
-          border-bottom: 1px solid var(--border-color);
-          justify-content: space-between;
-          align-items: center;
-          position: sticky;
-          top: 0;
-          z-index: 1100;
-        }
-
-        .burger-btn {
-          background: transparent;
-          border: 1px solid var(--border-color);
-          color: white;
-          font-size: 1.5rem;
-          cursor: pointer;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: var(--radius-md);
-        }
-
-        .nav-link-wrapper {
-          padding: 0.6rem 1.5rem;
-          display: block;
-          transition: all 0.2s;
-          border-left: 3px solid transparent;
-          text-decoration: none;
-        }
-
-        .nav-link-wrapper:hover {
-          background-color: rgba(255,255,255,0.05);
-          border-left-color: var(--primary);
-        }
-
-        .nav-link-main {
-          display: block;
-          color: var(--text-secondary);
-          font-weight: 500;
-          font-size: 0.9rem;
-          transition: color 0.2s;
-        }
-
-        .nav-link-wrapper:hover .nav-link-main {
-          color: var(--primary);
-        }
-
-        .nav-link-subtitle {
-          display: block;
-          font-size: 0.65rem;
-          color: var(--text-muted);
-          margin-top: 2px;
-          line-height: 1.3;
-          font-weight: 400;
-        }
-
-        .media-link {
-          color: var(--secondary);
-          font-weight: 700;
-        }
-
-        .nav-section-title {
-          padding: 1.5rem 1.5rem 0.5rem 1.5rem;
-          font-size: 0.7rem;
-          text-transform: uppercase;
-          color: var(--text-muted);
-          letter-spacing: 0.1em;
-          font-weight: 700;
-        }
-
-        .sidebar-header {
-          padding: 2rem 1.5rem;
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .user-profile {
-          margin-top: 1rem;
-          font-size: 0.85rem;
-          color: var(--text-secondary);
-        }
-
-        .role-badge {
-          text-transform: capitalize;
-          color: var(--accent);
-          font-weight: 600;
-        }
-
-        .sidebar-nav {
-          flex: 1;
-          padding: 1rem 0;
-          overflow-y: auto;
-        }
-
-        .sidebar-footer {
-          padding: 1.5rem;
-          border-top: 1px solid var(--border-color);
-        }
-
-        @media (max-width: 1024px) {
-          .dashboard-sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            transform: translateX(-100%);
-          }
-
-          .dashboard-sidebar.open {
-            transform: translateX(0);
-          }
-
-          .mobile-header {
-            display: flex;
-          }
-
-          .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 900;
-          }
-        }
-      `}</style>
     </>
   );
 }

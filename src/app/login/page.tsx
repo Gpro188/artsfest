@@ -14,12 +14,15 @@ function LoginForm() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [branding, setBranding] = useState({ name: "Artsfest Central Portal", moto: "Central Festival Management" });
+  const [branding, setBranding] = useState({
+    name: "Artsfest Central Portal",
+    moto: "Central Festival Management",
+  });
 
   useEffect(() => {
-    // We now just always fetch generic branding.
     getBranding().then(setBranding);
   }, []);
 
@@ -45,170 +48,309 @@ function LoginForm() {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      minHeight: '100vh', 
-      padding: 'var(--spacing-md)',
-      position: 'relative',
-      overflow: 'hidden',
-      background: 'radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.15), transparent 40%)'
-    }}>
-      {/* Decorative background blobs */}
-      <div style={{ position: 'absolute', top: '10%', right: '15%', width: '300px', height: '300px', background: 'var(--primary)', borderRadius: '50%', filter: 'blur(100px)', opacity: 0.15, zIndex: 0, animation: 'pulse 8s infinite alternate' }} />
-      <div style={{ position: 'absolute', bottom: '10%', left: '15%', width: '400px', height: '400px', background: 'var(--accent)', borderRadius: '50%', filter: 'blur(120px)', opacity: 0.15, zIndex: 0, animation: 'pulse 10s infinite alternate-reverse' }} />
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        position: "relative",
+        overflow: "hidden",
+        backgroundColor: "var(--bg-color)",
+      }}
+    >
+      {/* Left decorative panel (hidden on mobile) */}
+      <div
+        className="login-left-panel"
+        style={{
+          width: "45%",
+          position: "relative",
+          background: "linear-gradient(145deg, #3730a3 0%, #4f46e5 40%, #6366f1 70%, #818cf8 100%)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "3rem",
+          overflow: "hidden",
+        }}
+      >
+        {/* Decorative orbs */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-10%",
+            right: "-10%",
+            width: "300px",
+            height: "300px",
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.08)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-5%",
+            left: "-5%",
+            width: "200px",
+            height: "200px",
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.06)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: "40%",
+            left: "20%",
+            width: "120px",
+            height: "120px",
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.05)",
+          }}
+        />
 
-      <div className="glass-panel animate-fade-in" style={{ 
-        position: 'relative',
-        zIndex: 1,
-        padding: '3rem 2.5rem', 
-        width: '100%', 
-        maxWidth: '440px', 
-        boxSizing: 'border-box',
-        background: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-      }}>
-        <div data-tour="login-branding" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div style={{ 
-            display: 'inline-flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            width: '64px', 
-            height: '64px', 
-            borderRadius: '16px', 
-            background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-            marginBottom: '1rem',
-            boxShadow: '0 10px 25px -5px rgba(99, 102, 241, 0.4)'
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", color: "white" }}>
+          <div
+            style={{
+              width: "80px",
+              height: "80px",
+              borderRadius: "20px",
+              background: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              backdropFilter: "blur(12px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.5rem",
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="Logo"
+              style={{ width: "50px", height: "50px", objectFit: "contain" }}
+            />
           </div>
-          <h1 style={{ 
-            color: 'white', 
-            marginBottom: '0.5rem', 
-            fontSize: '1.75rem', 
-            fontWeight: 800,
-            letterSpacing: '-0.025em'
-          }}>{branding.name}</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>{branding.moto}</p>
+
+          <h1 style={{ fontSize: "2rem", fontWeight: 800, marginBottom: "0.75rem", lineHeight: 1.1 }}>
+            Dpro ArtsFes
+          </h1>
+          <p style={{ fontSize: "1rem", opacity: 0.8, lineHeight: 1.6, maxWidth: "280px" }}>
+            Premium multi-tenant festival management platform for seamless arts fest operations.
+          </p>
+
+          {/* Feature bullets */}
+          <div style={{ marginTop: "2.5rem", display: "flex", flexDirection: "column", gap: "0.875rem", textAlign: "left" }}>
+            {[
+              { icon: "🏆", text: "Live standings & results broadcasting" },
+              { icon: "📅", text: "Program scheduling & venue planning" },
+              { icon: "👥", text: "Multi-role team management" },
+              { icon: "🎨", text: "Automated poster & ID card generation" },
+            ].map((f) => (
+              <div key={f.text} style={{ display: "flex", alignItems: "center", gap: "0.75rem", opacity: 0.9 }}>
+                <span
+                  style={{
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "8px",
+                    background: "rgba(255,255,255,0.12)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1rem",
+                    flexShrink: 0,
+                  }}
+                >
+                  {f.icon}
+                </span>
+                <span style={{ fontSize: "0.875rem", lineHeight: 1.4 }}>{f.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        {error && (
-          <div style={{ 
-            backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-            color: '#fca5a5', 
-            padding: '1rem', 
-            borderRadius: 'var(--radius-md)', 
-            marginBottom: '1.5rem', 
-            textAlign: 'center', 
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            fontSize: '0.9rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px'
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            {error}
+      {/* Right: Login Form */}
+      <div
+        className="login-right-panel"
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "2.5rem",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: "420px" }} className="animate-fade-in">
+          {/* Header */}
+          <div style={{ marginBottom: "2rem" }} data-tour="login-branding">
+            <h2 style={{ fontSize: "1.625rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "0.375rem" }}>
+              Sign in to your account
+            </h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+              {branding.name} · {branding.moto}
+            </p>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div data-tour="login-username">
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.5rem' }} htmlFor="username">Username</label>
-            <input
-              id="username"
-              type="text"
+          {/* Error */}
+          {error && (
+            <div
               style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                backgroundColor: 'rgba(15, 23, 42, 0.5)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'white',
-                fontSize: '1rem',
-                transition: 'all 0.2s',
-                outline: 'none',
-                boxSizing: 'border-box'
+                display: "flex",
+                alignItems: "center",
+                gap: "0.625rem",
+                backgroundColor: "rgba(239,68,68,0.08)",
+                color: "#dc2626",
+                padding: "0.875rem 1rem",
+                borderRadius: "var(--radius-md)",
+                marginBottom: "1.5rem",
+                border: "1px solid rgba(239,68,68,0.2)",
+                fontSize: "0.875rem",
               }}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="Enter your assigned username"
-              onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-            />
-          </div>
-          <div data-tour="login-password">
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.5rem' }} htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                backgroundColor: 'rgba(15, 23, 42, 0.5)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'white',
-                fontSize: '1rem',
-                transition: 'all 0.2s',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="••••••••"
-              onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-            />
-          </div>
-          <div data-tour="login-submit" style={{ marginTop: '0.5rem' }}>
-            <button 
-              type="submit" 
-              style={{ 
-                width: '100%', 
-                padding: '0.875rem',
-                background: 'linear-gradient(to right, var(--primary), var(--accent))',
-                color: 'white',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '1rem',
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-                transition: 'opacity 0.2s, transform 0.1s',
-                boxShadow: '0 4px 14px 0 rgba(99, 102, 241, 0.39)',
-              }} 
-              disabled={loading}
-              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-              onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
-              {loading ? "Authenticating..." : "Sign In to Portal"}
-            </button>
-          </div>
-        </form>
+              <span style={{ fontSize: "1rem" }}>⚠️</span>
+              {error}
+            </div>
+          )}
 
-        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>
-            Secure Portal Area &middot; Authorized Access Only
+          {/* Form */}
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div data-tour="login-username">
+              <label className="form-label" htmlFor="username">
+                Username
+              </label>
+              <div style={{ position: "relative" }}>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: "0.875rem",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: "1rem",
+                    pointerEvents: "none",
+                  }}
+                >
+                  👤
+                </span>
+                <input
+                  id="username"
+                  type="text"
+                  className="form-input"
+                  style={{ paddingLeft: "2.5rem" }}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  disabled={loading}
+                  placeholder="Enter your assigned username"
+                />
+              </div>
+            </div>
+
+            <div data-tour="login-password">
+              <label className="form-label" htmlFor="password">
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: "0.875rem",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: "1rem",
+                    pointerEvents: "none",
+                  }}
+                >
+                  🔒
+                </span>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  className="form-input"
+                  style={{ paddingLeft: "2.5rem", paddingRight: "2.5rem" }}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "0.875rem",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                    color: "var(--text-muted)",
+                    padding: 0,
+                  }}
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+            </div>
+
+            <div data-tour="login-submit">
+              <button
+                type="submit"
+                className="btn btn-primary btn-lg"
+                style={{
+                  width: "100%",
+                  opacity: loading ? 0.7 : 1,
+                  cursor: loading ? "not-allowed" : "pointer",
+                  fontSize: "0.95rem",
+                  gap: "0.625rem",
+                }}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: "16px",
+                        height: "16px",
+                        border: "2px solid rgba(255,255,255,0.3)",
+                        borderTop: "2px solid white",
+                        borderRadius: "50%",
+                        animation: "spin 0.7s linear infinite",
+                      }}
+                    />
+                    Authenticating...
+                  </>
+                ) : (
+                  "Sign In to Portal"
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Footer note */}
+          <p
+            style={{
+              marginTop: "2rem",
+              textAlign: "center",
+              color: "var(--text-muted)",
+              fontSize: "0.8rem",
+            }}
+          >
+            🔐 Secure Portal Area · Authorized Access Only
           </p>
         </div>
+
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          @keyframes spin { to { transform: rotate(360deg); } }
+          @media (max-width: 768px) {
+            .login-left-panel { display: none !important; }
+            .login-right-panel { padding: 1.5rem !important; }
+          }
+          `
+        }} />
       </div>
 
       {!isSuperAdmin && (
@@ -220,7 +362,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          Loading...
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
