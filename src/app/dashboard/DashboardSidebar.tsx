@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 interface SidebarProps {
   role: string;
@@ -313,8 +314,9 @@ export default function DashboardSidebar({
       </nav>
 
       {/* Footer */}
-      <div className="sidebar-footer">
+      <div className="sidebar-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <LogoutButton />
+        <ThemeToggle />
       </div>
     </div>
   );
