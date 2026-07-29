@@ -277,7 +277,7 @@ img, picture, video, canvas, svg {
 .form-input {
   width: 100%;
   padding: 0.625rem 0.875rem;
-  background-color: var(--surface-color);
+  background-color: var(--surface-hover);
   border: 1px solid var(--border-color-strong);
   border-radius: var(--radius-md);
   color: var(--text-primary);

@@ -10,6 +10,7 @@ interface ThemeApplicatorProps {
 
 export default function ThemeApplicator({ primaryColor, secondaryColor, bgColor }: ThemeApplicatorProps) {
   useEffect(() => {
+    // Only apply custom colors if explicitly provided and valid
     if (typeof document !== "undefined") {
       if (primaryColor) {
         document.documentElement.style.setProperty("--primary", primaryColor);
@@ -17,26 +18,8 @@ export default function ThemeApplicator({ primaryColor, secondaryColor, bgColor 
       if (secondaryColor) {
         document.documentElement.style.setProperty("--secondary", secondaryColor);
       }
-      if (bgColor) {
-        document.documentElement.style.setProperty("--bg-color", bgColor);
-        
-        const brightness = getBrightness(bgColor);
-        if (brightness > 128) {
-          // Light background: use dark text and darker surfaces
-          document.documentElement.style.setProperty("--text-primary", "#111827");
-          document.documentElement.style.setProperty("--text-secondary", "#4b5563");
-          document.documentElement.style.setProperty("--surface-color", adjustColor(bgColor, -10));
-          document.documentElement.style.setProperty("--surface-hover", adjustColor(bgColor, -20));
-        } else {
-          // Dark background: use light text and lighter surfaces
-          document.documentElement.style.setProperty("--text-primary", "#f8fafc");
-          document.documentElement.style.setProperty("--text-secondary", "#94a3b8");
-          document.documentElement.style.setProperty("--surface-color", adjustColor(bgColor, 10));
-          document.documentElement.style.setProperty("--surface-hover", adjustColor(bgColor, 20));
-        }
-      }
     }
-  }, [primaryColor, secondaryColor, bgColor]);
+  }, [primaryColor, secondaryColor]);
 
   return null;
 }
