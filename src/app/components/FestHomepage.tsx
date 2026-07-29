@@ -40,8 +40,40 @@ export default function FestHomepage({ event, homepageSetting, globalSetting, ba
   const committeeMembers = Array.isArray(settings.committeeMembers) ? settings.committeeMembers : [];
   const galleryImages = Array.isArray(settings.galleryImages) ? settings.galleryImages : [];
 
+  // Calculate luminance/brightness of chosen bgColor to ensure high contrast text & cards
+  const isLightBg = (() => {
+    if (!bgColor || bgColor.startsWith("var")) return false;
+    const hex = bgColor.replace(/^#/, '');
+    if (hex.length !== 6) return false;
+    const rgb = parseInt(hex, 16);
+    const r = (rgb >> 16) & 0xff;
+    const g = (rgb >> 8) & 0xff;
+    const b = (rgb >> 0) & 0xff;
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 140;
+  })();
+
+  const textPrimary = isLightBg ? "#0f172a" : "#f8fafc";
+  const textSecondary = isLightBg ? "#475569" : "#94a3b8";
+  const cardBg = isLightBg ? "#ffffff" : "rgba(30, 41, 59, 0.5)";
+  const cardBorder = isLightBg ? "#e2e8f0" : "rgba(255, 255, 255, 0.08)";
+  const cardShadow = isLightBg ? "0 4px 6px -1px rgba(0, 0, 0, 0.05)" : "none";
+
   return (
-    <div style={{ backgroundColor: bgColor, minHeight: '100vh', '--primary': primaryColor, '--secondary': secondaryColor } as React.CSSProperties}>
+    <div 
+      style={{ 
+        backgroundColor: bgColor, 
+        color: textPrimary,
+        minHeight: '100vh', 
+        '--primary': primaryColor, 
+        '--secondary': secondaryColor,
+        '--fest-text-primary': textPrimary,
+        '--fest-text-secondary': textSecondary,
+        '--fest-card-bg': cardBg,
+        '--fest-card-border': cardBorder,
+        '--fest-card-shadow': cardShadow,
+      } as React.CSSProperties}
+    >
       
       {/* Hero Section */}
       <section 
