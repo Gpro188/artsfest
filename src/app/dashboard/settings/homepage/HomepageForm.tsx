@@ -96,25 +96,39 @@ export default function HomepageForm({ initialData }: { initialData: any }) {
           Select one of our curated theme presets or customize individual colors.
         </p>
 
-        {/* 3 Preset Theme Cards */}
+        {/* Preset Theme Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
           {[
             {
-              name: "Royal Indigo (Default)",
+              name: "Clean Pearl (Light Mode)",
+              primary: "#4F46E5",
+              secondary: "#0284C7",
+              bg: "#F8FAFC",
+              desc: "Pure White & Crisp Blue/Indigo"
+            },
+            {
+              name: "Minimal Titanium (Light)",
+              primary: "#2563EB",
+              secondary: "#0D9488",
+              bg: "#FFFFFF",
+              desc: "Bright White & Emerald Slate"
+            },
+            {
+              name: "Royal Indigo (Dark)",
               primary: "#6366F1",
               secondary: "#0EA5E9",
               bg: "#0F172A",
               desc: "Deep Slate & Electric Violet"
             },
             {
-              name: "Cyber Emerald",
+              name: "Cyber Emerald (Dark)",
               primary: "#10B981",
               secondary: "#06B6D4",
               bg: "#064E3B",
               desc: "Vibrant Green & Deep Teal"
             },
             {
-              name: "Gold & Crimson",
+              name: "Gold & Crimson (Dark)",
               primary: "#F59E0B",
               secondary: "#EC4899",
               bg: "#18181B",
