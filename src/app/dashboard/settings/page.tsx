@@ -80,11 +80,20 @@ export default async function SettingsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>System Settings & Audit</h1>
-        <p className="page-description">
-          Configure festival-wide settings, audit program assignments, and manage data maintenance operations.
-        </p>
+      <div style={{ marginBottom: 'var(--spacing-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>System Settings & Audit</h1>
+          <p className="page-description" style={{ margin: 0 }}>
+            Configure festival-wide settings, audit program assignments, and manage data maintenance operations.
+          </p>
+        </div>
+        <a 
+          href="/dashboard/settings/homepage" 
+          className="btn btn-primary" 
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+        >
+          <span>🎨</span> Homepage & Theme Settings
+        </a>
       </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-xl)' }}>

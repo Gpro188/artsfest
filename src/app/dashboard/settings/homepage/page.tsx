@@ -15,8 +15,8 @@ export default async function HomepageSettingsPage() {
   const settings = user.eventId ? await getHomepageSettings(user.eventId) : null;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-8">
+    <div style={{ padding: '1.5rem', maxWidth: '1152px', margin: '0 auto' }}>
+      <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Homepage Settings</h1>
         <p style={{ color: 'var(--text-secondary)' }}>Configure the public landing page for your Arts Fest.</p>
       </div>

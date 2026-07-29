@@ -96,6 +96,12 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
           icon: "⚙️",
           href: "/dashboard/settings",
         },
+        {
+          name: "Homepage & Theme",
+          subtitle: "Colors, hero & committee",
+          icon: "🎨",
+          href: "/dashboard/settings/homepage",
+        },
       ],
     });
   }

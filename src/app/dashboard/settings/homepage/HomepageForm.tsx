@@ -8,6 +8,10 @@ export default function HomepageForm({ initialData }: { initialData: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   
+  const [primaryColor, setPrimaryColor] = useState(initialData?.primaryColor || "#6366F1");
+  const [secondaryColor, setSecondaryColor] = useState(initialData?.secondaryColor || "#0EA5E9");
+  const [bgColor, setBgColor] = useState(initialData?.bgColor || "#0F172A");
+
   const [committee, setCommittee] = useState<any[]>(initialData?.committeeMembers || []);
   const [gallery, setGallery] = useState<string[]>(initialData?.galleryImages || []);
 
@@ -85,21 +89,89 @@ export default function HomepageForm({ initialData }: { initialData: any }) {
         </div>
       </div>
 
-      {/* Theme Colors */}
+      {/* Theme Colors & Presets */}
       <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-        <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.25rem' }}>Theme Colors</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-md)' }}>
+        <h2 style={{ marginBottom: 'var(--spacing-xs)', fontSize: '1.25rem' }}>Theme Colors</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 'var(--spacing-md)' }}>
+          Select one of our curated theme presets or customize individual colors.
+        </p>
+
+        {/* 3 Preset Theme Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
+          {[
+            {
+              name: "Royal Indigo (Default)",
+              primary: "#6366F1",
+              secondary: "#0EA5E9",
+              bg: "#0F172A",
+              desc: "Deep Slate & Electric Violet"
+            },
+            {
+              name: "Cyber Emerald",
+              primary: "#10B981",
+              secondary: "#06B6D4",
+              bg: "#064E3B",
+              desc: "Vibrant Green & Deep Teal"
+            },
+            {
+              name: "Gold & Crimson",
+              primary: "#F59E0B",
+              secondary: "#EC4899",
+              bg: "#18181B",
+              desc: "Luxury Gold & Sunset Rose"
+            }
+          ].map((preset) => (
+            <div
+              key={preset.name}
+              onClick={() => {
+                setPrimaryColor(preset.primary);
+                setSecondaryColor(preset.secondary);
+                setBgColor(preset.bg);
+              }}
+              style={{
+                padding: '1rem',
+                borderRadius: 'var(--radius-md)',
+                border: primaryColor === preset.primary && secondaryColor === preset.secondary && bgColor === preset.bg
+                  ? '2px solid var(--primary)'
+                  : '1px solid var(--border-color)',
+                background: 'var(--surface-color)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '0.5rem' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: preset.primary, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: preset.secondary, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: preset.bg, border: '1px solid #ffffff44', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+              </div>
+              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{preset.name}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{preset.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Custom Color Pickers */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--spacing-md)', paddingTop: 'var(--spacing-md)', borderTop: '1px solid var(--border-color)' }}>
           <div className="form-group">
             <label className="form-label">Primary Color</label>
-            <input type="color" name="primaryColor" defaultValue={initialData?.primaryColor || "#4F46E5"} className="form-input" style={{ padding: '0', height: '40px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="color" name="primaryColor" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} style={{ width: '48px', height: '40px', padding: '2px', borderRadius: '6px', cursor: 'pointer', border: '1px solid var(--border-color-strong)', backgroundColor: 'transparent' }} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{primaryColor}</span>
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label">Secondary Color</label>
-            <input type="color" name="secondaryColor" defaultValue={initialData?.secondaryColor || "#0EA5E9"} className="form-input" style={{ padding: '0', height: '40px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="color" name="secondaryColor" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} style={{ width: '48px', height: '40px', padding: '2px', borderRadius: '6px', cursor: 'pointer', border: '1px solid var(--border-color-strong)', backgroundColor: 'transparent' }} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{secondaryColor}</span>
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label">Background Color</label>
-            <input type="color" name="bgColor" defaultValue={initialData?.bgColor || "#0F172A"} className="form-input" style={{ padding: '0', height: '40px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="color" name="bgColor" value={bgColor} onChange={(e) => setBgColor(e.target.value)} style={{ width: '48px', height: '40px', padding: '2px', borderRadius: '6px', cursor: 'pointer', border: '1px solid var(--border-color-strong)', backgroundColor: 'transparent' }} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{bgColor}</span>
+            </div>
           </div>
         </div>
       </div>
