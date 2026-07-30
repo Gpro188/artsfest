@@ -38,7 +38,14 @@ export default async function AssignmentsPage() {
     }
   }
 
-  const whereClause = teamId ? { teamId, isApproved: true } : { isApproved: true };
+  const eventFilter = session.user.eventId ? { eventId: session.user.eventId } : undefined;
+
+  const whereClause: any = { isApproved: true };
+  if (teamId) {
+    whereClause.teamId = teamId;
+  } else if (session.user.eventId) {
+    whereClause.team = { eventId: session.user.eventId };
+  }
 
   const candidates = await prisma.candidate.findMany({
     where: whereClause,
@@ -76,6 +83,7 @@ export default async function AssignmentsPage() {
   });
 
   const programs = await prisma.program.findMany({
+    where: eventFilter,
     include: { 
       event: true,
       category: true

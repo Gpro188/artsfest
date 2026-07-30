@@ -4,15 +4,30 @@ import { useState } from "react";
 import { addCandidate } from "./actions";
 import ImageUpload from "../../components/ImageUpload";
 
-export default function CandidateForm({ teamId, categories, isRegistrationOpen = true, statusMessage = "" }: { teamId: string, categories: any[], isRegistrationOpen?: boolean, statusMessage?: string }) {
+export default function CandidateForm({ 
+  teamId: initialTeamId = "", 
+  teams = [], 
+  categories, 
+  isRegistrationOpen = true, 
+  statusMessage = "",
+  isAdmin = false
+}: { 
+  teamId?: string, 
+  teams?: any[], 
+  categories: any[], 
+  isRegistrationOpen?: boolean, 
+  statusMessage?: string,
+  isAdmin?: boolean
+}) {
   const [name, setName] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId || teams[0]?.id || "");
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [photo, setPhoto] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  if (!isRegistrationOpen) {
+  if (!isRegistrationOpen && !isAdmin) {
     return (
       <div style={{ 
         padding: 'var(--spacing-lg)', 
@@ -31,11 +46,15 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedTeamId) {
+      setError("Please select a team for this candidate.");
+      return;
+    }
     setLoading(true);
     setError("");
     setSuccess(false);
     
-    const result = await addCandidate({ name, categoryId, teamId, photo });
+    const result = await addCandidate({ name, categoryId, teamId: selectedTeamId, photo });
     
     if (result.success) {
       setSuccess(true);
@@ -60,7 +79,7 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
         </div>
       )}
       
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr auto', gap: 'var(--spacing-md)', alignItems: 'end' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1.5fr 1.5fr 1.5fr 1.5fr auto' : '2fr 1.5fr 2fr auto', gap: 'var(--spacing-md)', alignItems: 'end' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">Candidate Name</label>
           <input 
@@ -71,9 +90,25 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
             placeholder="Full Name"
             required
           />
-          <span className="field-helper">Enter the participant's full name as it should appear on certificates.</span>
+          <span className="field-helper">Enter full name.</span>
         </div>
         
+        {isAdmin && (
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Team</label>
+            <select 
+              className="form-input" 
+              value={selectedTeamId}
+              onChange={(e) => setSelectedTeamId(e.target.value)}
+              required
+            >
+              <option value="">Select Team...</option>
+              {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+            <span className="field-helper">Team participant belongs to.</span>
+          </div>
+        )}
+
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">Category</label>
           <select 
@@ -84,7 +119,7 @@ export default function CandidateForm({ teamId, categories, isRegistrationOpen =
           >
             {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
           </select>
-          <span className="field-helper">Age-group division this candidate competes in.</span>
+          <span className="field-helper">Age-group division.</span>
         </div>
 
         <ImageUpload 

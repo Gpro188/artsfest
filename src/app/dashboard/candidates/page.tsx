@@ -96,18 +96,23 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
         </p>
       </div>
       
-      {session.user.role === "MANAGER" && userTeamId && (
-        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div data-tour="candidates-form" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-            <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Add Candidate</h3>
-            {categories.length === 0 ? (
-              <p style={{ color: 'var(--warning)' }}>No categories created for this event. Please ask Admin to add categories.</p>
-            ) : (
+      {/* Add Candidate Form (Available to Managers and Admins) */}
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <div data-tour="candidates-form" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
+          <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Add Candidate {session.user.role === "ADMIN" && "(Admin Direct Add)"}</h3>
+          {categories.length === 0 ? (
+            <p style={{ color: 'var(--warning)' }}>No categories created for this event. Please add categories in Settings or Categories setup first.</p>
+          ) : session.user.role === "MANAGER" ? (
+            userTeamId ? (
               <CandidateForm teamId={userTeamId} categories={categories} isRegistrationOpen={isRegistrationOpen} statusMessage={registrationStatusMessage} />
-            )}
-          </div>
+            ) : (
+              <p style={{ color: 'var(--warning)' }}>You are not assigned to any team.</p>
+            )
+          ) : (
+            <CandidateForm teams={teams} categories={categories} isAdmin={true} />
+          )}
         </div>
-      )}
+      </div>
 
       <div data-tour="candidates-list" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--spacing-md)' }}>

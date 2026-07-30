@@ -73,6 +73,12 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
           href: "/dashboard/programs",
         },
         {
+          name: "Program Assignments",
+          subtitle: "Enroll candidates into programs",
+          icon: "📝",
+          href: "/dashboard/assignments",
+        },
+        {
           name: "Results & Scoring",
           subtitle: "Enter marks & publish results",
           icon: "🏆",
