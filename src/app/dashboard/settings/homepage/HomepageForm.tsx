@@ -222,12 +222,25 @@ export default function HomepageForm({ initialData }: { initialData: any }) {
       <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Program Committee</h2>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>Add or edit committee members, titles, and profile photos.</p>
+            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Committee & Leaders Section</h2>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>Customize the section title and edit team members, roles, and profile photos.</p>
           </div>
           <button type="button" onClick={addCommitteeMember} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
             + Add Member
           </button>
+        </div>
+
+        {/* Section Title Input */}
+        <div className="form-group" style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <label className="form-label">Section Heading Title</label>
+          <input 
+            type="text" 
+            name="committeeTitle" 
+            defaultValue={initialData?.committeeTitle || "Program Committee"} 
+            className="form-input" 
+            placeholder="e.g. Program Committee, Group Leaders, Organizing Team" 
+          />
+          <span className="field-helper">This title will be displayed above the committee/leaders grid on your public fest homepage.</span>
         </div>
 
         {committee.length === 0 ? (

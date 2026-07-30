@@ -59,6 +59,7 @@ export async function saveHomepageSettings(data: any) {
         pinnedButtonText: data.pinnedButtonText,
         pinnedButtonLogoUrl: data.pinnedButtonLogoUrl,
         committeeMembers,
+        committeeTitle: data.committeeTitle || "Program Committee",
         galleryImages,
       },
       create: {
@@ -87,6 +88,7 @@ export async function saveHomepageSettings(data: any) {
         pinnedButtonText: data.pinnedButtonText,
         pinnedButtonLogoUrl: data.pinnedButtonLogoUrl,
         committeeMembers,
+        committeeTitle: data.committeeTitle || "Program Committee",
         galleryImages,
       },
     });

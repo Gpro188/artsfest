@@ -245,6 +245,7 @@ model HomepageSetting {
   pinnedButtonText    String?  @default("Results")
   pinnedButtonLogoUrl String?
   committeeMembers    Json?
+  committeeTitle      String?  @default("Program Committee")
   galleryImages       Json?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

@@ -59,6 +59,8 @@ export default function FestHomepage({ event, homepageSetting, globalSetting, ba
   const cardBorder = isLightBg ? "#e2e8f0" : "rgba(255, 255, 255, 0.08)";
   const cardShadow = isLightBg ? "0 4px 6px -1px rgba(0, 0, 0, 0.05)" : "none";
 
+  const committeeTitle = settings.committeeTitle || "Program Committee";
+
   return (
     <div 
       style={{ 
@@ -137,7 +139,7 @@ export default function FestHomepage({ event, homepageSetting, globalSetting, ba
       {committeeMembers.length > 0 && (
         <section className={styles.section} id="committee" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Program Committee</h2>
+            <h2 className={styles.sectionTitle}>{committeeTitle}</h2>
           </div>
           <div className={styles.committeeGrid}>
             {committeeMembers.map((member: any, idx: number) => (
