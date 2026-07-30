@@ -39,9 +39,19 @@ export default async function SearchPage(props: {
     };
   }
 
-  const events = await prisma.event.findMany({
+  const rawEvents = await prisma.event.findMany({
     where: eventWhere,
+    select: { id: true, name: true, parentId: true },
     orderBy: { createdAt: 'desc' }
+  });
+
+  // Deduplicate by name/id so event names don't repeat in dropdowns
+  const seenNames = new Set<string>();
+  const events = rawEvents.filter(ev => {
+    const key = ev.name.trim().toLowerCase();
+    if (seenNames.has(key)) return false;
+    seenNames.add(key);
+    return true;
   });
 
   const categories = await prisma.category.findMany({

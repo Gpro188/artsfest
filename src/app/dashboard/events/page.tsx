@@ -25,9 +25,9 @@ export default async function EventsPage() {
   return (
     <div className="animate-fade-in">
       <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Events Management</h1>
+        <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Events & Sub-Fest Management</h1>
         <p className="page-description">
-          Create and manage festival events. Each event operates as an isolated tenant with its own teams, programs, categories, and results.
+          Manage your festival events and optional sub-fests (such as On-Stage / Off-Stage divisions). Single-event festivals operate directly out of your main event tenant without creating extra sub-events.
         </p>
       </div>
       
