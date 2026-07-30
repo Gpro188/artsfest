@@ -94,7 +94,10 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
             </div>
           </div>
           
-          <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+            <Link href={`/search?eventId=${event.id}`} className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
+              🔍 Search
+            </Link>
             <Link href="/login" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
               Login
             </Link>

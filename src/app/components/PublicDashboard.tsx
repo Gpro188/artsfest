@@ -146,17 +146,26 @@ export default function PublicDashboard({ initialEvents, initialActiveId }: { in
             }
         `}</style>
 
-        {/* Search Input */}
-        <div style={{ position: 'relative', width: '100%', maxWidth: '600px' }}>
-            <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
-            <input 
-                type="text" 
-                placeholder="Search results by Program or Chest Number..." 
-                className="form-input"
-                style={{ paddingLeft: '45px', borderRadius: 'var(--radius-full)', background: 'var(--surface-color)', borderColor: 'var(--border-color-strong)' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        {/* Search Input & Advanced Search Link */}
+        <div style={{ display: 'flex', width: '100%', maxWidth: '680px', gap: '10px', alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+                <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
+                <input 
+                    type="text" 
+                    placeholder="Quick search by Program or Chest Number..." 
+                    className="form-input"
+                    style={{ paddingLeft: '45px', borderRadius: 'var(--radius-full)', background: 'var(--surface-color)', borderColor: 'var(--border-color-strong)' }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+            <Link 
+                href={`/search${activeEventId ? `?eventId=${activeEventId}` : ''}`} 
+                className="btn btn-secondary"
+                style={{ borderRadius: 'var(--radius-full)', padding: '0.625rem 1.25rem', fontSize: '0.85rem', whiteSpace: 'nowrap', textDecoration: 'none' }}
+            >
+                ⚙️ Advanced Search
+            </Link>
         </div>
 
         {/* Tab Navigation */}
