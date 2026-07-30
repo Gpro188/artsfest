@@ -4,13 +4,20 @@ import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import HubTourWrapper from "./HubTourWrapper";
 
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+
 export default async function HubPage(props: {
   searchParams: Promise<{ eventId?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const { eventId } = searchParams;
-  const settings = await getSettings(eventId);
-  const res = await getHubData(eventId);
+  const session = await getServerSession(authOptions);
+
+  // Prioritize URL eventId, then logged-in user's eventId
+  const activeEventId = searchParams.eventId || session?.user?.eventId || undefined;
+  
+  const settings = await getSettings(activeEventId);
+  const res = await getHubData(activeEventId);
   const events = (res.success && res.data) ? res.data : [];
 
   return (
