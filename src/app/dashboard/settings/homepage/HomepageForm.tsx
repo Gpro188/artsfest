@@ -220,25 +220,80 @@ export default function HomepageForm({ initialData }: { initialData: any }) {
 
       {/* Program Committee */}
       <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-        <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.25rem' }}>Program Committee</h2>
-        {committee.map((member, idx) => (
-          <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)', alignItems: 'center' }}>
-            <input type="text" placeholder="Name" value={member.name} onChange={e => updateCommittee(idx, 'name', e.target.value)} className="form-input" />
-            <input type="text" placeholder="Role (e.g. Chairman)" value={member.role} onChange={e => updateCommittee(idx, 'role', e.target.value)} className="form-input" />
-            
-            <div style={{ minWidth: '200px' }}>
-              <ImageUpload 
-                label="" 
-                folder="committee" 
-                initialUrl={member.imageUrl}
-                onUploadComplete={(url) => updateCommittee(idx, 'imageUrl', url)} 
-              />
-            </div>
-            
-            <button type="button" onClick={() => removeCommittee(idx)} className="btn-secondary" style={{ backgroundColor: 'var(--error)' }}>Remove</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Program Committee</h2>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>Add or edit committee members, titles, and profile photos.</p>
           </div>
-        ))}
-        <button type="button" onClick={addCommitteeMember} className="btn-secondary" style={{ marginTop: 'var(--spacing-sm)' }}>+ Add Member</button>
+          <button type="button" onClick={addCommitteeMember} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+            + Add Member
+          </button>
+        </div>
+
+        {committee.length === 0 ? (
+          <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+            No committee members added yet. Click <strong>+ Add Member</strong> above to add organizers.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+            {committee.map((member, idx) => (
+              <div 
+                key={idx} 
+                style={{ 
+                  padding: 'var(--spacing-md)', 
+                  backgroundColor: 'var(--surface-color)', 
+                  border: '1px solid var(--border-color-strong)', 
+                  borderRadius: 'var(--radius-md)',
+                  display: 'grid', 
+                  gridTemplateColumns: 'auto 1fr 1fr 2fr auto', 
+                  gap: 'var(--spacing-md)', 
+                  alignItems: 'center' 
+                }}
+              >
+                {/* Avatar Preview */}
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'var(--surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--border-color)' }}>
+                  {member.imageUrl ? (
+                    <img src={member.imageUrl} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontSize: '1.5rem' }}>👤</span>
+                  )}
+                </div>
+
+                {/* Name */}
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '2px' }}>Name</label>
+                  <input type="text" placeholder="e.g. John Doe" value={member.name} onChange={e => updateCommittee(idx, 'name', e.target.value)} className="form-input" />
+                </div>
+
+                {/* Role */}
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '2px' }}>Role / Designation</label>
+                  <input type="text" placeholder="e.g. Chairman" value={member.role} onChange={e => updateCommittee(idx, 'role', e.target.value)} className="form-input" />
+                </div>
+
+                {/* Photo Upload */}
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <ImageUpload 
+                    label="Profile Photo" 
+                    folder="committee" 
+                    initialUrl={member.imageUrl}
+                    onUploadComplete={(url) => updateCommittee(idx, 'imageUrl', url)} 
+                  />
+                </div>
+
+                {/* Remove Action */}
+                <button 
+                  type="button" 
+                  onClick={() => removeCommittee(idx)} 
+                  className="btn btn-danger" 
+                  style={{ padding: '0.5rem 0.875rem', fontSize: '0.85rem' }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Gallery Section */}
