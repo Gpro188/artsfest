@@ -23,7 +23,24 @@ export default async function SearchPage(props: {
   const stageType = searchParams.stageType || "";
   const programType = searchParams.programType || "";
   
+  // If eventId is provided, filter events dropdown to the main event & its sub-events
+  let eventWhere: any = {};
+  if (eventId) {
+    const targetEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, parentId: true }
+    });
+    const rootId = targetEvent?.parentId || eventId;
+    eventWhere = {
+      OR: [
+        { id: rootId },
+        { parentId: rootId }
+      ]
+    };
+  }
+
   const events = await prisma.event.findMany({
+    where: eventWhere,
     orderBy: { createdAt: 'desc' }
   });
 
