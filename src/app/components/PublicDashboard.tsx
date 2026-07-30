@@ -61,7 +61,7 @@ export default function PublicDashboard({ initialEvents, initialActiveId }: { in
         alignItems: 'center' 
       }}>
         {/* Event Switcher */}
-        <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.6)', padding: '4px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', background: 'var(--surface-color)', padding: '4px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
           {initialEvents.map(event => (
             <button
               key={event.id}
@@ -99,16 +99,17 @@ export default function PublicDashboard({ initialEvents, initialActiveId }: { in
                     { label: 'Live Participants', value: data.stats.totalParticipants, icon: '🎭', color: 'var(--accent)' }
                 ].map((stat, i) => (
                     <div key={i} className="stat-card" style={{ 
-                        padding: '12px', 
+                        padding: '16px 12px', 
                         textAlign: 'center', 
-                        borderBottom: `3px solid ${stat.color}`,
-                        background: 'rgba(30, 41, 59, 0.7)',
+                        borderTop: `3px solid ${stat.color}`,
+                        background: 'var(--surface-color)',
                         borderRadius: 'var(--radius-lg)',
-                        border: '1px solid var(--border-color)'
+                        border: '1px solid var(--border-color)',
+                        boxShadow: 'var(--shadow-sm)'
                     }}>
-                        <div className="stat-icon" style={{ fontSize: '1.2rem', marginBottom: '5px' }}>{stat.icon}</div>
-                        <div className="stat-value" style={{ fontSize: '1.5rem', fontWeight: 800 }}>{stat.value}</div>
-                        <div className="stat-label" style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>{stat.label}</div>
+                        <div className="stat-icon" style={{ fontSize: '1.4rem', marginBottom: '4px' }}>{stat.icon}</div>
+                        <div className="stat-value" style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>{stat.value}</div>
+                        <div className="stat-label" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{stat.label}</div>
                     </div>
                 ))}
             </div>
@@ -145,14 +146,14 @@ export default function PublicDashboard({ initialEvents, initialActiveId }: { in
             }
         `}</style>
 
-        {/* Global Search Bar */}
-        <div style={{ width: '100%', maxWidth: '600px', position: 'relative' }}>
+        {/* Search Input */}
+        <div style={{ position: 'relative', width: '100%', maxWidth: '600px' }}>
             <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
             <input 
                 type="text" 
                 placeholder="Search results by Program or Chest Number..." 
                 className="form-input"
-                style={{ paddingLeft: '45px', borderRadius: 'var(--radius-full)', background: 'rgba(255,255,255,0.05)' }}
+                style={{ paddingLeft: '45px', borderRadius: 'var(--radius-full)', background: 'var(--surface-color)', borderColor: 'var(--border-color-strong)' }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -161,9 +162,9 @@ export default function PublicDashboard({ initialEvents, initialActiveId }: { in
         {/* Tab Navigation */}
         <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: '10px', flexWrap: 'wrap' }}>
             {[
-                { id: 'standings', label: '📊 Standings', color: '#FCD34D' },
-                { id: 'hall', label: '⭐ Hall of Fame', color: '#F43F5E' },
-                { id: 'live', label: '🔥 Live Feed', color: '#10B981' }
+                { id: 'standings', label: '📊 Standings', color: '#D97706' },
+                { id: 'hall', label: '⭐ Hall of Fame', color: '#E11D48' },
+                { id: 'live', label: '🔥 Live Feed', color: '#059669' }
             ].map(tab => (
                 <button 
                     key={tab.id}
@@ -172,7 +173,7 @@ export default function PublicDashboard({ initialEvents, initialActiveId }: { in
                         padding: '10px 20px', 
                         borderRadius: 'var(--radius-md)', 
                         border: 'none',
-                        background: activeTab === tab.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+                        background: activeTab === tab.id ? 'var(--surface-hover)' : 'transparent',
                         color: activeTab === tab.id ? tab.color : 'var(--text-secondary)',
                         fontWeight: 600,
                         cursor: 'pointer',
