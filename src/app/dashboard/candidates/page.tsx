@@ -21,9 +21,11 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
   let isRegistrationOpen = true;
   let registrationStatusMessage = "";
 
+  const eventFilter = session.user.eventId ? { eventId: session.user.eventId } : undefined;
+
   const [allTeams, allCategories] = await Promise.all([
-    session.user.role === "ADMIN" ? prisma.team.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
-    session.user.role === "ADMIN" ? prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([])
+    session.user.role === "ADMIN" ? prisma.team.findMany({ where: eventFilter, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
+    session.user.role === "ADMIN" ? prisma.category.findMany({ where: eventFilter, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([])
   ]);
 
   if (session.user.role === "MANAGER") {
@@ -54,11 +56,15 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
     teams = allTeams;
   }
 
-  // Define where clause
+  // Define where clause scoped by eventId and role
   const whereClause: any = {};
   if (session.user.role === "MANAGER") {
     whereClause.teamId = userTeamId;
   } else {
+    // If Admin has an eventId assigned, scope candidates to that event
+    if (session.user.eventId) {
+      whereClause.team = { eventId: session.user.eventId };
+    }
     if (filterTeamId) whereClause.teamId = filterTeamId;
   }
   
