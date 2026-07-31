@@ -19,12 +19,24 @@ export default async function ScoringPage(props: {
     redirect("/dashboard");
   }
 
+  // Scope events strictly to logged in Admin's main event and its sub-events
+  const userEventId = session.user.eventId;
+  const eventWhere: any = userEventId ? {
+    OR: [
+      { id: userEventId },
+      { parentId: userEventId }
+    ]
+  } : {};
+
   const events = await prisma.event.findMany({
+    where: eventWhere,
     orderBy: { createdAt: 'desc' },
     select: { id: true, name: true, createdAt: true }
   });
 
-  const activeEventId = searchParams.eventId || events[0]?.id;
+  const activeEventId = (searchParams.eventId && events.some(e => e.id === searchParams.eventId)) 
+    ? searchParams.eventId 
+    : events[0]?.id;
 
   if (!activeEventId) {
     return (

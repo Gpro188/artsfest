@@ -21,11 +21,17 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
   let isRegistrationOpen = true;
   let registrationStatusMessage = "";
 
-  const eventFilter = session.user.eventId ? { eventId: session.user.eventId } : undefined;
+  const userEventId = session.user.eventId;
+  const categoryTeamWhere: any = userEventId ? {
+    OR: [
+      { eventId: userEventId },
+      { event: { parentId: userEventId } }
+    ]
+  } : undefined;
 
   const [allTeams, allCategories] = await Promise.all([
-    session.user.role === "ADMIN" ? prisma.team.findMany({ where: eventFilter, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
-    session.user.role === "ADMIN" ? prisma.category.findMany({ where: eventFilter, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([])
+    session.user.role === "ADMIN" ? prisma.team.findMany({ where: categoryTeamWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
+    session.user.role === "ADMIN" ? prisma.category.findMany({ where: categoryTeamWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([])
   ]);
 
   if (session.user.role === "MANAGER") {

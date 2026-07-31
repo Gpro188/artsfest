@@ -19,12 +19,23 @@ export default async function SchedulePage(props: {
   const { role, id: userId } = session.user;
 
   if (role === "ADMIN") {
+    const userEventId = session.user.eventId;
+    const eventWhere: any = userEventId ? {
+      OR: [
+        { id: userEventId },
+        { parentId: userEventId }
+      ]
+    } : {};
+
     const events = await prisma.event.findMany({
+      where: eventWhere,
       orderBy: { createdAt: 'desc' },
       select: { id: true, name: true, createdAt: true }
     });
 
-    const activeEventId = searchParams.eventId || events[0]?.id;
+    const activeEventId = (searchParams.eventId && events.some(e => e.id === searchParams.eventId)) 
+      ? searchParams.eventId 
+      : events[0]?.id;
 
     const programs = await prisma.program.findMany({
       where: activeEventId ? { eventId: activeEventId } : {},
