@@ -63,7 +63,7 @@ export default async function ProgramsPage() {
         <>
           <div data-tour="programs-bulk">
             <ProgramBulkActions 
-              eventId={currentEventId} 
+              events={events} 
               programs={programs} 
               categories={allCategories} 
             />

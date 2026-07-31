@@ -5,22 +5,27 @@ import * as XLSX from "xlsx";
 import { bulkImportCandidates } from "./actions";
 
 export default function CandidateBulkActions({ teams, categories }: { teams: any[], categories: any[] }) {
+  const [selectedTeamId, setSelectedTeamId] = useState(teams[0]?.id || "");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(categories[0]?.id || "");
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const selectedTeam = teams.find(t => t.id === selectedTeamId) || teams[0];
+  const selectedCategory = categories.find(c => c.id === selectedCategoryId) || categories[0];
 
   const downloadTemplate = () => {
     const template = [
       {
         "Candidate Name": "Muhammad Ali",
-        "Team": teams[0]?.name || "Alpha Team",
-        "Category": categories[0]?.name || "Senior",
+        "Team": selectedTeam?.name || teams[0]?.name || "Alpha Team",
+        "Category": selectedCategory?.name || categories[0]?.name || "Senior",
         "Chest Number": "A101"
       },
       {
         "Candidate Name": "Fathima Riya",
-        "Team": teams[0]?.name || "Alpha Team",
-        "Category": categories[1]?.name || categories[0]?.name || "Junior",
+        "Team": selectedTeam?.name || teams[0]?.name || "Alpha Team",
+        "Category": selectedCategory?.name || categories[0]?.name || "Senior",
         "Chest Number": "A102"
       }
     ];
@@ -28,7 +33,7 @@ export default function CandidateBulkActions({ teams, categories }: { teams: any
     const ws = XLSX.utils.json_to_sheet(template);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Candidates_Template");
-    XLSX.writeFile(wb, "Candidates_Import_Template.xlsx");
+    XLSX.writeFile(wb, `Candidates_Template_${selectedTeam?.name?.replace(/\s+/g, '_') || 'Fest'}.xlsx`);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,13 +63,14 @@ export default function CandidateBulkActions({ teams, categories }: { teams: any
           const teamName = (row["Team"] || row["team"] || row["Team Name"] || "").toString().trim();
           const catName = (row["Category"] || row["category"] || row["Category Name"] || "").toString().trim();
 
-          const team = teams.find(t => t.name.toLowerCase() === teamName.toLowerCase());
-          const category = categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+          // Use Excel value first, fallback to user selected dropdown defaults
+          const team = teamName ? teams.find(t => t.name.toLowerCase() === teamName.toLowerCase()) : selectedTeam;
+          const category = catName ? categories.find(c => c.name.toLowerCase() === catName.toLowerCase()) : selectedCategory;
 
           return {
             name: (row["Candidate Name"] || row["Name"] || row["name"] || "").toString().trim(),
-            teamId: team?.id || "",
-            categoryId: category?.id || "",
+            teamId: team?.id || selectedTeamId,
+            categoryId: category?.id || selectedCategoryId,
             chestNumber: (row["Chest Number"] || row["chestNumber"] || "").toString().trim() || undefined,
             rawTeam: teamName,
             rawCategory: catName
@@ -81,14 +87,14 @@ export default function CandidateBulkActions({ teams, categories }: { teams: any
 
         const missingTeam = mappedCandidates.filter(c => !c.teamId);
         if (missingTeam.length > 0) {
-          setError(`Could not find team matching "${missingTeam[0].rawTeam}". Make sure team names match your created teams exact spelling.`);
+          setError(`Could not find team matching "${missingTeam[0].rawTeam}". Please select a default team in the dropdown above or check spelling.`);
           setImporting(false);
           return;
         }
 
         const missingCat = mappedCandidates.filter(c => !c.categoryId);
         if (missingCat.length > 0) {
-          setError(`Could not find category matching "${missingCat[0].rawCategory}". Make sure category names match your created categories exact spelling.`);
+          setError(`Could not find category matching "${missingCat[0].rawCategory}". Please select a default category in the dropdown above or check spelling.`);
           setImporting(false);
           return;
         }
@@ -113,11 +119,44 @@ export default function CandidateBulkActions({ teams, categories }: { teams: any
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
         <div>
           <h3 style={{ margin: 0 }}>Candidate Excel Upload & Bulk Actions</h3>
-          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Download sample template, fill candidate list, and upload in bulk.</p>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Select team & category presets, download pre-filled Excel template, and upload in bulk.</p>
         </div>
         <button onClick={downloadTemplate} className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           📥 Download Template Excel
         </button>
+      </div>
+
+      {/* Preset Target Selection Bar */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)', padding: 'var(--spacing-sm) var(--spacing-md)', backgroundColor: 'var(--surface-color)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+        {teams.length > 0 && (
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '2px', fontWeight: 600 }}>Default Target Team:</label>
+            <select 
+              className="form-input" 
+              value={selectedTeamId}
+              onChange={(e) => setSelectedTeamId(e.target.value)}
+            >
+              {teams.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {categories.length > 0 && (
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '2px', fontWeight: 600 }}>Default Target Category:</label>
+            <select 
+              className="form-input" 
+              value={selectedCategoryId}
+              onChange={(e) => setSelectedCategoryId(e.target.value)}
+            >
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div style={{ border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-lg)', textAlign: 'center', backgroundColor: 'var(--surface-color)' }}>
@@ -134,9 +173,11 @@ export default function CandidateBulkActions({ teams, categories }: { teams: any
             />
             <label htmlFor="candidate-excel-upload" style={{ cursor: 'pointer', display: 'block' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>👨‍🎓📊</div>
-              <div style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '1rem' }}>Click to Upload Candidates Excel</div>
+              <div style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '1rem' }}>
+                Click to Upload Candidates Excel
+              </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Supports candidate names, team names, categories, and optional chest numbers.
+                Fills target Team ({selectedTeam?.name || 'Selected'}) & Category ({selectedCategory?.name || 'Selected'}) automatically if left blank in file.
               </div>
             </label>
           </>
