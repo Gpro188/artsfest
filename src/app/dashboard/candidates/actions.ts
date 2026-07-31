@@ -40,7 +40,6 @@ export async function addCandidate(data: { name: string, categoryId: string, tea
   } catch (error: any) {
     console.error("Failed to add candidate:", error);
     
-    // Better error messages for Prisma errors
     if (error.code === 'P2002') {
       return { success: false, error: "A unique constraint failed. This candidate or chest number might already exist." };
     }
@@ -104,7 +103,6 @@ export async function deleteCandidate(id: string) {
     const candidate = await prisma.candidate.findUnique({ where: { id } });
     if (!candidate) return { success: false, error: "Candidate not found" };
 
-    // Prevent manager from deleting approved candidate
     if (session.user.role === "MANAGER") {
       const team = await prisma.team.findUnique({
         where: { managerId: session.user.id },
@@ -134,17 +132,13 @@ export async function approveCandidate(id: string, prefixCode: string) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-    // Find the candidate
     const candidate = await prisma.candidate.findUnique({ where: { id } });
     if (!candidate || candidate.isApproved) return { success: false, error: "Candidate already approved or not found" };
 
-    // Transaction for assigning Chest Number
     await prisma.$transaction(async (tx) => {
-      // Fetch category to get offset
       const cat = await tx.category.findUnique({ where: { id: candidate.categoryId } });
       const offset = cat?.chestNumberOffset || 0;
 
-      // Find the highest existing chest number for this prefix and category
       const existingCandidates = await tx.candidate.findMany({
         where: { teamId: candidate.teamId, categoryId: candidate.categoryId, isApproved: true, chestNumber: { not: null } },
         select: { chestNumber: true }
@@ -156,13 +150,12 @@ export async function approveCandidate(id: string, prefixCode: string) {
         const sequences = existingCandidates
           .map(c => c.chestNumber!)
           .map(cn => {
-             // For numeric, we need to subtract both prefix and offset
              const isNum = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
              if (isNum) {
                return parseInt(cn, 10) - parseInt(prefixCode, 10) - offset;
              }
              const numPart = parseInt(cn.replace(prefixCode, ''), 10);
-             return numPart - offset + 1; // Get the relative sequence
+             return numPart - offset + 1;
           })
           .filter(n => !isNaN(n));
           
@@ -171,20 +164,12 @@ export async function approveCandidate(id: string, prefixCode: string) {
         }
       }
 
-      // Logic: Incorporate offset to avoid collisions between categories
       const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
       let newChestNumber = "";
 
       if (isNumericPrefix) {
         newChestNumber = (parseInt(prefixCode, 10) + offset + nextSequence).toString();
       } else {
-        // For alphanumeric, we use prefix + (offset + sequence)
-        // We subtract 1 if offset starts from 1, or just add if it's a base.
-        // Usually if offset is 1, they want it to start at 1.
-        const sequenceWithOffset = offset + nextSequence - (offset > 0 ? 0 : 0); 
-        // Wait, if offset is 1, nextSequence is 1, we want 1. So 1 + 1 - 1 = 1.
-        // Actually, offset is usually the START of the range.
-        // If offset is 1, first is 1. If offset is 31, first is 31.
         const finalNum = offset + nextSequence - 1;
         const formattedNum = finalNum.toString().padStart(2, '0');
         newChestNumber = `${prefixCode}${formattedNum}`;
@@ -207,5 +192,37 @@ export async function approveCandidate(id: string, prefixCode: string) {
       return { success: false, error: "Approval failed: Chest number collision. Please check prefix codes and category offsets." };
     }
     return { success: false, error: error.message || "Failed to approve candidate" };
+  }
+}
+
+export async function bulkImportCandidates(candidatesList: Array<{ name: string, teamId: string, categoryId: string, chestNumber?: string }>) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return { success: false, error: "Unauthorized" };
+
+    let count = 0;
+    for (const c of candidatesList) {
+      if (!c.name || !c.teamId || !c.categoryId) continue;
+
+      await prisma.candidate.create({
+        data: {
+          name: c.name,
+          teamId: c.teamId,
+          categoryId: c.categoryId,
+          chestNumber: c.chestNumber || null,
+          isApproved: true,
+        }
+      });
+      count++;
+    }
+
+    revalidatePath("/dashboard/candidates");
+    return { success: true, count };
+  } catch (error: any) {
+    console.error("Failed to bulk import candidates:", error);
+    if (error.code === 'P2002') {
+      return { success: false, error: "Duplicate chest number or candidate constraint failed during import." };
+    }
+    return { success: false, error: error.message || "Failed to import candidates" };
   }
 }

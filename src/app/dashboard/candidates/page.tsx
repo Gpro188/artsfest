@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import CandidateForm from "./CandidateForm";
 import CandidateList from "./CandidateList";
 import CandidateFilter from "./CandidateFilter";
+import CandidateBulkActions from "./CandidateBulkActions";
 
 export default async function CandidatesPage(props: { searchParams: Promise<{ teamId?: string, categoryId?: string }> }) {
   const searchParams = await props.searchParams;
@@ -102,6 +103,9 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
         </p>
       </div>
       
+      {/* Bulk Import / Excel Actions */}
+      <CandidateBulkActions teams={teams} categories={categories} />
+
       {/* Add Candidate Form (Available to Managers and Admins) */}
       <div style={{ marginBottom: 'var(--spacing-lg)' }}>
         <div data-tour="candidates-form" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
