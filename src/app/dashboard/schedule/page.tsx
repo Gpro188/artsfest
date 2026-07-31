@@ -27,10 +27,18 @@ export default async function SchedulePage(props: {
       ]
     } : {};
 
-    const events = await prisma.event.findMany({
+    const rawEvents = await prisma.event.findMany({
       where: eventWhere,
       orderBy: { createdAt: 'desc' },
       select: { id: true, name: true, createdAt: true }
+    });
+
+    const seenEventNames = new Set<string>();
+    const events = rawEvents.filter(ev => {
+      const key = ev.name.trim().toLowerCase();
+      if (seenEventNames.has(key)) return false;
+      seenEventNames.add(key);
+      return true;
     });
 
     const activeEventId = (searchParams.eventId && events.some(e => e.id === searchParams.eventId)) 
