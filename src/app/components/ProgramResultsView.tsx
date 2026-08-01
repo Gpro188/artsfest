@@ -7,6 +7,7 @@ import { toPng } from "html-to-image";
 export default function ProgramResultsView({ program, settings, userRole }: { program: any, settings: any, userRole?: string }) {
   const isAuthorizedMedia = userRole === 'ADMIN' || userRole === 'MEDIA';
   const [isPosterMode, setIsPosterMode] = useState(false);
+  const [posterStyle, setPosterStyle] = useState<'photo' | 'nophoto'>('nophoto'); // Default: Without Photo as requested
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDataUrl, setGeneratedDataUrl] = useState<string | null>(null);
   const posterRef = useRef<HTMLDivElement>(null);
@@ -117,9 +118,29 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
   if (isPosterMode) {
     return (
       <div className="poster-container" style={{ minHeight: '100vh', backgroundColor: '#0f172a', padding: '40px 0' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px', padding: '20px', position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '10px', padding: '20px', position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)', marginBottom: '20px' }}>
             <button onClick={() => { setIsPosterMode(false); setGeneratedDataUrl(null); }} className="btn btn-secondary no-print">← Back</button>
             
+            {/* Style Selector Buttons */}
+            {!finalPosterUrl && (
+              <div style={{ display: 'flex', gap: '5px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '4px', borderRadius: 'var(--radius-md)' }} className="no-print">
+                <button 
+                  onClick={() => { setPosterStyle('nophoto'); setGeneratedDataUrl(null); }}
+                  className={`btn ${posterStyle === 'nophoto' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '6px 12px', fontSize: '0.8rem', backgroundColor: posterStyle === 'nophoto' ? 'var(--primary)' : 'transparent', border: 'none' }}
+                >
+                  📝 Text-Only (No Photo)
+                </button>
+                <button 
+                  onClick={() => { setPosterStyle('photo'); setGeneratedDataUrl(null); }}
+                  className={`btn ${posterStyle === 'photo' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '6px 12px', fontSize: '0.8rem', backgroundColor: posterStyle === 'photo' ? 'var(--primary)' : 'transparent', border: 'none' }}
+                >
+                  🖼️ With Participant Photo
+                </button>
+              </div>
+            )}
+
             {!finalPosterUrl && !generatedDataUrl && (program.category?.posterBgUrl || settings?.posterBgUrl || isAuthorizedMedia) && (
               <button onClick={handleGeneratePoster} className="btn btn-primary no-print" disabled={isGenerating}>
                   {isGenerating ? '⌛ Generating...' : '✨ Generate Poster'}
@@ -166,8 +187,8 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
             ) : (
                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '50px 20px', border: '2px dashed rgba(255,255,255,0.2)', borderRadius: 'var(--radius-lg)' }}>
                     <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🖼️</div>
-                    <h3 style={{ marginBottom: '10px', color: 'var(--text-secondary)' }}>Ready to Generate</h3>
-                    <p style={{ fontSize: '0.9rem', maxWidth: '300px', margin: '0 auto' }}>Click the Generate Poster button above to automatically design and create the high-resolution official poster.</p>
+                    <h3 style={{ marginBottom: '10px', color: 'var(--text-secondary)' }}>Ready to Generate ({posterStyle === 'nophoto' ? 'No Photo Template' : 'With Photo Template'})</h3>
+                    <p style={{ fontSize: '0.9rem', maxWidth: '320px', margin: '0 auto' }}>Click the Generate Poster button above to automatically design and create the high-resolution official poster.</p>
                 </div>
             )}
         </div>
@@ -202,10 +223,10 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                         {settings?.posterLogoUrl && <img src={settings.posterLogoUrl} style={{ height: '100px', objectFit: 'contain' }} alt="" crossOrigin="anonymous" />}
                     </div>
 
-                    {/* CENTER BODY CONTENT (Reference Image Style) */}
+                    {/* CENTER BODY CONTENT */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', zIndex: 1, padding: '0', justifyContent: 'center', height: '100%' }}>
                         
-                        {/* Top Empty Space (approx 30%) */}
+                        {/* Top Empty Space (approx 28%) */}
                         <div style={{ height: '28%' }}></div>
 
                         {/* Content Group - Tightly packed in the middle */}
@@ -235,21 +256,37 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
                                 </div>
                             </div>
 
-                            {/* Winners Horizontal Line */}
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 40px', gap: '30px', flexWrap: 'wrap' }}>
-                                {winners.map((winner: any) => (
-                                    <WinnerCard 
-                                        key={winner.id} 
-                                        result={winner} 
-                                        rank={winner.rank} 
-                                        secondaryColor={settings?.posterSecondaryColor}
-                                        textColor={settings?.posterTextColor}
-                                    />
-                                ))}
-                            </div>
+                            {/* Winners Render based on selected style */}
+                            {posterStyle === 'nophoto' ? (
+                              /* Clean Without Photo / Typography Style */
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', maxWidth: '850px', margin: '0 auto', width: '100%' }}>
+                                  {winners.map((winner: any) => (
+                                      <WinnerNoPhotoCard 
+                                          key={winner.id} 
+                                          result={winner} 
+                                          rank={winner.rank} 
+                                          secondaryColor={settings?.posterSecondaryColor}
+                                          textColor={settings?.posterTextColor}
+                                      />
+                                  ))}
+                              </div>
+                            ) : (
+                              /* Photo Cards Style */
+                              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 40px', gap: '30px', flexWrap: 'wrap' }}>
+                                  {winners.map((winner: any) => (
+                                      <WinnerCard 
+                                          key={winner.id} 
+                                          result={winner} 
+                                          rank={winner.rank} 
+                                          secondaryColor={settings?.posterSecondaryColor}
+                                          textColor={settings?.posterTextColor}
+                                      />
+                                  ))}
+                              </div>
+                            )}
                         </div>
 
-                        {/* Bottom Empty Space (approx 30%) */}
+                        {/* Bottom Empty Space (approx 25%) */}
                         <div style={{ height: '25%' }}></div>
                     </div>
                 </div>
@@ -532,6 +569,72 @@ function WinnerCard({
                 }}>
                     {teamName}
                 </div>
+            </div>
+        </div>
+    );
+}
+
+function WinnerNoPhotoCard({ 
+    result, 
+    rank, 
+    secondaryColor = "#f97316", 
+    textColor = "#1e293b" 
+}: { 
+    result: any, 
+    rank: number, 
+    secondaryColor?: string, 
+    textColor?: string 
+}) {
+    const displayName = result.candidate?.name || result.team?.name || 'Participant';
+    const teamName = result.candidate?.team?.name || result.team?.name || '';
+    const rankLabel = rank === 1 ? '1ST PRIZE' : rank === 2 ? '2ND PRIZE' : '3RD PRIZE';
+
+    return (
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            padding: '20px 32px',
+            borderLeft: `10px solid ${secondaryColor}`,
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)'
+        }}>
+            <div style={{ textAlign: 'left' }}>
+                <div style={{ 
+                    fontSize: '2rem', 
+                    fontWeight: 900, 
+                    color: textColor, 
+                    lineHeight: 1.1,
+                    textTransform: 'uppercase',
+                    marginBottom: '4px'
+                }}>
+                    {displayName}
+                </div>
+                <div style={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 700, 
+                    color: secondaryColor,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px'
+                }}>
+                    {teamName}
+                </div>
+            </div>
+
+            <div style={{
+                backgroundColor: secondaryColor,
+                color: 'white',
+                padding: '10px 24px',
+                borderRadius: '12px',
+                fontWeight: 900,
+                fontSize: '1.2rem',
+                letterSpacing: '1px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}>
+                {rankLabel}
             </div>
         </div>
     );
