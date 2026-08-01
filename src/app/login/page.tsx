@@ -26,7 +26,7 @@ function LoginForm() {
     getBranding().then(setBranding);
     if (isSuperAdmin) {
       setUsername("superadmin");
-      setPassword("admin123");
+      setPassword("superadmin123");
     }
   }, [isSuperAdmin]);
 
@@ -238,7 +238,7 @@ function LoginForm() {
                   setLoading(true);
                   signIn("credentials", {
                     username: "superadmin",
-                    password: "admin123",
+                    password: "superadmin123",
                     redirect: false,
                   }).then((res) => {
                     if (!res?.error) {
