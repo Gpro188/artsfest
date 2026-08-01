@@ -24,7 +24,11 @@ function LoginForm() {
 
   useEffect(() => {
     getBranding().then(setBranding);
-  }, []);
+    if (isSuperAdmin) {
+      setUsername("superadmin");
+      setPassword("admin123");
+    }
+  }, [isSuperAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,6 +212,47 @@ function LoginForm() {
             >
               <span style={{ fontSize: "1rem" }}>⚠️</span>
               {error}
+            </div>
+          )}
+
+          {/* Quick Super Admin Login Banner */}
+          {isSuperAdmin && (
+            <div
+              style={{
+                backgroundColor: "rgba(79, 70, 229, 0.08)",
+                border: "1px solid rgba(79, 70, 229, 0.25)",
+                borderRadius: "var(--radius-md)",
+                padding: "1rem",
+                marginBottom: "1.5rem",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+                ⚡ Super Admin Direct Access Active
+              </p>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ width: "100%", fontSize: "0.875rem" }}
+                onClick={() => {
+                  setLoading(true);
+                  signIn("credentials", {
+                    username: "superadmin",
+                    password: "admin123",
+                    redirect: false,
+                  }).then((res) => {
+                    if (!res?.error) {
+                      router.push("/super-admin");
+                      router.refresh();
+                    } else {
+                      setError("Failed to auto-login as Super Admin");
+                      setLoading(false);
+                    }
+                  });
+                }}
+              >
+                🚀 1-Click Direct Super Admin Login
+              </button>
             </div>
           )}
 
