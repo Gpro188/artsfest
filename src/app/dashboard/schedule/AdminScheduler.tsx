@@ -60,9 +60,83 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
     reader.readAsDataURL(file);
   };
 
+  // Extract all unique venues already created/used across programs
+  const existingVenues = Array.from(new Set(programs.map(p => p.venue?.trim()).filter(Boolean)));
+  const [newVenueName, setNewVenueName] = useState("");
+  const [venuesList, setVenuesList] = useState<string[]>(existingVenues.length > 0 ? existingVenues : ["Stage 1 - Main Auditorium", "Stage 2 - Open Air", "Stage 3 - Mini Hall"]);
+  const [activeVenueFilter, setActiveVenueFilter] = useState<string>("ALL");
+
+  const addCustomVenue = () => {
+    if (!newVenueName.trim()) return;
+    const name = newVenueName.trim();
+    if (!venuesList.includes(name)) {
+      setVenuesList([...venuesList, name]);
+    }
+    setNewVenueName("");
+  };
+
+  const filteredPrograms = activeVenueFilter === "ALL" 
+    ? programs 
+    : programs.filter(p => p.venue?.trim() === activeVenueFilter);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
       
+      {/* 🎪 Venue Manager Bar */}
+      <div className="glass-panel" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🎪</span> Festival Venues Manager
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Add venue names first, then filter programs by venue or assign venues in 1-click.
+            </p>
+          </div>
+
+          {/* Quick Add Venue */}
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="e.g. Main Auditorium" 
+              value={newVenueName}
+              onChange={(e) => setNewVenueName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addCustomVenue()}
+              style={{ width: '200px', fontSize: '0.85rem', padding: '6px 12px' }}
+            />
+            <button onClick={addCustomVenue} className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>
+              + Add Venue
+            </button>
+          </div>
+        </div>
+
+        {/* Filter / Quick Assign Venue Badges */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter View:</span>
+          <button
+            onClick={() => setActiveVenueFilter("ALL")}
+            className={`btn ${activeVenueFilter === "ALL" ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '4px 10px', fontSize: '0.75rem', borderRadius: '20px' }}
+          >
+            All Venues ({programs.length})
+          </button>
+          {venuesList.map(v => {
+            const count = programs.filter(p => p.venue?.trim() === v).length;
+            return (
+              <button
+                key={v}
+                onClick={() => setActiveVenueFilter(v)}
+                className={`btn ${activeVenueFilter === v ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 10px', fontSize: '0.75rem', borderRadius: '20px' }}
+              >
+                🎪 {v} ({count})
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="glass-panel" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', border: '1px dashed var(--primary)' }}>
         <h3 style={{ marginTop: 0, fontSize: '1rem' }}>Bulk Import Schedule (Excel)</h3>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -97,7 +171,7 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
         </div>
       )}
 
-      {programs.map((program) => {
+      {filteredPrograms.map((program) => {
         const endTime = program.startTime ? new Date(new Date(program.startTime).getTime() + (program.duration * 60 * 1000)) : null;
 
         return (
@@ -122,7 +196,20 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 0.8fr 1fr auto', gap: 'var(--spacing-sm)', alignItems: 'flex-end' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontSize: '0.7rem' }}>Venue</label>
-                <input type="text" className="form-input" defaultValue={program.venue || ""} id={`venue-${program.id}`} />
+                {/* Datalist / Select dropdown connected with venuesList */}
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  defaultValue={program.venue || ""} 
+                  id={`venue-${program.id}`} 
+                  list={`venues-list-${program.id}`}
+                  placeholder="Select or type venue..."
+                />
+                <datalist id={`venues-list-${program.id}`}>
+                  {venuesList.map(v => (
+                    <option key={v} value={v} />
+                  ))}
+                </datalist>
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontSize: '0.7rem' }}>Start Time</label>

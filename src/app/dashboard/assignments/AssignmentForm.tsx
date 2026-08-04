@@ -97,10 +97,13 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
         <div>
           <h4 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--primary)' }}>Available Programs</h4>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '0 0 var(--spacing-sm) 0' }}>Programs that match the candidate's category. Click "Assign" to register them.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
             {programs.filter(p => !assignedProgramIds.includes(p.id)).map(program => {
-              // Validations
-              const isCategoryMatch = program.type === "GENERAL" || program.categoryId === selectedCandidate.categoryId;
+              // Validations: match by categoryId or matching category name across sub-events
+              const isCategoryMatch = program.type === "GENERAL" || 
+                program.categoryId === selectedCandidate.categoryId || 
+                (program.category?.name && selectedCandidate.category?.name && 
+                 program.category.name.trim().toLowerCase() === selectedCandidate.category.name.trim().toLowerCase());
+              
               const isLimitReached = program.type === "INDIVIDUAL" && currentIndividualCount >= maxIndividualLimit;
               const canAssign = isCategoryMatch && !isLimitReached;
 
