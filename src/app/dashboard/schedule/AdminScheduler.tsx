@@ -111,7 +111,7 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
           </div>
         </div>
 
-        {/* Filter / Quick Assign Venue Badges */}
+        {/* Filter / Quick Assign & Manage Venue Badges */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter View:</span>
           <button
@@ -121,17 +121,65 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
           >
             All Venues ({programs.length})
           </button>
+
           {venuesList.map(v => {
             const count = programs.filter(p => p.venue?.trim() === v).length;
+            const isActive = activeVenueFilter === v;
+
             return (
-              <button
+              <div 
                 key={v}
-                onClick={() => setActiveVenueFilter(v)}
-                className={`btn ${activeVenueFilter === v ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ padding: '4px 10px', fontSize: '0.75rem', borderRadius: '20px' }}
+                style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  backgroundColor: isActive ? 'var(--primary)' : 'var(--surface-color)', 
+                  color: isActive ? 'white' : 'var(--text-primary)',
+                  borderRadius: '20px', 
+                  border: '1px solid var(--border-color)',
+                  padding: '2px 8px 2px 12px',
+                  fontSize: '0.75rem',
+                  gap: '6px'
+                }}
               >
-                🎪 {v} ({count})
-              </button>
+                <span 
+                  onClick={() => setActiveVenueFilter(v)}
+                  style={{ cursor: 'pointer', fontWeight: 600 }}
+                >
+                  🎪 {v} ({count})
+                </span>
+
+                {/* Edit Venue Name Button */}
+                <button
+                  title="Rename Venue"
+                  onClick={() => {
+                    const newName = prompt(`Rename venue "${v}":`, v);
+                    if (newName && newName.trim() && newName.trim() !== v) {
+                      const updatedName = newName.trim();
+                      setVenuesList(venuesList.map(item => item === v ? updatedName : item));
+                      if (activeVenueFilter === v) setActiveVenueFilter(updatedName);
+                      // Update any programs assigned to this venue locally
+                      setPrograms(programs.map(p => p.venue?.trim() === v ? { ...p, venue: updatedName } : p));
+                    }
+                  }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', fontSize: '0.7rem', opacity: 0.8 }}
+                >
+                  ✏️
+                </button>
+
+                {/* Delete Venue Badge Button */}
+                <button
+                  title="Remove Venue Badge"
+                  onClick={() => {
+                    if (confirm(`Remove venue "${v}" from quick selection?`)) {
+                      setVenuesList(venuesList.filter(item => item !== v));
+                      if (activeVenueFilter === v) setActiveVenueFilter("ALL");
+                    }
+                  }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', fontSize: '0.7rem', opacity: 0.8 }}
+                >
+                  ❌
+                </button>
+              </div>
             );
           })}
         </div>
