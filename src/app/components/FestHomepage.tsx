@@ -168,13 +168,21 @@ export default function FestHomepage({ event, homepageSetting, globalSetting, ba
               {/* Duplicate the images to create a seamless infinite scroll loop */}
               {[...galleryImages, ...galleryImages].map((url: string, idx: number) => {
                 const ratio = settings.galleryRatio || '16/9';
-                const aspectRatioStyle = ratio === 'auto' 
-                  ? { height: '240px', width: 'auto' } 
-                  : { aspectRatio: ratio.replace('/', ' / '), height: '240px', width: 'auto' };
+                
+                // If auto/exact natural ratio selected, render exact image dimensions without cropping
+                if (ratio === 'auto') {
+                  return (
+                    <div key={idx} className={styles.galleryImageWrapper} style={{ width: 'auto', height: '260px', flexShrink: 0, backgroundColor: 'transparent' }}>
+                      <img src={url} alt={`Gallery ${idx + 1}`} style={{ height: '100%', width: 'auto', objectFit: 'contain', borderRadius: '16px' }} />
+                    </div>
+                  );
+                }
+
+                const aspectRatioStyle = { aspectRatio: ratio.replace('/', ' / '), height: '250px', width: 'auto' };
 
                 return (
                   <div key={idx} className={styles.galleryImageWrapper} style={aspectRatioStyle}>
-                    <img src={url} alt={`Gallery ${idx + 1}`} style={{ objectFit: ratio === 'auto' ? 'contain' : 'cover' }} />
+                    <img src={url} alt={`Gallery ${idx + 1}`} style={{ objectFit: 'cover' }} />
                   </div>
                 );
               })}
