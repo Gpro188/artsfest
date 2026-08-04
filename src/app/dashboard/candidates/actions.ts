@@ -26,12 +26,53 @@ export async function addCandidate(data: { name: string, categoryId: string, tea
       }
     }
 
+    let chestNumber: string | null = null;
+    let isApproved = false;
+
+    if (session.user.role === "ADMIN") {
+      isApproved = true;
+      const team = await prisma.team.findUnique({ where: { id: data.teamId } });
+      const cat = await prisma.category.findUnique({ where: { id: data.categoryId } });
+      const prefixCode = team?.prefixCode || "C";
+      const offset = cat?.chestNumberOffset || 0;
+
+      const existingCandidates = await prisma.candidate.findMany({
+        where: { teamId: data.teamId, categoryId: data.categoryId, isApproved: true, chestNumber: { not: null } },
+        select: { chestNumber: true }
+      });
+
+      let nextSeq = 1;
+      if (existingCandidates.length > 0) {
+        const seqs = existingCandidates
+          .map(c => c.chestNumber!)
+          .map(cn => {
+             const isNum = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+             if (isNum) return parseInt(cn, 10) - parseInt(prefixCode, 10) - offset;
+             const numPart = parseInt(cn.replace(prefixCode, ''), 10);
+             return numPart - offset + 1;
+          })
+          .filter(n => !isNaN(n));
+        if (seqs.length > 0) nextSeq = Math.max(...seqs) + 1;
+      }
+
+      const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+      if (isNumericPrefix) {
+        chestNumber = (parseInt(prefixCode, 10) + offset + nextSeq).toString();
+      } else {
+        const finalNum = offset + nextSeq;
+        const formattedNum = finalNum.toString().padStart(2, '0');
+        chestNumber = `${prefixCode}${formattedNum}`;
+      }
+    }
+
     await prisma.candidate.create({
       data: {
         name: data.name,
         categoryId: data.categoryId,
         teamId: data.teamId,
         photo: data.photo,
+        chestNumber,
+        isApproved,
       }
     });
 
@@ -204,12 +245,50 @@ export async function bulkImportCandidates(candidatesList: Array<{ name: string,
     for (const c of candidatesList) {
       if (!c.name || !c.teamId || !c.categoryId) continue;
 
+      let chestNumber = c.chestNumber || null;
+
+      // If chest number not provided in Excel, auto-generate next sequence
+      if (!chestNumber) {
+        const team = await prisma.team.findUnique({ where: { id: c.teamId } });
+        const cat = await prisma.category.findUnique({ where: { id: c.categoryId } });
+        const prefixCode = team?.prefixCode || "C";
+        const offset = cat?.chestNumberOffset || 0;
+
+        const existingCandidates = await prisma.candidate.findMany({
+          where: { teamId: c.teamId, categoryId: c.categoryId, isApproved: true, chestNumber: { not: null } },
+          select: { chestNumber: true }
+        });
+
+        let nextSeq = 1;
+        if (existingCandidates.length > 0) {
+          const seqs = existingCandidates
+            .map(item => item.chestNumber!)
+            .map(cn => {
+               const isNum = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+               if (isNum) return parseInt(cn, 10) - parseInt(prefixCode, 10) - offset;
+               const numPart = parseInt(cn.replace(prefixCode, ''), 10);
+               return numPart - offset + 1;
+            })
+            .filter(n => !isNaN(n));
+          if (seqs.length > 0) nextSeq = Math.max(...seqs) + 1;
+        }
+
+        const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+        if (isNumericPrefix) {
+          chestNumber = (parseInt(prefixCode, 10) + offset + nextSeq).toString();
+        } else {
+          const finalNum = offset + nextSeq;
+          const formattedNum = finalNum.toString().padStart(2, '0');
+          chestNumber = `${prefixCode}${formattedNum}`;
+        }
+      }
+
       await prisma.candidate.create({
         data: {
           name: c.name,
           teamId: c.teamId,
           categoryId: c.categoryId,
-          chestNumber: c.chestNumber || null,
+          chestNumber: chestNumber,
           isApproved: true,
         }
       });
