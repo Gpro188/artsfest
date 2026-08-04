@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { updateProgramSchedule, autoCalculateCandidateSlots } from "./actions";
+import { updateProgramSchedule, autoCalculateCandidateSlots, autoScheduleSequentialPrograms } from "./actions";
 import { importScheduleFromExcel, checkSchedulingConflicts } from "./importActions";
 
 export default function AdminScheduler({ initialPrograms, eventId }: { initialPrograms: any[], eventId: string }) {
@@ -9,6 +9,13 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [conflicts, setConflicts] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
+  const [autoScheduling, setAutoScheduling] = useState(false);
+
+  // Auto timeline setup controls
+  const [autoStartDate, setAutoStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [autoStartTime, setAutoStartTime] = useState("09:00");
+  const [autoBreakMinutes, setAutoBreakMinutes] = useState(10);
+  const [autoDefaultVenue, setAutoDefaultVenue] = useState("");
 
   // Sync state with props when switching events
   useEffect(() => {
@@ -18,6 +25,26 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
   useEffect(() => {
     fetchConflicts();
   }, [programs]);
+
+  const handleAutoScheduleAll = async () => {
+    if (!confirm(`Auto-schedule all ${programs.length} programs sequentially starting from ${autoStartDate} ${autoStartTime} with ${autoBreakMinutes} min break time?`)) return;
+    setAutoScheduling(true);
+    const res = await autoScheduleSequentialPrograms({
+      eventId,
+      startDate: autoStartDate,
+      startTimePerDay: autoStartTime,
+      breakDurationMinutes: autoBreakMinutes,
+      defaultVenue: autoDefaultVenue || venuesList[0] || "Stage 1 - Main Auditorium"
+    });
+
+    if (res.success) {
+      alert(`Successfully auto-scheduled ${res.count} programs with break times!`);
+      window.location.reload();
+    } else {
+      alert(res.error || "Failed to auto-schedule.");
+    }
+    setAutoScheduling(false);
+  };
 
   const fetchConflicts = async () => {
     const result = await checkSchedulingConflicts(eventId);
@@ -185,19 +212,77 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
         </div>
       </div>
 
-      <div className="glass-panel" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', border: '1px dashed var(--primary)' }}>
-        <h3 style={{ marginTop: 0, fontSize: '1rem' }}>Bulk Import Schedule (Excel)</h3>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-          Upload an Excel file with columns: <strong>ProgramName, Venue, StartTime, Duration, StageType</strong>
-        </p>
-        <input 
-          type="file" 
-          accept=".xlsx, .xls" 
-          onChange={handleExcelImport}
-          disabled={importing}
-          style={{ fontSize: '0.8rem' }}
-        />
-        {importing && <span style={{ marginLeft: '10px' }}>Importing...</span>}
+      {/* ⚡ Auto Timeline & Break Time Generator */}
+      <div className="glass-panel" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)', border: '1px solid var(--primary)', backgroundColor: 'rgba(99, 102, 241, 0.05)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)' }}>
+              <span>⚡</span> Automatic Timeline & Break Time Generator
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Set start date, daily start time, and break interval. Calculates start times, durations, and candidate slots automatically!
+            </p>
+          </div>
+          <button 
+            onClick={handleAutoScheduleAll} 
+            disabled={autoScheduling} 
+            className="btn btn-primary"
+            style={{ padding: '8px 18px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+          >
+            {autoScheduling ? "Generating..." : "⚡ Generate Full Schedule"}
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--spacing-sm)', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.7rem' }}>Festival Start Date</label>
+            <input 
+              type="date" 
+              className="form-input" 
+              value={autoStartDate}
+              onChange={(e) => setAutoStartDate(e.target.value)}
+              style={{ fontSize: '0.85rem', padding: '6px' }}
+            />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.7rem' }}>Daily Start Time</label>
+            <input 
+              type="time" 
+              className="form-input" 
+              value={autoStartTime}
+              onChange={(e) => setAutoStartTime(e.target.value)}
+              style={{ fontSize: '0.85rem', padding: '6px' }}
+            />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.7rem' }}>Break Time (Min)</label>
+            <input 
+              type="number" 
+              className="form-input" 
+              value={autoBreakMinutes}
+              onChange={(e) => setAutoBreakMinutes(parseInt(e.target.value) || 0)}
+              placeholder="e.g. 10"
+              style={{ fontSize: '0.85rem', padding: '6px' }}
+            />
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.7rem' }}>Default Venue</label>
+            <select 
+              className="form-input" 
+              value={autoDefaultVenue}
+              onChange={(e) => setAutoDefaultVenue(e.target.value)}
+              style={{ fontSize: '0.85rem', padding: '6px' }}
+            >
+              <option value="">-- Select Venue --</option>
+              {venuesList.map(v => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {conflicts.length > 0 && (

@@ -71,10 +71,49 @@ export async function autoCalculateCandidateSlots(programId: string) {
 
     await prisma.$transaction(updates);
 
+export async function autoScheduleSequentialPrograms(data: {
+  eventId: string;
+  startDate: string;
+  defaultVenue: string;
+  startTimePerDay: string; // e.g. "09:00"
+  breakDurationMinutes: number;
+}) {
+  try {
+    const programs = await prisma.program.findMany({
+      where: { eventId: data.eventId },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    if (programs.length === 0) return { success: false, error: "No programs found" };
+
+    let currentDateTime = new Date(`${data.startDate}T${data.startTimePerDay}:00`);
+
+    const updates = [];
+
+    for (const program of programs) {
+      const durationMin = program.duration || 15;
+
+      updates.push(
+        prisma.program.update({
+          where: { id: program.id },
+          data: {
+            venue: program.venue || data.defaultVenue,
+            startTime: new Date(currentDateTime),
+          }
+        })
+      );
+
+      // Increment time by program duration + break duration
+      const totalMinutes = durationMin + (data.breakDurationMinutes || 0);
+      currentDateTime = new Date(currentDateTime.getTime() + totalMinutes * 60000);
+    }
+
+    await prisma.$transaction(updates);
+
     revalidatePath("/dashboard/schedule");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to auto-calculate slots:", error);
-    return { success: false, error: "Failed to auto-calculate slots" };
+    return { success: true, count: updates.length };
+  } catch (error: any) {
+    console.error("Failed auto sequential schedule:", error);
+    return { success: false, error: error.message || "Failed to auto-schedule" };
   }
 }
