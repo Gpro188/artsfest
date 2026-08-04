@@ -167,18 +167,30 @@ export default function FestHomepage({ event, homepageSetting, globalSetting, ba
             <div className={styles.galleryTrack}>
               {/* Duplicate the images to create a seamless infinite scroll loop */}
               {[...galleryImages, ...galleryImages].map((url: string, idx: number) => {
-                const ratio = settings.galleryRatio || '16/9';
+                const ratio = settings.galleryRatio || 'auto';
                 
-                // If auto/exact natural ratio selected, render exact image dimensions without cropping
+                // For exact uploaded size / auto / portrait support
                 if (ratio === 'auto') {
                   return (
-                    <div key={idx} className={styles.galleryImageWrapper} style={{ width: 'auto', height: '260px', flexShrink: 0, backgroundColor: 'transparent' }}>
-                      <img src={url} alt={`Gallery ${idx + 1}`} style={{ height: '100%', width: 'auto', objectFit: 'contain', borderRadius: '16px' }} />
+                    <div key={idx} style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                      <img 
+                        src={url} 
+                        alt={`Gallery ${idx + 1}`} 
+                        style={{ 
+                          maxHeight: '320px', 
+                          maxWidth: '450px', 
+                          height: 'auto', 
+                          width: 'auto', 
+                          borderRadius: '16px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                          display: 'block'
+                        }} 
+                      />
                     </div>
                   );
                 }
 
-                const aspectRatioStyle = { aspectRatio: ratio.replace('/', ' / '), height: '250px', width: 'auto' };
+                const aspectRatioStyle = { aspectRatio: ratio.replace('/', ' / '), height: '260px', width: 'auto' };
 
                 return (
                   <div key={idx} className={styles.galleryImageWrapper} style={aspectRatioStyle}>
