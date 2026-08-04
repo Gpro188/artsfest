@@ -44,7 +44,12 @@ export default async function AssignmentsPage() {
   if (teamId) {
     whereClause.teamId = teamId;
   } else if (session.user.eventId) {
-    whereClause.team = { eventId: session.user.eventId };
+    whereClause.team = {
+      OR: [
+        { eventId: session.user.eventId },
+        { event: { parentId: session.user.eventId } }
+      ]
+    };
   }
 
   const candidates = await prisma.candidate.findMany({

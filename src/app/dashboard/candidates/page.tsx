@@ -68,9 +68,14 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
   if (session.user.role === "MANAGER") {
     whereClause.teamId = userTeamId;
   } else {
-    // If Admin has an eventId assigned, scope candidates to that event
+    // If Admin has an eventId assigned, scope candidates to that event and its sub-events
     if (session.user.eventId) {
-      whereClause.team = { eventId: session.user.eventId };
+      whereClause.team = {
+        OR: [
+          { eventId: session.user.eventId },
+          { event: { parentId: session.user.eventId } }
+        ]
+      };
     }
     if (filterTeamId) whereClause.teamId = filterTeamId;
   }
