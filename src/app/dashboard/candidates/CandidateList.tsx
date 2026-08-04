@@ -68,7 +68,7 @@ export default function CandidateList({ candidates, role, categories }: { candid
                     fontSize: '0.8rem',
                     fontWeight: 'bold'
                   }}>
-                    {candidate.chestNumber}
+                    {candidate.chestNumber || "Approved"}
                   </span>
                 ) : (
                   <span style={{ color: 'var(--warning)', fontSize: '0.875rem' }}>Pending Approval</span>
@@ -80,7 +80,9 @@ export default function CandidateList({ candidates, role, categories }: { candid
                   <button 
                     onClick={async () => {
                       const result = await approveCandidate(candidate.id, candidate.team.prefixCode);
-                      if (!result.success) {
+                      if (result.success) {
+                        window.location.reload();
+                      } else {
                         alert(result.error || "Failed to approve candidate");
                       }
                     }}

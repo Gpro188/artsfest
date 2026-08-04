@@ -168,13 +168,21 @@ export async function deleteCandidate(id: string) {
   }
 }
 
-export async function approveCandidate(id: string, prefixCode: string) {
+export async function approveCandidate(id: string, prefixCode?: string) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-    const candidate = await prisma.candidate.findUnique({ where: { id } });
-    if (!candidate || candidate.isApproved) return { success: false, error: "Candidate already approved or not found" };
+    const candidate = await prisma.candidate.findUnique({ 
+      where: { id },
+      include: { team: true } 
+    });
+    if (!candidate) return { success: false, error: "Candidate not found" };
+    if (candidate.isApproved && candidate.chestNumber) {
+      return { success: false, error: "Candidate is already approved with Chest No: " + candidate.chestNumber };
+    }
+
+    const effectivePrefix = (prefixCode || candidate.team?.prefixCode || candidate.team?.name?.slice(0, 3)?.toUpperCase() || "C").trim();
 
     await prisma.$transaction(async (tx) => {
       const cat = await tx.category.findUnique({ where: { id: candidate.categoryId } });
@@ -191,11 +199,11 @@ export async function approveCandidate(id: string, prefixCode: string) {
         const sequences = existingCandidates
           .map(c => c.chestNumber!)
           .map(cn => {
-             const isNum = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+             const isNum = !isNaN(parseInt(effectivePrefix)) && /^\d+$/.test(effectivePrefix);
              if (isNum) {
-               return parseInt(cn, 10) - parseInt(prefixCode, 10) - offset;
+               return parseInt(cn, 10) - parseInt(effectivePrefix, 10) - offset;
              }
-             const numPart = parseInt(cn.replace(prefixCode, ''), 10);
+             const numPart = parseInt(cn.replace(effectivePrefix, ''), 10);
              return numPart - offset + 1;
           })
           .filter(n => !isNaN(n));
@@ -205,15 +213,15 @@ export async function approveCandidate(id: string, prefixCode: string) {
         }
       }
 
-      const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+      const isNumericPrefix = !isNaN(parseInt(effectivePrefix)) && /^\d+$/.test(effectivePrefix);
       let newChestNumber = "";
 
       if (isNumericPrefix) {
-        newChestNumber = (parseInt(prefixCode, 10) + offset + nextSequence).toString();
+        newChestNumber = (parseInt(effectivePrefix, 10) + offset + nextSequence).toString();
       } else {
-        const finalNum = offset + nextSequence - 1;
+        const finalNum = offset + nextSequence;
         const formattedNum = finalNum.toString().padStart(2, '0');
-        newChestNumber = `${prefixCode}${formattedNum}`;
+        newChestNumber = `${effectivePrefix}${formattedNum}`;
       }
 
       await tx.candidate.update({
