@@ -244,6 +244,74 @@ export async function approveCandidate(id: string, prefixCode?: string) {
   }
 }
 
+export async function bulkApproveUnapprovedCandidates() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+    const unapprovedCandidates = await prisma.candidate.findMany({
+      where: { isApproved: false },
+      include: { team: true, category: true }
+    });
+
+    if (unapprovedCandidates.length === 0) {
+      return { success: true, count: 0, message: "No pending candidates found." };
+    }
+
+    let approvedCount = 0;
+
+    for (const candidate of unapprovedCandidates) {
+      const prefixCode = (candidate.team?.prefixCode || candidate.team?.name?.slice(0, 3)?.toUpperCase() || "C").trim();
+      const offset = candidate.category?.chestNumberOffset || 0;
+
+      const existingCandidates = await prisma.candidate.findMany({
+        where: { teamId: candidate.teamId, categoryId: candidate.categoryId, isApproved: true, chestNumber: { not: null } },
+        select: { chestNumber: true }
+      });
+
+      let nextSequence = 1;
+      if (existingCandidates.length > 0) {
+        const sequences = existingCandidates
+          .map(c => c.chestNumber!)
+          .map(cn => {
+             const isNum = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+             if (isNum) return parseInt(cn, 10) - parseInt(prefixCode, 10) - offset;
+             const numPart = parseInt(cn.replace(prefixCode, ''), 10);
+             return numPart - offset + 1;
+          })
+          .filter(n => !isNaN(n));
+        if (sequences.length > 0) nextSequence = Math.max(...sequences) + 1;
+      }
+
+      const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+      let newChestNumber = "";
+
+      if (isNumericPrefix) {
+        newChestNumber = (parseInt(prefixCode, 10) + offset + nextSequence).toString();
+      } else {
+        const finalNum = offset + nextSequence;
+        const formattedNum = finalNum.toString().padStart(2, '0');
+        newChestNumber = `${prefixCode}${formattedNum}`;
+      }
+
+      await prisma.candidate.update({
+        where: { id: candidate.id },
+        data: {
+          isApproved: true,
+          chestNumber: newChestNumber
+        }
+      });
+      approvedCount++;
+    }
+
+    revalidatePath("/dashboard/candidates");
+    return { success: true, count: approvedCount };
+  } catch (error: any) {
+    console.error("Failed to bulk approve candidates:", error);
+    return { success: false, error: error.message || "Failed to bulk approve candidates" };
+  }
+}
+
 export async function bulkImportCandidates(candidatesList: Array<{ name: string, teamId: string, categoryId: string, chestNumber?: string }>) {
   try {
     const session = await getServerSession(authOptions);

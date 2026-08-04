@@ -2,17 +2,33 @@
 
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import { bulkImportCandidates } from "./actions";
+import { bulkImportCandidates, bulkApproveUnapprovedCandidates } from "./actions";
 
 export default function CandidateBulkActions({ teams, categories }: { teams: any[], categories: any[] }) {
   const [selectedTeamId, setSelectedTeamId] = useState(teams[0]?.id || "");
   const [selectedCategoryId, setSelectedCategoryId] = useState(categories[0]?.id || "");
   const [importing, setImporting] = useState(false);
+  const [approving, setApproving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const selectedTeam = teams.find(t => t.id === selectedTeamId) || teams[0];
   const selectedCategory = categories.find(c => c.id === selectedCategoryId) || categories[0];
+
+  const handleBulkApprove = async () => {
+    if (!confirm("Are you sure you want to approve all pending candidates and auto-generate their chest numbers?")) return;
+    setApproving(true);
+    setError("");
+    setSuccess("");
+    const res = await bulkApproveUnapprovedCandidates();
+    if (res.success) {
+      setSuccess(`Successfully approved ${res.count} candidates & assigned chest numbers!`);
+      window.location.reload();
+    } else {
+      setError(res.error || "Failed to bulk approve candidates.");
+    }
+    setApproving(false);
+  };
 
   const downloadTemplate = () => {
     const template = [
@@ -121,9 +137,14 @@ export default function CandidateBulkActions({ teams, categories }: { teams: any
           <h3 style={{ margin: 0 }}>Candidate Excel Upload & Bulk Actions</h3>
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Select team & category presets, download pre-filled Excel template, and upload in bulk.</p>
         </div>
-        <button onClick={downloadTemplate} className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          📥 Download Template Excel
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={handleBulkApprove} disabled={approving} className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '6px 14px', backgroundColor: 'var(--success)', color: 'white', border: 'none' }}>
+            {approving ? "Approving..." : "⚡ 1-Click Approve All Pending"}
+          </button>
+          <button onClick={downloadTemplate} className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            📥 Download Template Excel
+          </button>
+        </div>
       </div>
 
       {/* Preset Target Selection Bar */}

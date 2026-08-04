@@ -88,9 +88,10 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
       id: true,
       name: true,
       chestNumber: true,
+      isApproved: true,
       photo: true,
       createdAt: true,
-      team: { select: { id: true, name: true, flagColor: true, event: { select: { name: true } } } },
+      team: { select: { id: true, name: true, prefixCode: true, flagColor: true, event: { select: { name: true } } } },
       category: { select: { id: true, name: true } },
       _count: {
         select: { programs: true }
