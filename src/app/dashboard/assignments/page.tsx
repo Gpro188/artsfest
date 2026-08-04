@@ -59,6 +59,7 @@ export default async function AssignmentsPage() {
       name: true,
       chestNumber: true,
       categoryId: true,
+      team: { select: { id: true, name: true } },
       category: {
         select: {
           id: true,

@@ -73,7 +73,28 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
 
       <div className="form-group" style={{ marginBottom: 'var(--spacing-xl)' }}>
         <label className="form-label">Select Candidate</label>
+        
+        {/* Candidate Search Filter */}
+        <input 
+          type="text" 
+          className="form-input" 
+          placeholder="🔍 Search candidate by name, team, chest no, or category..." 
+          id="candidate-search-input"
+          onChange={(e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const selectEl = document.getElementById("candidate-select-dropdown") as HTMLSelectElement;
+            if (selectEl) {
+              const matchedOpt = Array.from(selectEl.options).find(opt => opt.text.toLowerCase().includes(query));
+              if (matchedOpt) {
+                setSelectedCandidateId(matchedOpt.value);
+              }
+            }
+          }}
+          style={{ marginBottom: '8px', fontSize: '0.875rem' }}
+        />
+
         <select 
+          id="candidate-select-dropdown"
           className="form-input" 
           value={selectedCandidateId}
           onChange={(e) => {
@@ -83,13 +104,13 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
         >
           {candidates.map(c => (
             <option key={c.id} value={c.id}>
-              {c.name} ({c.category?.name}) - Chest No: {c.chestNumber}
+              {c.name} ({c.team?.name || 'No Team'}) • {c.category?.name} - Chest No: {c.chestNumber || 'Pending'}
             </option>
           ))}
         </select>
-        <span className="field-helper">Choose a candidate to view and manage their program assignments. Only approved candidates appear in this list.</span>
+        <span className="field-helper">Choose a candidate to view and manage their program assignments. Approved candidates appear in this list.</span>
         <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Category: <strong>{selectedCandidate.category?.name}</strong> • Individual Limit: <strong style={{ color: currentIndividualCount >= maxIndividualLimit ? 'var(--error)' : 'var(--success)' }}>{currentIndividualCount} / {maxIndividualLimit}</strong>
+          Candidate: <strong>{selectedCandidate.name}</strong> • Team: <strong>{selectedCandidate.team?.name || 'Unassigned'}</strong> • Category: <strong>{selectedCandidate.category?.name}</strong> • Individual Limit: <strong style={{ color: currentIndividualCount >= maxIndividualLimit ? 'var(--error)' : 'var(--success)' }}>{currentIndividualCount} / {maxIndividualLimit}</strong>
         </div>
       </div>
 
