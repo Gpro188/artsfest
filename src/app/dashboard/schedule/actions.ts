@@ -71,6 +71,14 @@ export async function autoCalculateCandidateSlots(programId: string) {
 
     await prisma.$transaction(updates);
 
+    revalidatePath("/dashboard/schedule");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to auto-calculate slots:", error);
+    return { success: false, error: "Failed to auto-calculate slots" };
+  }
+}
+
 export async function autoScheduleSequentialPrograms(data: {
   eventId: string;
   startDate: string;
