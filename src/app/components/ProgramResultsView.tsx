@@ -258,8 +258,8 @@ export default function ProgramResultsView({ program, settings, userRole }: { pr
 
                             {/* Winners Render based on selected style */}
                             {posterStyle === 'nophoto' ? (
-                              /* Clean Without Photo / Typography Style */
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', maxWidth: '850px', margin: '0 auto', width: '100%' }}>
+                              /* Clean Without Photo Centered Cards Style */
+                              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 40px', gap: '30px', flexWrap: 'wrap' }}>
                                   {winners.map((winner: any) => (
                                       <WinnerNoPhotoCard 
                                           key={winner.id} 
@@ -587,54 +587,63 @@ function WinnerNoPhotoCard({
 }) {
     const displayName = result.candidate?.name || result.team?.name || 'Participant';
     const teamName = result.candidate?.team?.name || result.team?.name || '';
-    const rankLabel = rank === 1 ? '1ST PRIZE' : rank === 2 ? '2ND PRIZE' : '3RD PRIZE';
+    const rankLabel = rank === 1 ? '1st Prize' : rank === 2 ? '2nd Prize' : '3rd Prize';
 
     return (
         <div style={{
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
+            justifyContent: 'center',
+            width: '280px',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '16px',
-            padding: '20px 32px',
-            borderLeft: `10px solid ${secondaryColor}`,
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)'
+            backdropFilter: 'blur(12px)',
+            borderRadius: '24px',
+            padding: '28px 24px',
+            border: `3px solid ${secondaryColor}`,
+            boxShadow: '0 15px 35px rgba(0,0,0,0.12)',
+            position: 'relative',
+            textAlign: 'center'
         }}>
-            <div style={{ textAlign: 'left' }}>
-                <div style={{ 
-                    fontSize: '2rem', 
-                    fontWeight: 900, 
-                    color: textColor, 
-                    lineHeight: 1.1,
-                    textTransform: 'uppercase',
-                    marginBottom: '4px'
-                }}>
-                    {displayName}
-                </div>
-                <div style={{ 
-                    fontSize: '1.1rem', 
-                    fontWeight: 700, 
-                    color: secondaryColor,
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px'
-                }}>
-                    {teamName}
-                </div>
-            </div>
-
+            {/* Rank Badge */}
             <div style={{
                 backgroundColor: secondaryColor,
                 color: 'white',
-                padding: '10px 24px',
-                borderRadius: '12px',
+                padding: '6px 20px',
+                borderRadius: '8px',
                 fontWeight: 900,
-                fontSize: '1.2rem',
+                fontSize: '0.9rem',
+                textTransform: 'uppercase',
                 letterSpacing: '1px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                border: '2px solid white',
+                marginBottom: '16px'
             }}>
                 {rankLabel}
+            </div>
+
+            {/* Candidate Name */}
+            <div style={{ 
+                fontSize: '1.6rem', 
+                fontWeight: 900, 
+                color: textColor, 
+                lineHeight: 1.15,
+                textTransform: 'uppercase',
+                marginBottom: '6px'
+            }}>
+                {displayName}
+            </div>
+
+            {/* Team Name */}
+            <div style={{ 
+                fontSize: '0.95rem', 
+                fontWeight: 700, 
+                color: textColor,
+                opacity: 0.75,
+                textTransform: 'uppercase',
+                letterSpacing: '1.5px'
+            }}>
+                {teamName}
             </div>
         </div>
     );
