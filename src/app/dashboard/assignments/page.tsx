@@ -88,8 +88,15 @@ export default async function AssignmentsPage() {
     }
   });
 
+  const programWhere: any = session.user.eventId ? {
+    OR: [
+      { eventId: session.user.eventId },
+      { event: { parentId: session.user.eventId } }
+    ]
+  } : undefined;
+
   const programs = await prisma.program.findMany({
-    where: eventFilter,
+    where: programWhere,
     include: { 
       event: true,
       category: true
