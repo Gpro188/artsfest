@@ -166,11 +166,18 @@ export default function FestHomepage({ event, homepageSetting, globalSetting, ba
           <div className={styles.gallerySliderContainer}>
             <div className={styles.galleryTrack}>
               {/* Duplicate the images to create a seamless infinite scroll loop */}
-              {[...galleryImages, ...galleryImages].map((url: string, idx: number) => (
-                <div key={idx} className={styles.galleryImageWrapper}>
-                  <img src={url} alt={`Gallery ${idx + 1}`} />
-                </div>
-              ))}
+              {[...galleryImages, ...galleryImages].map((url: string, idx: number) => {
+                const ratio = settings.galleryRatio || '16/9';
+                const aspectRatioStyle = ratio === 'auto' 
+                  ? { height: '240px', width: 'auto' } 
+                  : { aspectRatio: ratio.replace('/', ' / '), height: '240px', width: 'auto' };
+
+                return (
+                  <div key={idx} className={styles.galleryImageWrapper} style={aspectRatioStyle}>
+                    <img src={url} alt={`Gallery ${idx + 1}`} style={{ objectFit: ratio === 'auto' ? 'contain' : 'cover' }} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

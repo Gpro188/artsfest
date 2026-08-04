@@ -311,21 +311,83 @@ export default function HomepageForm({ initialData }: { initialData: any }) {
 
       {/* Gallery Section */}
       <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-        <h2 style={{ marginBottom: 'var(--spacing-md)', fontSize: '1.25rem' }}>Image Gallery</h2>
-        {gallery.map((url, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)', alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
-              <ImageUpload 
-                label={`Gallery Image ${idx + 1}`} 
-                folder="gallery" 
-                initialUrl={url}
-                onUploadComplete={(uploadedUrl) => updateGallery(idx, uploadedUrl)} 
-              />
-            </div>
-            <button type="button" onClick={() => removeGallery(idx)} className="btn-secondary" style={{ backgroundColor: 'var(--error)' }}>Remove</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Image Gallery</h2>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>Upload festival photos and select your preferred image aspect ratio.</p>
           </div>
-        ))}
-        <button type="button" onClick={addGalleryImage} className="btn-secondary" style={{ marginTop: 'var(--spacing-sm)' }}>+ Add Image URL</button>
+          <button type="button" onClick={addGalleryImage} className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '6px 14px' }}>
+            + Add Gallery Image
+          </button>
+        </div>
+
+        {/* Custom Aspect Ratio Selector */}
+        <div className="form-group" style={{ marginBottom: 'var(--spacing-lg)', backgroundColor: 'var(--surface-color)', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          <label className="form-label" style={{ fontWeight: 600 }}>Gallery Image Aspect Ratio Display:</label>
+          <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap', marginTop: '6px' }}>
+            {[
+              { id: '16/9', label: '16:9 (Landscape Standard)', desc: 'Best for photography & stage photos' },
+              { id: '4/3', label: '4:3 (Classic Banner)', desc: 'Standard medium ratio' },
+              { id: '1/1', label: '1:1 (Square)', desc: 'Instagram post format' },
+              { id: 'auto', label: 'Original Natural Ratio', desc: 'Preserves original image dimensions without cropping' }
+            ].map(r => (
+              <label 
+                key={r.id}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  padding: '8px 16px', 
+                  backgroundColor: (initialData?.galleryRatio || '16/9') === r.id ? 'rgba(79, 70, 229, 0.15)' : 'transparent',
+                  border: (initialData?.galleryRatio || '16/9') === r.id ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                <input 
+                  type="radio" 
+                  name="galleryRatio" 
+                  value={r.id} 
+                  defaultChecked={(initialData?.galleryRatio || '16/9') === r.id}
+                />
+                <div>
+                  <div style={{ fontWeight: 600 }}>{r.label}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.desc}</div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {gallery.length === 0 ? (
+          <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+            No gallery images added yet. Click <strong>+ Add Gallery Image</strong> to upload photos.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+            {gallery.map((url, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center', backgroundColor: 'var(--surface-color)', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                <div style={{ flex: 1 }}>
+                  <ImageUpload 
+                    label={`Gallery Image ${idx + 1}`} 
+                    folder="gallery" 
+                    initialUrl={url}
+                    onUploadComplete={(uploadedUrl) => updateGallery(idx, uploadedUrl)} 
+                  />
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => removeGallery(idx)} 
+                  className="btn btn-secondary" 
+                  style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--error)', borderColor: 'rgba(239,68,68,0.3)', padding: '0.5rem 1rem' }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Stats Section */}

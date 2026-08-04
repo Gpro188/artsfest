@@ -247,6 +247,7 @@ model HomepageSetting {
   committeeMembers    Json?
   committeeTitle      String?  @default("Program Committee")
   galleryImages       Json?
+  galleryRatio        String?  @default("16/9")
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   event               Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)

@@ -61,6 +61,7 @@ export async function saveHomepageSettings(data: any) {
         committeeMembers,
         committeeTitle: data.committeeTitle || "Program Committee",
         galleryImages,
+        galleryRatio: data.galleryRatio || "16/9",
       },
       create: {
         eventId,
@@ -90,6 +91,7 @@ export async function saveHomepageSettings(data: any) {
         committeeMembers,
         committeeTitle: data.committeeTitle || "Program Committee",
         galleryImages,
+        galleryRatio: data.galleryRatio || "16/9",
       },
     });
 

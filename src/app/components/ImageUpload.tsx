@@ -96,12 +96,35 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
   };
 
   return (
-    <div className="form-group">
-      <label className="form-label">{label}</label>
-      <div style={{ position: 'relative' }}>
+    <div className="form-group" style={{ marginBottom: 'var(--spacing-md)' }}>
+      {label && <label className="form-label">{label}</label>}
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {preview && (
-          <div style={{ marginBottom: '12px', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-color)', width: 'fit-content' }}>
-            <img src={preview} alt="Preview" style={{ display: 'block', maxHeight: '150px', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            padding: '8px', 
+            backgroundColor: 'var(--surface-color)', 
+            borderRadius: 'var(--radius-md)', 
+            border: '1px solid var(--border-color)' 
+          }}>
+            <img 
+              src={preview} 
+              alt="Preview" 
+              style={{ 
+                width: '60px', 
+                height: '60px', 
+                objectFit: 'cover', 
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                backgroundColor: '#000'
+              }} 
+              crossOrigin="anonymous" 
+            />
+            <div style={{ flex: 1, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ Image Loaded</span>
+            </div>
           </div>
         )}
         <input 
@@ -121,7 +144,6 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
         
         {uploading && (
           <div style={{ 
-            marginTop: '8px', 
             height: '4px', 
             width: '100%', 
             backgroundColor: 'rgba(255,255,255,0.1)', 
@@ -137,8 +159,8 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
           </div>
         )}
 
-        {uploading && <div style={{ fontSize: '0.7rem', color: 'var(--primary)', marginTop: '4px' }}>Uploading: {progress}%</div>}
-        {error && <div style={{ fontSize: '0.7rem', color: 'var(--error)', marginTop: '4px' }}>{error}</div>}
+        {uploading && <div style={{ fontSize: '0.7rem', color: 'var(--primary)' }}>Uploading: {progress}%</div>}
+        {error && <div style={{ fontSize: '0.7rem', color: 'var(--error)' }}>{error}</div>}
       </div>
     </div>
   );
