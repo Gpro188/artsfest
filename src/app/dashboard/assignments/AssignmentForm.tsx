@@ -119,47 +119,50 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
           <h4 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--primary)' }}>Available Programs</h4>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '0 0 var(--spacing-sm) 0' }}>Programs that match the candidate's category. Click "Assign" to register them.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
-            {programs.filter(p => !assignedProgramIds.includes(p.id)).map(program => {
-              // Validations: match by categoryId or matching category name across sub-events
-              const isCategoryMatch = program.type === "GENERAL" || 
-                program.categoryId === selectedCandidate.categoryId || 
-                (program.category?.name && selectedCandidate.category?.name && 
-                 program.category.name.trim().toLowerCase() === selectedCandidate.category.name.trim().toLowerCase());
-              
-              const isLimitReached = program.type === "INDIVIDUAL" && currentIndividualCount >= maxIndividualLimit;
-              const canAssign = isCategoryMatch && !isLimitReached;
+            {programs
+              .filter(p => !assignedProgramIds.includes(p.id))
+              .filter(p => {
+                // Strictly filter only programs matching candidate's category (or GENERAL)
+                return p.type === "GENERAL" || 
+                  p.categoryId === selectedCandidate.categoryId || 
+                  (p.category?.name && selectedCandidate.category?.name && 
+                   p.category.name.trim().toLowerCase() === selectedCandidate.category.name.trim().toLowerCase());
+              })
+              .map(program => {
+                const isLimitReached = program.type === "INDIVIDUAL" && currentIndividualCount >= maxIndividualLimit;
+                const canAssign = !isLimitReached;
 
-              return (
-                <div key={program.id} style={{ 
-                  padding: 'var(--spacing-sm)', 
-                  border: '1px solid var(--border-color)', 
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  opacity: canAssign ? 1 : 0.5
-                }}>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{program.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {program.type} {program.category && `• ${program.category.name}`}
-                    </div>
-                    {!canAssign && (
-                      <div style={{ fontSize: '0.7rem', color: 'var(--warning)', marginTop: '2px' }}>
-                        {!isCategoryMatch ? "Category mismatch" : "Limit reached"}
+                return (
+                  <div key={program.id} style={{ 
+                    padding: 'var(--spacing-sm)', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: 'var(--radius-md)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    opacity: canAssign ? 1 : 0.6
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{program.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {program.type} {program.category && `• ${program.category.name}`}
                       </div>
-                    )}
+                      {!canAssign && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--error)', marginTop: '2px' }}>
+                          Limit reached ({currentIndividualCount}/{maxIndividualLimit})
+                        </div>
+                      )}
+                    </div>
+                    <button 
+                      onClick={() => handleAssign(program.id)}
+                      className="btn btn-primary" 
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                      disabled={!canAssign || loading}
+                    >
+                      Assign
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => handleAssign(program.id)}
-                    className="btn btn-primary" 
-                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-                    disabled={!canAssign || loading}
-                  >
-                    Assign
-                  </button>
-                </div>
-              );
+                );
             })}
           </div>
         </div>
