@@ -361,7 +361,16 @@ export default function AdminScheduler({ initialPrograms, eventId }: { initialPr
                   <option value="OFF_STAGE">OFF STAGE</option>
                 </select>
               </div>
-              <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+              <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
+                <a 
+                  href={`/print/judges-sheet?programId=${program.id}`} 
+                  target="_blank" 
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.75rem', padding: '6px 10px' }}
+                  title="Print Judges Tabulation Sheet for this program"
+                >
+                  📋 Tabulation
+                </a>
                 <button 
                   className="btn btn-secondary"
                   title="Auto-calculate candidate times"

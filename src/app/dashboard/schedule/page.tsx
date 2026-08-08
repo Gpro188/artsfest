@@ -69,7 +69,13 @@ export default async function SchedulePage(props: {
               Plan and manage the festival timeline. Assign time slots and venues for each program.
             </p>
           </div>
-          <div data-tour="schedule-print" style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+          <div data-tour="schedule-print" style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+            <a href={`/print/judges-sheet?eventId=${activeEventId}`} target="_blank" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: 'var(--primary)', color: 'white' }}>
+              📋 Judges Tabulation Sheet
+            </a>
+            <a href={`/print/stage-manager?eventId=${activeEventId}`} target="_blank" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: 'var(--secondary)', color: 'white' }}>
+              🎪 Stage Manager List
+            </a>
             <a href={`/print/schedule?eventId=${activeEventId}`} target="_blank" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
               Print Schedule
             </a>

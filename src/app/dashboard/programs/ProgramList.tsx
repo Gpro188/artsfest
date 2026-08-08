@@ -64,6 +64,14 @@ export default function ProgramList({ programs, categories }: { programs: Progra
             </div>
           </div>
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+            <a 
+              href={`/print/judges-sheet?programId=${program.id}`} 
+              target="_blank" 
+              className="btn btn-secondary" 
+              style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}
+            >
+              📋 Tabulation Sheet
+            </a>
             <button 
               onClick={() => setEditingProgram(program)}
               className="btn btn-secondary" 
