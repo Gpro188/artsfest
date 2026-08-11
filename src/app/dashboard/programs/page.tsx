@@ -79,8 +79,7 @@ export default async function ProgramsPage() {
           
           <div>
             <div data-tour="programs-list" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>All Programs</h3>
-              <ProgramList programs={programs as any} categories={allCategories} />
+              <ProgramList programs={programs as any} events={events} categories={allCategories} />
             </div>
           </div>
         </div>

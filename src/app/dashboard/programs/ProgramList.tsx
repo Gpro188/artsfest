@@ -15,16 +15,143 @@ type ProgramType = {
   _count: { assignments: number };
 };
 
-export default function ProgramList({ programs, categories }: { programs: ProgramType[], categories: any[] }) {
+export default function ProgramList({ 
+  programs, 
+  events = [], 
+  categories = [] 
+}: { 
+  programs: ProgramType[], 
+  events?: any[], 
+  categories?: any[] 
+}) {
   const [editingProgram, setEditingProgram] = useState<ProgramType | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string>("ALL");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  if (programs.length === 0) {
-    return <div style={{ color: 'var(--text-muted)' }}>No programs created yet.</div>;
-  }
+  // Extract unique categories from programs or categories prop
+  const availableCategories = Array.from(
+    new Map(
+      categories.concat(programs.map(p => p.category).filter(Boolean)).map(c => [c.id || c.name, c])
+    ).values()
+  );
+
+  const filteredPrograms = programs.filter(program => {
+    // Event filter matching name or ID
+    if (selectedEventId !== "ALL") {
+      if (program.event?.name !== selectedEventId && (program as any).eventId !== selectedEventId) {
+        return false;
+      }
+    }
+
+    // Category filter matching ID or Name
+    if (selectedCategoryId !== "ALL") {
+      if (selectedCategoryId === "GENERAL") {
+        if (program.categoryId || program.category) return false;
+      } else {
+        if (program.categoryId !== selectedCategoryId && program.category?.name !== selectedCategoryId) {
+          return false;
+        }
+      }
+    }
+
+    // Text search query matching Code or Name
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const codeMatch = program.programCode?.toLowerCase().includes(q);
+      const nameMatch = program.name.toLowerCase().includes(q);
+      if (!codeMatch && !nameMatch) return false;
+    }
+
+    return true;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-      {programs.map((program) => (
+      {/* Header & Filter Controls */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
+          <h3 style={{ margin: 0 }}>All Programs ({filteredPrograms.length})</h3>
+          {(selectedEventId !== "ALL" || selectedCategoryId !== "ALL" || searchQuery) && (
+            <button 
+              onClick={() => {
+                setSelectedEventId("ALL");
+                setSelectedCategoryId("ALL");
+                setSearchQuery("");
+              }}
+              className="btn btn-secondary"
+              style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+            >
+              Clear Filters ❌
+            </button>
+          )}
+        </div>
+
+        {/* Filter Dropdowns Grid */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+          gap: 'var(--spacing-sm)', 
+          backgroundColor: 'rgba(15, 23, 42, 0.4)', 
+          padding: 'var(--spacing-sm)', 
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border-color)',
+          marginBottom: 'var(--spacing-sm)'
+        }}>
+          {/* Event Filter */}
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 600 }}>Filter by Event</label>
+            <select 
+              className="form-input" 
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
+              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+            >
+              <option value="ALL">All Events ({events.length || 'All'})</option>
+              {events.map(ev => (
+                <option key={ev.id} value={ev.name}>{ev.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 600 }}>Filter by Category</label>
+            <select 
+              className="form-input" 
+              value={selectedCategoryId}
+              onChange={(e) => setSelectedCategoryId(e.target.value)}
+              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+            >
+              <option value="ALL">All Categories</option>
+              <option value="GENERAL">General (No Category)</option>
+              {availableCategories.map(c => (
+                <option key={c.id || c.name} value={c.id || c.name}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search Box */}
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 600 }}>Search Program</label>
+            <input 
+              type="text"
+              className="form-input"
+              placeholder="Search code or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {filteredPrograms.length === 0 ? (
+        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 'var(--spacing-lg)' }}>
+          No programs match the selected event or category filter.
+        </div>
+      ) : (
+        filteredPrograms.map((program) => (
         <div key={program.id} style={{ 
           padding: 'var(--spacing-md)', 
           border: '1px solid var(--border-color)', 
