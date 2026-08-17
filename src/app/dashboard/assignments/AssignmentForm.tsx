@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
         color: 'var(--error)',
         marginBottom: 'var(--spacing-xl)'
       }}>
-        <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>ðŸ•’</div>
+        <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🕒</div>
         <strong>Assignment Closed / Not Started</strong>
         <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{statusMessage || "The deadline for assigning programs has passed. Please contact the administrator for any urgent changes."}</p>
       </div>
@@ -48,7 +48,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
           <h3 style={{ marginTop: 0, marginBottom: 'var(--spacing-md)', fontSize: '1.1rem' }}>Search Student</h3>
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
             <div style={{ position: 'relative', flex: 1 }}>
-              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>ðŸ”</span>
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
               <input 
                 type="text" 
                 className="form-input" 
@@ -90,14 +90,14 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold', fontSize: '1.2rem'
                     }}>
-                      ðŸ‘¤
+                      👤
                     </div>
                     <div>
                       <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px' }}>
                         {c.name} {c.chestNumber && <span style={{ color: 'var(--primary)', fontSize: '0.8rem', marginLeft: '6px', padding: '2px 6px', background: 'rgba(15, 92, 70, 0.1)', borderRadius: '4px' }}>{c.chestNumber}</span>}
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        {c.team?.name || 'No Team'} â€¢ {c.category?.name}
+                        {c.team?.name || 'No Team'} • {c.category?.name}
                       </div>
                     </div>
                   </div>
@@ -116,7 +116,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                       setProgramQuery("");
                     }}
                   >
-                    Select â†’
+                    Select →
                   </button>
                 </div>
               );
@@ -205,14 +205,14 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontWeight: 'bold', fontSize: '1.5rem'
           }}>
-            ðŸ‘¤
+            👤
           </div>
           <div>
             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
               {selectedCandidate.name}
             </div>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              {selectedCandidate.team?.name || 'No Team'} â€¢ {selectedCandidate.category?.name} â€¢ Chest No: {selectedCandidate.chestNumber || 'Pending'}
+              {selectedCandidate.team?.name || 'No Team'} • {selectedCandidate.category?.name} • Chest No: {selectedCandidate.chestNumber || 'Pending'}
             </div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <div style={{ position: 'relative', flex: 1 }}>
-              <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>ðŸ”</span>
+              <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>🔍</span>
               <input 
                 type="text" 
                 className="form-input" 
@@ -303,7 +303,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                     <div>
                       <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{program.name}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                        {program.type} {program.category && `â€¢ ${program.category.name}`}
+                        {program.type} {program.category && `• ${program.category.name}`}
                       </div>
                       {!canAssign && (
                         <div style={{ fontSize: '0.7rem', color: 'var(--error)', marginTop: '4px', fontWeight: 600 }}>
@@ -326,7 +326,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                         transition: 'var(--transition-fast)'
                       }}
                     >
-                      {isLoading ? <span style={{ fontSize: '0.9rem' }}>â³</span> : '+'}
+                      {isLoading ? <span style={{ fontSize: '0.9rem' }}>⏳</span> : '+'}
                     </button>
                   </div>
                 );
@@ -340,7 +340,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Assigned Programs</h4>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Programs currently enrolled. Click Ã— to remove.</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Programs currently enrolled. Click × to remove.</p>
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 10px', background: 'var(--surface-color)', borderRadius: '9999px', border: '1px solid var(--border-color)' }}>
               {selectedCandidate.programs.length} Assigned
@@ -354,7 +354,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                 alignItems: 'center', justifyContent: 'center', 
                 color: 'var(--text-muted)', textAlign: 'center'
               }}>
-                <div style={{ fontSize: '3rem', opacity: 0.2, marginBottom: '16px' }}>ðŸ“‹</div>
+                <div style={{ fontSize: '3rem', opacity: 0.2, marginBottom: '16px' }}>📋</div>
                 <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '4px' }}>No programs assigned yet</div>
                 <div style={{ fontSize: '0.85rem' }}>Add programs from the left list.</div>
               </div>
@@ -392,7 +392,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                         transition: 'var(--transition-fast)'
                       }}
                     >
-                      {isLoading ? <span style={{ fontSize: '0.9rem' }}>â³</span> : 'Ã—'}
+                      {isLoading ? <span style={{ fontSize: '0.9rem' }}>⏳</span> : '×'}
                     </button>
                   </div>
                 );
