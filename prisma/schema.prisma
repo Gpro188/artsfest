@@ -236,6 +236,14 @@ model GlobalSetting {
   posterWinnerTeamColor         String?   @default("#64748b")
   posterWinnerGap               Int?      @default(18)
 
+  // Independent Rank Position Overrides (optional)
+  posterRank1Top                Int?
+  posterRank1Left               Int?
+  posterRank2Top                Int?
+  posterRank2Left               Int?
+  posterRank3Top                Int?
+  posterRank3Left               Int?
+
   // Granular visibility toggles
   posterShowRankBadge           Boolean   @default(true)  // 01, 02, 03 circular badge
   posterShowChestNumber         Boolean   @default(true)  // (286)

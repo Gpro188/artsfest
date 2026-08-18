@@ -54,6 +54,14 @@ export default function PosterSettingsForm({ initialSettings, sampleProgram }: {
     posterWinnerTeamColor: initialSettings?.posterWinnerTeamColor || "#64748b",
     posterWinnerGap: initialSettings?.posterWinnerGap !== undefined ? Number(initialSettings.posterWinnerGap) : 16,
 
+    // Independent Rank Positions (Optional Override)
+    posterRank1Top: initialSettings?.posterRank1Top !== undefined && initialSettings?.posterRank1Top !== null ? Number(initialSettings.posterRank1Top) : null,
+    posterRank1Left: initialSettings?.posterRank1Left !== undefined && initialSettings?.posterRank1Left !== null ? Number(initialSettings.posterRank1Left) : null,
+    posterRank2Top: initialSettings?.posterRank2Top !== undefined && initialSettings?.posterRank2Top !== null ? Number(initialSettings.posterRank2Top) : null,
+    posterRank2Left: initialSettings?.posterRank2Left !== undefined && initialSettings?.posterRank2Left !== null ? Number(initialSettings.posterRank2Left) : null,
+    posterRank3Top: initialSettings?.posterRank3Top !== undefined && initialSettings?.posterRank3Top !== null ? Number(initialSettings.posterRank3Top) : null,
+    posterRank3Left: initialSettings?.posterRank3Left !== undefined && initialSettings?.posterRank3Left !== null ? Number(initialSettings.posterRank3Left) : null,
+
     // Granular Display Toggles (Rank Badges, Chest Numbers, Team Name)
     posterShowRankBadge: initialSettings?.posterShowRankBadge !== undefined ? initialSettings.posterShowRankBadge : true,
     posterShowChestNumber: initialSettings?.posterShowChestNumber !== undefined ? initialSettings.posterShowChestNumber : true,
@@ -300,18 +308,24 @@ export default function PosterSettingsForm({ initialSettings, sampleProgram }: {
                   boxSizing: 'border-box'
                 }}
               >
-                {previewWinners.map((winner: any, idx: number) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '1.8cqi',
-                      width: '100%',
-                      minHeight: '8cqi',
-                      justifyContent: align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'
-                    }}
-                  >
+                {previewWinners.map((winner: any, idx: number) => {
+                  const rankTopOffset = idx === 0 ? (formData.posterRank1Top || 0) : idx === 1 ? (formData.posterRank2Top || 0) : (formData.posterRank3Top || 0);
+                  const rankLeftOffset = idx === 0 ? (formData.posterRank1Left || 0) : idx === 1 ? (formData.posterRank2Left || 0) : (formData.posterRank3Left || 0);
+
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '1.8cqi',
+                        width: '100%',
+                        minHeight: '8cqi',
+                        justifyContent: align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start',
+                        transform: (rankTopOffset !== 0 || rankLeftOffset !== 0) ? `translate(${rankLeftOffset}cqi, ${rankTopOffset}cqi)` : undefined,
+                        position: 'relative'
+                      }}
+                    >
                     {/* Rank Circle Badge (Optional toggle) */}
                     {formData.posterShowRankBadge && (
                       <div style={{
@@ -388,7 +402,8 @@ export default function PosterSettingsForm({ initialSettings, sampleProgram }: {
                       )}
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           </div>
@@ -507,18 +522,24 @@ export default function PosterSettingsForm({ initialSettings, sampleProgram }: {
                     zIndex: 10,
                     boxSizing: "border-box"
                   }}>
-                    {previewWinners.map((winner: any, idx: number) => (
-                      <div
-                        key={idx}
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: "1.8cqi",
-                          width: "100%",
-                          minHeight: "8cqi",
-                          justifyContent: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start"
-                        }}
-                      >
+                    {previewWinners.map((winner: any, idx: number) => {
+                      const rankTopOffset = idx === 0 ? (formData.posterRank1Top || 0) : idx === 1 ? (formData.posterRank2Top || 0) : (formData.posterRank3Top || 0);
+                      const rankLeftOffset = idx === 0 ? (formData.posterRank1Left || 0) : idx === 1 ? (formData.posterRank2Left || 0) : (formData.posterRank3Left || 0);
+
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: "1.8cqi",
+                            width: "100%",
+                            minHeight: "8cqi",
+                            justifyContent: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start",
+                            transform: (rankTopOffset !== 0 || rankLeftOffset !== 0) ? `translate(${rankLeftOffset}cqi, ${rankTopOffset}cqi)` : undefined,
+                            position: "relative"
+                          }}
+                        >
                         {formData.posterShowRankBadge && (
                           <div style={{
                             width: "5.5cqi",
@@ -594,7 +615,8 @@ export default function PosterSettingsForm({ initialSettings, sampleProgram }: {
                           )}
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 </>
               );
@@ -1202,42 +1224,120 @@ export default function PosterSettingsForm({ initialSettings, sampleProgram }: {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '4px' }}>
-                <div>
-                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '4px' }}>Candidate Name Color</label>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <input 
-                      type="color" 
-                      value={formData.posterTextColor || "#1e293b"}
-                      onChange={(e) => setFormData({...formData, posterTextColor: e.target.value})}
-                      style={{ width: '32px', height: '32px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                    />
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={formData.posterTextColor || "#1e293b"}
-                      onChange={(e) => setFormData({...formData, posterTextColor: e.target.value})}
-                      style={{ fontSize: '0.75rem', padding: '4px 6px' }}
-                    />
+              {/* Granular Individual Place Position Adjustments */}
+              <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>🎯 Individual Place Position Fine-Tuning (Optional)</span>
+                </div>
+
+                {/* 1st Place Fine Tuning */}
+                <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '8px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10b981', marginBottom: '6px' }}>🥇 1st Place Offset</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                        <span>Top (Y)</span>
+                        <span style={{ fontWeight: 700, color: '#10b981' }}>{formData.posterRank1Top ?? 0}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="0.2"
+                        value={formData.posterRank1Top ?? 0}
+                        onChange={(e) => setFormData({ ...formData, posterRank1Top: parseFloat(e.target.value) || 0 })}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                        <span>Left (X)</span>
+                        <span style={{ fontWeight: 700, color: '#10b981' }}>{formData.posterRank1Left ?? 0}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="0.2"
+                        value={formData.posterRank1Left ?? 0}
+                        onChange={(e) => setFormData({ ...formData, posterRank1Left: parseFloat(e.target.value) || 0 })}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '4px' }}>Team Name Color</label>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <input 
-                      type="color" 
-                      value={formData.posterWinnerTeamColor || "#64748b"}
-                      onChange={(e) => setFormData({...formData, posterWinnerTeamColor: e.target.value})}
-                      style={{ width: '32px', height: '32px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                    />
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={formData.posterWinnerTeamColor || "#64748b"}
-                      onChange={(e) => setFormData({...formData, posterWinnerTeamColor: e.target.value})}
-                      style={{ fontSize: '0.75rem', padding: '4px 6px' }}
-                    />
+                {/* 2nd Place Fine Tuning */}
+                <div style={{ background: 'rgba(249, 115, 22, 0.05)', padding: '8px', borderRadius: '6px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#f97316', marginBottom: '6px' }}>🥈 2nd Place Offset</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                        <span>Top (Y)</span>
+                        <span style={{ fontWeight: 700, color: '#f97316' }}>{formData.posterRank2Top ?? 0}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="0.2"
+                        value={formData.posterRank2Top ?? 0}
+                        onChange={(e) => setFormData({ ...formData, posterRank2Top: parseFloat(e.target.value) || 0 })}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                        <span>Left (X)</span>
+                        <span style={{ fontWeight: 700, color: '#f97316' }}>{formData.posterRank2Left ?? 0}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="0.2"
+                        value={formData.posterRank2Left ?? 0}
+                        onChange={(e) => setFormData({ ...formData, posterRank2Left: parseFloat(e.target.value) || 0 })}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3rd Place Fine Tuning */}
+                <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '8px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ef4444', marginBottom: '6px' }}>🥉 3rd Place Offset</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                        <span>Top (Y)</span>
+                        <span style={{ fontWeight: 700, color: '#ef4444' }}>{formData.posterRank3Top ?? 0}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="0.2"
+                        value={formData.posterRank3Top ?? 0}
+                        onChange={(e) => setFormData({ ...formData, posterRank3Top: parseFloat(e.target.value) || 0 })}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                        <span>Left (X)</span>
+                        <span style={{ fontWeight: 700, color: '#ef4444' }}>{formData.posterRank3Left ?? 0}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="0.2"
+                        value={formData.posterRank3Left ?? 0}
+                        onChange={(e) => setFormData({ ...formData, posterRank3Left: parseFloat(e.target.value) || 0 })}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

@@ -77,6 +77,12 @@ export async function updatePosterSettings(data: {
   posterShowRankBadge?: boolean,
   posterShowChestNumber?: boolean,
   posterShowTeam?: boolean,
+  posterRank1Top?: number | null,
+  posterRank1Left?: number | null,
+  posterRank2Top?: number | null,
+  posterRank2Left?: number | null,
+  posterRank3Top?: number | null,
+  posterRank3Left?: number | null,
 }) {
   try {
     const session = await getServerSession(authOptions);

@@ -1111,6 +1111,9 @@ export default function ProgramResultsView({
                       ? (secondaryColor || "#f97316")
                       : "#ef4444";
 
+                    const rankTopOffset = idx === 0 ? (settings?.posterRank1Top || 0) : idx === 1 ? (settings?.posterRank2Top || 0) : (settings?.posterRank3Top || 0);
+                    const rankLeftOffset = idx === 0 ? (settings?.posterRank1Left || 0) : idx === 1 ? (settings?.posterRank2Left || 0) : (settings?.posterRank3Left || 0);
+
                     return (
                       <div
                         key={winner.id || idx}
@@ -1120,7 +1123,9 @@ export default function ProgramResultsView({
                           gap: "1.8cqi",
                           width: "100%",
                           minHeight: "8cqi",
-                          justifyContent: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start"
+                          justifyContent: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start",
+                          transform: (rankTopOffset !== 0 || rankLeftOffset !== 0) ? `translate(${rankLeftOffset}cqi, ${rankTopOffset}cqi)` : undefined,
+                          position: "relative"
                         }}
                       >
                         {/* Circular Rank Badge (Optional) */}
