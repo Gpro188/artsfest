@@ -288,6 +288,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
               <option value="ALL">All Types</option>
               <option value="INDIVIDUAL">Individual</option>
               <option value="GROUP">Group</option>
+              <option value="GENERAL">General</option>
             </select>
           </div>
 
