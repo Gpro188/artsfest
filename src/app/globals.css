@@ -1,7 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 /* ─── CSS Custom Properties (Theme Tokens) ─── */
 :root {
+  /* Jauhare Alam Design System Tokens */
+  --ink: #12162a;          /* header/hero background, deep navy */
+  --ink-soft: #1c2140;
+  --bg: #f3f4f9;            /* page background */
+  --surface: #ffffff;       /* card background */
+  --text: #1b1e2b;
+  --muted: #6b7080;
+  --border: #e5e6f0;
+  --gold: #c8973f;          /* trophy/award accent */
+  --gold-bright: #ecc884;
+  --gold-ink: #4a3410;
+  --maroon: #9c2b3c;        /* Yaqooth team color */
+  --emerald: #1e7a5b;       /* Marjaan team color */
+  --indigo: #4b4f9e;        /* Fairooz team color */
+  --indigo-soft: #eaebf8;
+  --live: #d64545;
+  --radius: 16px;
+  --shadow-sm: 0 1px 2px rgba(18,22,42,.06), 0 1px 1px rgba(18,22,42,.04);
+  --shadow-md: 0 8px 24px -8px rgba(18,22,42,.18);
+  --shadow-lg: 0 24px 60px -20px rgba(18,22,42,.35);
+
+  --font-display: var(--font-anek, 'Anek Malayalam', var(--font-fraunces, 'Fraunces', Georgia, serif));
+  --font-body: var(--font-inter, 'Inter', var(--font-anek, 'Anek Malayalam'), -apple-system, BlinkMacSystemFont, sans-serif);
+  --font-mono: var(--font-mono-numbers, 'JetBrains Mono', monospace);
+  --font-poster: var(--font-anek, 'Anek Malayalam', var(--font-outfit, 'Outfit', sans-serif));
+
   --primary: #6366f1;
   --primary-hover: #4f46e5;
   --secondary: #0ea5e9;
@@ -10,26 +36,26 @@
   --warning: #f59e0b;
   --error: #ef4444;
 
-  --bg-color: #f9fafb;
-  --surface-color: #ffffff;
+  --bg-color: var(--bg);
+  --surface-color: var(--surface);
   --surface-hover: #f2f4f7;
-  --border-color: #e4e7ec;
+  --border-color: var(--border);
   --border-color-strong: #d0d5dd;
 
-  --text-primary: #101828;
+  --text-primary: var(--text);
   --text-secondary: #344054;
-  --text-muted: #667085;
+  --text-muted: var(--muted);
 
   --hero-glass-bg: rgba(255, 255, 255, 0.9);
   --hero-orb-1: rgba(99, 102, 241, 0.2);
   --hero-orb-2: rgba(139, 92, 246, 0.2);
   --hero-orb-3: rgba(56, 189, 248, 0.1);
   --hero-gradient-center: rgba(249, 250, 251, 1);
-  --card-bg: rgba(255, 255, 255, 1);
+  --card-bg: var(--surface);
   --card-border-hover: rgba(99, 102, 241, 0.4);
 
-  --font-sans: 'Inter', sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-display);
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -44,9 +70,6 @@
   --spacing-xl: 2rem;
   --spacing-xxl: 3rem;
 
-  --shadow-sm: 0px 1px 3px 0px rgba(16,24,40,0.1), 0px 1px 2px 0px rgba(16,24,40,0.06);
-  --shadow-md: 0px 4px 8px -2px rgba(16,24,40,0.1), 0px 2px 4px -2px rgba(16,24,40,0.06);
-  --shadow-lg: 0px 12px 16px -4px rgba(16,24,40,0.08), 0px 4px 6px -2px rgba(16,24,40,0.03);
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
   --transition-fast: 0.15s ease-in-out;
   --transition-normal: 0.3s ease-in-out;
@@ -102,9 +125,24 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
   line-height: 1.2;
   font-weight: 600;
+}
+
+.font-display {
+  font-family: var(--font-display) !important;
+}
+
+.font-body {
+  font-family: var(--font-body) !important;
+}
+
+.font-mono-num {
+  font-family: var(--font-mono) !important;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 a {

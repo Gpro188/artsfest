@@ -162,24 +162,37 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
   const availableFiltered = programs
     .filter(p => !assignedProgramIds.includes(p.id))
     .filter(p => {
-      // 1. Strict Event Match (Must belong to candidate's team event or parent event)
+      // 1. Event Match (Matches candidate's team event, parent festival event, or program belongs to festival hierarchy)
       const teamEventId = selectedCandidate.team?.eventId;
       const teamParentEventId = selectedCandidate.team?.event?.parentId;
-      const isEventMatch = p.eventId === teamEventId || (teamParentEventId && p.eventId === teamParentEventId);
+      
+      let isEventMatch = true;
+      if (teamEventId || teamParentEventId) {
+        isEventMatch = (
+          p.eventId === teamEventId ||
+          (teamParentEventId && p.eventId === teamParentEventId) ||
+          (teamEventId && p.event?.parentId === teamEventId) ||
+          (teamParentEventId && p.event?.parentId === teamParentEventId)
+        );
+      }
       if (!isEventMatch) return false;
 
-      // 2. Strict Category Match
-      const categoryMatch = p.type === "GENERAL" || 
+      // 2. Strict Category Match (Matches category ID, name, or General programs)
+      const candCatName = selectedCandidate.category?.name?.trim().toLowerCase();
+      const progCatName = p.category?.name?.trim().toLowerCase();
+
+      const categoryMatch = (
+        p.type === "GENERAL" || 
         p.categoryId === selectedCandidate.categoryId || 
-        (p.category?.name && selectedCandidate.category?.name && 
-         p.category.name.trim().toLowerCase() === selectedCandidate.category.name.trim().toLowerCase());
+        (candCatName && progCatName && candCatName === progCatName)
+      );
       
       if (!categoryMatch) return false;
 
       // 3. Search Query Match
       if (programQuery && !p.name.toLowerCase().includes(programQuery.toLowerCase().trim())) return false;
 
-      // 4. Filter Match
+      // 4. Filter Match (Individual / Group / All)
       if (programFilter !== 'ALL' && p.type !== programFilter) return false;
 
       return true;

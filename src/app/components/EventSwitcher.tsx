@@ -52,12 +52,13 @@ export default function EventSwitcher({ events, activeEventId }: { events: any[]
           position: relative;
           margin-bottom: var(--spacing-lg);
           padding: 4px;
-          background: rgba(15, 23, 42, 0.4);
-          border: 1px solid var(--border-color);
+          background: var(--surface);
+          border: 1px solid var(--border);
           border-radius: var(--radius-full);
           max-width: 100%;
           overflow: hidden;
           align-self: flex-start;
+          box-shadow: var(--shadow-sm);
         }
 
         .event-switcher-scroll {
@@ -76,32 +77,32 @@ export default function EventSwitcher({ events, activeEventId }: { events: any[]
 
         .event-switch-btn {
           white-space: nowrap;
-          padding: 0.6rem 1.8rem;
+          padding: 0.55rem 1.6rem;
           border-radius: var(--radius-full);
           border: none;
           background: transparent;
-          color: var(--text-secondary);
-          font-weight: 500;
+          color: var(--muted);
+          font-weight: 600;
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           font-size: 0.9rem;
           scroll-snap-align: center;
         }
 
         .event-switch-btn:hover {
-          color: white;
-          background: rgba(255, 255, 255, 0.05);
+          color: var(--text);
+          background: var(--bg);
         }
 
         .event-switch-btn.active {
-          background: var(--primary);
+          background: linear-gradient(135deg, var(--maroon) 0%, #b83247 100%);
           color: white;
           font-weight: 700;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          box-shadow: 0 4px 14px rgba(156, 43, 60, 0.35);
           transform: scale(1.02);
         }
 
-        @media (max-width: 768px) {
+        @container fest-shell (max-width: 768px) {
           .event-switcher-wrapper {
             width: 100%;
             border-radius: var(--radius-lg);

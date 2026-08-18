@@ -39,7 +39,14 @@ export default async function ProgramsPage() {
     orderBy: { createdAt: 'desc' }
   });
 
-  const allCategories = events.flatMap(e => e.categories);
+  const rawCategories = events.flatMap(e => e.categories);
+  const seenCategoryNames = new Set<string>();
+  const allCategories = rawCategories.filter(cat => {
+    const trimmed = cat.name.trim().toUpperCase();
+    if (seenCategoryNames.has(trimmed)) return false;
+    seenCategoryNames.add(trimmed);
+    return true;
+  });
   const currentEventId = events[0]?.id || "";
 
   return (

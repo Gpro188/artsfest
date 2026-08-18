@@ -24,46 +24,84 @@ export default async function MediaPage() {
     orderBy: { name: 'asc' }
   });
   
+  let publishedWhere: any = {
+    results: {
+      some: { isPublished: true }
+    }
+  };
+
+  if (eventId) {
+    const targetEvent = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { subEvents: true }
+    });
+    if (targetEvent) {
+      const allRelatedEventIds = [targetEvent.id, ...(targetEvent.subEvents?.map(s => s.id) || [])];
+      publishedWhere.eventId = { in: allRelatedEventIds };
+    } else {
+      publishedWhere.eventId = eventId;
+    }
+  }
+
+  // Fetch a sample real published program with results to test live in the Media Center
+  const sampleProgram = await prisma.program.findFirst({
+    where: publishedWhere,
+    include: {
+      category: true,
+      event: true,
+      results: {
+        where: { isPublished: true },
+        include: {
+          candidate: { include: { team: true } },
+          team: true
+        },
+        orderBy: { rank: 'asc' },
+        take: 3
+      }
+    }
+  });
+
   // Programs that have results and are published - for the download center
   const publishedPrograms = await prisma.program.findMany({
-    where: {
-        eventId: eventId || undefined,
-        results: {
-            some: { isPublished: true }
-        }
-    },
+    where: publishedWhere,
     include: {
-        category: true
+      category: true,
+      event: true
     },
     orderBy: { name: 'asc' }
   });
 
   return (
     <div className="animate-fade-in">
-      <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
         <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Media Center</h1>
-        <p className="page-description">Design result posters, manage branding assets, set category styles, and download result media templates.</p>
+        <p className="page-description">Design result posters, position text over your background, and manage category styles.</p>
       </div>
 
-      <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 'var(--spacing-xl)', alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
-            <div data-tour="media-poster"><PosterSettingsForm initialSettings={initialSettings} /></div>
-            <div data-tour="media-category"><CategoryBrandingForm categories={categories} /></div>
+      {/* Main Studio Section: Poster Preview on Left & Adjustment Sliders on Right */}
+      <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <PosterSettingsForm initialSettings={initialSettings} sampleProgram={sampleProgram} />
+      </div>
+
+      {/* Lower Section: Category Branding & Template Download Center */}
+      <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-xl)', alignItems: 'start' }}>
+        <div data-tour="media-category">
+          <CategoryBrandingForm categories={categories} />
         </div>
 
-        <div data-tour="media-downloads" className="glass-panel" style={{ padding: 'var(--spacing-lg)', position: 'sticky', top: '20px' }}>
+        <div data-tour="media-downloads" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
             <h3 style={{ marginBottom: 'var(--spacing-md)' }}>🖼️ Template Download Center</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: 'var(--spacing-lg)' }}>
-                Quickly access program result boards to download "Clean Body" templates for your manual designs.
+                Quickly access published program result boards to view or download finalized posters.
             </p>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '700px', overflowY: 'auto', paddingRight: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '550px', overflowY: 'auto', paddingRight: '6px' }}>
                 {publishedPrograms.length > 0 ? publishedPrograms.map(program => (
                     <div key={program.id} style={{ 
                         display: 'flex', 
                         justifyContent: 'space-between', 
                         alignItems: 'center', 
-                        padding: '12px', 
+                        padding: '12px 14px', 
                         backgroundColor: 'rgba(255,255,255,0.05)', 
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid var(--border-color)'
@@ -72,8 +110,8 @@ export default async function MediaPage() {
                             <div style={{ fontWeight: 600 }}>{program.name}</div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{program.category?.name}</div>
                         </div>
-                        <Link href={`/results/${program.id}`} className="btn btn-secondary" style={{ padding: '5px 12px', fontSize: '0.8rem' }}>
-                            Open Generator
+                        <Link href={`/results/${program.id}`} className="btn btn-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem' }}>
+                            Open Poster
                         </Link>
                     </div>
                 )) : (

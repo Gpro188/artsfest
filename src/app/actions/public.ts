@@ -18,14 +18,37 @@ const getCachedPublicEventData = unstable_cache(
       totalCandidates,
       candidatesWithAssignments
     ] = await Promise.all([
-      // 1. Get Latest Results
-      prisma.result.findMany({
-        where: { program: { eventId }, isPublished: true },
+      // 1. Get Latest Published Programs (with full result winners list)
+      prisma.program.findMany({
+        where: {
+          eventId,
+          results: { some: { isPublished: true } }
+        },
         select: {
-          id: true, points: true, rank: true, grade: true, updatedAt: true,
-          candidate: { select: { id: true, name: true, chestNumber: true, photo: true, team: { select: { id: true, name: true, flagColor: true } } } },
-          team: { select: { id: true, name: true, flagColor: true, leaderPhoto: true } },
-          program: { select: { id: true, name: true } }
+          id: true,
+          name: true,
+          updatedAt: true,
+          category: { select: { id: true, name: true } },
+          results: {
+            where: { isPublished: true },
+            select: {
+              id: true,
+              points: true,
+              rank: true,
+              grade: true,
+              candidate: {
+                select: {
+                  id: true,
+                  name: true,
+                  chestNumber: true,
+                  photo: true,
+                  team: { select: { id: true, name: true, flagColor: true } }
+                }
+              },
+              team: { select: { id: true, name: true, flagColor: true, leaderPhoto: true } }
+            },
+            orderBy: [{ rank: 'asc' }, { points: 'desc' }]
+          }
         },
         orderBy: { updatedAt: 'desc' },
         take: 10
@@ -133,13 +156,11 @@ const getCachedPublicEventData = unstable_cache(
 
     categories.forEach(cat => {
       const catScores = Object.values(candidateScores)
-        .filter(c => c.categoryName === cat.name)
+        .filter(c => c.categoryName?.toUpperCase() === cat.name?.toUpperCase())
         .sort((a, b) => b.points - a.points)
         .slice(0, 5);
       
-      if (catScores.length > 0) {
-        categoryStars[cat.name] = catScores;
-      }
+      categoryStars[cat.name] = catScores;
     });
 
     const stats = {
@@ -173,39 +194,57 @@ export async function getPublicEventData(eventId: string) {
   }
 }
 
-const getCachedProgramResults = unstable_cache(
-  async (programId: string) => {
-    const [program, settings] = await Promise.all([
-      prisma.program.findUnique({
-        where: { id: programId },
-        include: {
-          category: true,
-          event: true,
-          mediaTemplate: true,
-          results: {
-            where: { isPublished: true },
-            include: {
-              candidate: { include: { team: true } },
-              team: true
-            },
-            orderBy: { rank: 'asc' }
-          }
-        }
-      }),
-      prisma.globalSetting.findUnique({ where: { id: "default" } })
-    ]);
-
-    return { program, settings };
-  },
-  ['program-results'],
-  { revalidate: 60, tags: ['results'] }
-);
-
 export async function getProgramResults(programId: string) {
   try {
-    const data = await getCachedProgramResults(programId);
-    if (!data.program) return { success: false, error: "Program not found" };
-    return { success: true, data };
+    const program = await prisma.program.findUnique({
+      where: { id: programId },
+      include: {
+        category: true,
+        event: true,
+        mediaTemplate: true,
+        results: {
+          where: { isPublished: true },
+          include: {
+            candidate: { include: { team: true } },
+            team: true
+          },
+          orderBy: { rank: 'asc' }
+        }
+      }
+    });
+
+    if (!program) return { success: false, error: "Program not found" };
+
+    // Fetch settings for the event or parent event or fallback to default
+    const targetEventId = program.eventId || program.event?.parentId;
+    let settings = null;
+
+    if (targetEventId) {
+      settings = await prisma.globalSetting.findFirst({
+        where: {
+          OR: [
+            { eventId: program.eventId },
+            { eventId: program.event?.parentId || undefined },
+            { id: "default" }
+          ],
+          posterBgUrl: { not: null }
+        }
+      });
+    }
+
+    if (!settings) {
+      settings = await prisma.globalSetting.findFirst({
+        where: {
+          posterBgUrl: { not: null }
+        }
+      });
+    }
+
+    if (!settings) {
+      settings = await prisma.globalSetting.findUnique({ where: { id: "default" } });
+    }
+
+    return { success: true, data: { program, settings } };
   } catch (error) {
     console.error("Failed to fetch program results:", error);
     return { success: false, error: "Failed to fetch results" };

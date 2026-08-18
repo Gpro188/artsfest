@@ -104,7 +104,14 @@ export default async function ScoringPage(props: {
                 select: {
                   id: true,
                   name: true,
-                  chestNumber: true
+                  chestNumber: true,
+                  team: {
+                    select: {
+                      id: true,
+                      name: true,
+                      flagColor: true
+                    }
+                  }
                 }
               }
             }

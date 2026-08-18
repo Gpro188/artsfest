@@ -3,9 +3,31 @@ import { prisma } from "./prisma";
 export async function getSettings(eventId?: string | null) {
   try {
     if (eventId) {
-      let settings = await prisma.globalSetting.findUnique({
-        where: { eventId }
+      let settings = await prisma.globalSetting.findFirst({
+        where: {
+          OR: [
+            { eventId },
+            { event: { subEvents: { some: { id: eventId } } } },
+            { event: { parent: { id: eventId } } }
+          ],
+          posterBgUrl: { not: null }
+        },
+        orderBy: { updatedAt: 'desc' }
       });
+
+      if (!settings) {
+        settings = await prisma.globalSetting.findUnique({
+          where: { eventId }
+        });
+      }
+
+      if (!settings) {
+        settings = await prisma.globalSetting.findFirst({
+          where: { posterBgUrl: { not: null } },
+          orderBy: { updatedAt: 'desc' }
+        });
+      }
+
       if (!settings) {
         // Fetch event name to pre-populate settings
         const event = await prisma.event.findUnique({
@@ -13,10 +35,12 @@ export async function getSettings(eventId?: string | null) {
         });
         settings = await prisma.globalSetting.create({
           data: {
-            id: eventId, // explicitly set id so it doesn't default to "default"
-            eventId,
+            id: eventId,
             festName: event?.name || "Arts Fest",
-            festMoto: "Celebrating Creativity"
+            festMoto: "Celebrating Creativity",
+            event: {
+              connect: { id: eventId }
+            }
           }
         });
       }
@@ -46,7 +70,36 @@ export async function getSettings(eventId?: string | null) {
       posterCongratulationUrl: null,
       posterPrimaryColor: "#1e293b",
       posterSecondaryColor: "#f97316",
-      posterTextColor: "#1e293b"
+      posterTextColor: "#1e293b",
+      posterTextAlignment: "left",
+      posterShowGrade: true,
+      posterMarginTop: 15,
+      posterMarginLeft: 10,
+      posterContentWidth: 60,
+      posterProgramTop: 36,
+      posterProgramLeft: 30,
+      posterProgramWidth: 40,
+      posterProgramFontSize: 36,
+      posterCategoryTop: 40,
+      posterCategoryLeft: 43,
+      posterCategoryFontSize: 18,
+      posterCategoryColor: "#ffffff",
+      posterCategoryShow: true,
+      posterNumberTop: 40,
+      posterNumberLeft: 55,
+      posterNumberFontSize: 18,
+      posterNumberColor: "#1e293b",
+      posterNumberShow: true,
+      posterWinnersTop: 46,
+      posterWinnersLeft: 18,
+      posterWinnersWidth: 36,
+      posterWinnerNameSize: 20,
+      posterWinnerTeamSize: 13,
+      posterWinnerTeamColor: "#64748b",
+      posterWinnerGap: 18,
+      posterShowRankBadge: true,
+      posterShowChestNumber: true,
+      posterShowTeam: true
     } as any;
   }
 }

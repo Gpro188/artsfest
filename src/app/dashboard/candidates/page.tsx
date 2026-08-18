@@ -30,10 +30,18 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
     ]
   } : undefined;
 
-  const [allTeams, allCategories] = await Promise.all([
+  const [allTeams, rawAllCategories] = await Promise.all([
     session.user.role === "ADMIN" ? prisma.team.findMany({ where: categoryTeamWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
     session.user.role === "ADMIN" ? prisma.category.findMany({ where: categoryTeamWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([])
   ]);
+
+  const seenCatNames = new Set<string>();
+  const allCategories = rawAllCategories.filter(cat => {
+    const trimmed = cat.name.trim().toUpperCase();
+    if (seenCatNames.has(trimmed)) return false;
+    seenCatNames.add(trimmed);
+    return true;
+  });
 
   if (session.user.role === "MANAGER") {
     const team = await prisma.team.findUnique({
@@ -80,7 +88,20 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
     if (filterTeamId) whereClause.teamId = filterTeamId;
   }
   
-  if (filterCategoryId) whereClause.categoryId = filterCategoryId;
+  if (filterCategoryId) {
+    // Look up the selected category to get its name so we can match candidates in both Boys and Girls sub-events
+    const selectedCat = rawAllCategories.find(c => c.id === filterCategoryId);
+    if (selectedCat) {
+      whereClause.category = {
+        name: {
+          equals: selectedCat.name,
+          mode: "insensitive"
+        }
+      };
+    } else {
+      whereClause.categoryId = filterCategoryId;
+    }
+  }
 
   const candidates = await prisma.candidate.findMany({
     where: whereClause,

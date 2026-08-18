@@ -47,7 +47,36 @@ export async function updatePosterSettings(data: {
   posterBgUrl?: string,
   posterPrimaryColor?: string,
   posterSecondaryColor?: string,
-  posterTextColor?: string
+  posterTextColor?: string,
+  posterTextAlignment?: string,
+  posterShowGrade?: boolean,
+  posterMarginTop?: number,
+  posterMarginLeft?: number,
+  posterContentWidth?: number,
+  posterProgramTop?: number,
+  posterProgramLeft?: number,
+  posterProgramWidth?: number,
+  posterProgramFontSize?: number,
+  posterCategoryTop?: number,
+  posterCategoryLeft?: number,
+  posterCategoryFontSize?: number,
+  posterCategoryColor?: string,
+  posterCategoryShow?: boolean,
+  posterNumberTop?: number,
+  posterNumberLeft?: number,
+  posterNumberFontSize?: number,
+  posterNumberColor?: string,
+  posterNumberShow?: boolean,
+  posterWinnersTop?: number,
+  posterWinnersLeft?: number,
+  posterWinnersWidth?: number,
+  posterWinnerNameSize?: number,
+  posterWinnerTeamSize?: number,
+  posterWinnerTeamColor?: string,
+  posterWinnerGap?: number,
+  posterShowRankBadge?: boolean,
+  posterShowChestNumber?: boolean,
+  posterShowTeam?: boolean,
 }) {
   try {
     const session = await getServerSession(authOptions);
@@ -58,16 +87,33 @@ export async function updatePosterSettings(data: {
     const { eventId } = session.user;
 
     if (eventId) {
-      await prisma.globalSetting.upsert({
-        where: { eventId },
-        update: data,
-        create: {
-          eventId,
-          id: `event-${eventId}`,
-          festName: "Arts Fest",
-          ...data
-        }
+      // Find event and any related parent or sub-events
+      const currentEv = await prisma.event.findUnique({
+        where: { id: eventId },
+        include: { subEvents: true }
       });
+
+      const relatedEventIds = [eventId];
+      if (currentEv?.parentId) relatedEventIds.push(currentEv.parentId);
+      if (currentEv?.subEvents) {
+        currentEv.subEvents.forEach(s => relatedEventIds.push(s.id));
+      }
+
+      // Upsert for each related event so all programs have access to the same poster art
+      for (const eId of relatedEventIds) {
+        await prisma.globalSetting.upsert({
+          where: { eventId: eId },
+          update: data,
+          create: {
+            id: `event-${eId}`,
+            festName: currentEv?.name || "Arts Fest",
+            event: {
+              connect: { id: eId }
+            },
+            ...data
+          }
+        });
+      }
     } else {
       await prisma.globalSetting.upsert({
         where: { id: "default" },
@@ -81,6 +127,7 @@ export async function updatePosterSettings(data: {
     }
 
     revalidatePath("/", "layout");
+    revalidatePath("/results/[id]", "page");
     return { success: true };
   } catch (error) {
     console.error("Failed to update poster settings:", error);

@@ -185,16 +185,119 @@ export async function submitMarks(data: {
       });
     }
 
-    // If NOT manual mode, recalculate program
-    if (data.manualRank === undefined && data.manualGrade === undefined) {
-      await recalculateProgramResults(data.programId);
-    }
-
     revalidatePath("/dashboard/scoring");
     return { success: true };
   } catch (error) {
     console.error("Submission failed:", error);
     return { success: false, error: "Failed to submit results" };
+  }
+}
+
+export async function submitBulkProgramResults(data: {
+  eventId: string;
+  programId: string;
+  entries: Array<{
+    candidateId?: string;
+    chestNumber?: string;
+    teamId?: string;
+    rank?: number | null;
+    grade?: string | null;
+    marks?: number;
+  }>;
+}) {
+  try {
+    const program = await prisma.program.findUnique({
+      where: { id: data.programId },
+      include: {
+        category: { include: { pointMatrix: true } },
+        event: { include: { generalPointMatrix: true } }
+      }
+    });
+
+    if (!program) return { success: false, error: "Program not found" };
+
+    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
+    if (program.type === "GENERAL") {
+      if (program.event.generalPointMatrix?.generalPoints) {
+        try { pointsConfig = JSON.parse(program.event.generalPointMatrix.generalPoints); } catch (e) {}
+      }
+    } else if (program.category?.pointMatrix) {
+      const str = program.type === "INDIVIDUAL" ? program.category.pointMatrix.individualPoints : program.category.pointMatrix.groupPoints;
+      if (str) {
+        try { pointsConfig = JSON.parse(str); } catch (e) {}
+      }
+    }
+
+    for (const entry of data.entries) {
+      if (!entry.rank && !entry.grade && (entry.marks === undefined || entry.marks === 0)) {
+        continue;
+      }
+
+      let points = 0;
+      if (entry.rank === 1) points += pointsConfig.rank1 || 0;
+      else if (entry.rank === 2) points += pointsConfig.rank2 || 0;
+      else if (entry.rank === 3) points += pointsConfig.rank3 || 0;
+
+      if (entry.grade === "A") points += pointsConfig.gradeA || 0;
+      else if (entry.grade === "B") points += pointsConfig.gradeB || 0;
+
+      const marks = entry.marks !== undefined ? entry.marks : points;
+
+      if (entry.candidateId || entry.chestNumber) {
+        let candidateId = entry.candidateId;
+        if (!candidateId && entry.chestNumber) {
+          const cand = await prisma.candidate.findUnique({ where: { chestNumber: entry.chestNumber } });
+          if (cand) candidateId = cand.id;
+        }
+
+        if (candidateId) {
+          await prisma.result.upsert({
+            where: { candidateId_programId: { candidateId, programId: data.programId } },
+            update: {
+              marks,
+              rank: entry.rank || null,
+              grade: entry.grade || null,
+              points
+            },
+            create: {
+              candidateId,
+              programId: data.programId,
+              marks,
+              rank: entry.rank || null,
+              grade: entry.grade || null,
+              points,
+              isPublished: false
+            }
+          });
+        }
+      } else if (entry.teamId) {
+        await prisma.result.upsert({
+          where: { teamId_programId: { teamId: entry.teamId, programId: data.programId } },
+          update: {
+            marks,
+            rank: entry.rank || null,
+            grade: entry.grade || null,
+            points
+          },
+          create: {
+            teamId: entry.teamId,
+            programId: data.programId,
+            marks,
+            rank: entry.rank || null,
+            grade: entry.grade || null,
+            points,
+            isPublished: false
+          }
+        });
+      }
+    }
+
+    revalidatePath("/dashboard/scoring");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Bulk submission failed:", error);
+    return { success: false, error: "Failed to submit program results" };
   }
 }
 

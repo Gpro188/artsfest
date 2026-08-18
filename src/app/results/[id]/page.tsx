@@ -5,8 +5,9 @@ import { getSettings } from "@/lib/settings";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import FestHeader from "@/app/components/FestHeader";
 
-export const revalidate = 60; // Cache for 1 minute
+export const dynamic = "force-dynamic";
 
 export default async function ProgramResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,53 +31,70 @@ export default async function ProgramResultsPage({ params }: { params: Promise<{
     festLogo: null
   };
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-       {/* Simple Header for Results Page */}
-       <header style={{ 
-        padding: 'var(--spacing-md) 0', 
-        borderBottom: '1px solid var(--border-color)',
-        backgroundColor: 'rgba(15, 23, 42, 0.8)',
-        backdropFilter: 'blur(10px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50
-      }} className="no-print">
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-            <div style={{ 
-              width: '32px', 
-              height: '32px', 
-              borderRadius: 'var(--radius-md)', 
-              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '1rem'
-            }}>
-              {(program.event?.name || settings.festName).charAt(0)}
-            </div>
-            <h1 style={{ fontSize: '1.2rem', margin: 0 }}>{program.event?.name || settings.festName} Results</h1>
-          </Link>
-          <Link href="/search" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
-            🔍 Search
-          </Link>
-        </div>
-      </header>
+  const festName = program.event?.name || settings.festName;
+  const dashboardUrl = program.event?.parentId
+    ? `/fest/${program.event.parentId}/results`
+    : `/fest/${program.eventId}/results`;
 
-      <main style={{ flex: 1, padding: 'var(--spacing-xl) 0' }}>
-        <div className="container">
-            <ProgramResultsView program={program} settings={settings} userRole={userRole} />
+  return (
+    <div className="program-result-page-root">
+      {/* Global Fest Header */}
+      <FestHeader 
+        festName={festName}
+        festMoto={settings.festMoto || "Official Results Feed"}
+        festLogo={settings.festLogo}
+        searchUrl={`/search?eventId=${program.eventId}`}
+        loginUrl="/login"
+        backUrl={dashboardUrl}
+        backLabel="Dashboard"
+      />
+
+      <main className="program-result-main">
+        <div className="program-result-container">
+          <ProgramResultsView program={program} settings={settings} userRole={userRole} />
         </div>
       </main>
 
-      <footer style={{ padding: 'var(--spacing-lg) 0', borderTop: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-muted)' }} className="no-print">
-        <div className="container">
-          <p>&copy; {new Date().getFullYear()} {program.event?.name || settings.festName} • Official Results Feed</p>
+      <footer className="program-result-footer no-print">
+        <div className="program-result-container">
+          <p className="font-body">&copy; {new Date().getFullYear()} {festName} • Official Results Feed</p>
         </div>
       </footer>
+
+      <style>{`
+        .program-result-page-root {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          background-color: var(--bg);
+          color: var(--text);
+          font-family: var(--font-body);
+          overflow-x: hidden;
+        }
+
+        .program-result-main {
+          flex: 1;
+          padding: 2rem 0 3.5rem 0;
+          container-type: inline-size;
+          container-name: fest-shell;
+        }
+
+        .program-result-container {
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 1.25rem;
+        }
+
+        .program-result-footer {
+          padding: 2rem 0;
+          border-top: 1px solid var(--border);
+          text-align: center;
+          color: var(--muted);
+          background-color: var(--surface);
+          font-size: 0.85rem;
+        }
+      `}</style>
     </div>
   );
 }

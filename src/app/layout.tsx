@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Inter } from "next/font/google";
+import { Outfit, Inter, Fraunces, JetBrains_Mono, Anek_Malayalam } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -9,8 +9,28 @@ const outfit = Outfit({
   display: "swap",
 });
 
+const anekMalayalam = Anek_Malayalam({
+  variable: "--font-anek",
+  subsets: ["malayalam", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono-numbers",
   subsets: ["latin"],
   display: "swap",
 });
@@ -73,7 +93,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${inter.variable} font-outfit`}
+      className={`${outfit.variable} ${anekMalayalam.variable} ${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-outfit`}
       suppressHydrationWarning
     >
       <head>

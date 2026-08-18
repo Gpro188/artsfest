@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 
 export default function SearchClient({ 
   initialQuery, 
@@ -45,133 +46,296 @@ export default function SearchClient({
     router.push(`/search?${params.toString()}`);
   };
 
+  const handleClear = () => {
+    setQuery("");
+    setEventId("");
+    setCategoryId("");
+    setStageType("");
+    setProgramType("");
+    router.push(`/search?type=${type}`);
+  };
+
   return (
-    <div className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-      <form onSubmit={handleSearch}>
-        {/* Simple Search Area */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)', alignItems: 'flex-end', marginBottom: showAdvanced ? 'var(--spacing-md)' : 0 }}>
-          
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Search By</label>
+    <div className="search-client-card">
+      <form onSubmit={handleSearch} className="search-form">
+        {/* Top Primary Search Row */}
+        <div className="search-top-row">
+          <div className="form-field-group target-field">
+            <label className="form-field-label font-body">Search Target</label>
             <select 
-              className="form-input" 
+              className="form-select-input font-body" 
               value={type}
-              onChange={(e) => setType(e.target.value)}
+              onChange={(e) => {
+                setType(e.target.value);
+              }}
             >
               <option value="chestNumber">Candidate / Chest Number</option>
               <option value="program">Programme / Result Board</option>
             </select>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Programme / Name</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={type === 'chestNumber' ? 'Search by Name or Chest #' : 'Search by Programme Name or Code'}
-            />
+          <div className="form-field-group field-grow relative-wrapper">
+            <label className="form-field-label font-body">Search Term</label>
+            <div className="input-with-icon">
+              <Search size={16} className="input-search-icon" />
+              <input 
+                type="text" 
+                className="form-text-input font-body" 
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={type === 'chestNumber' ? 'Type Chest Number or Candidate Name...' : 'Type Programme Name or Code...'}
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} className="clear-query-btn">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button type="submit" className="btn btn-primary" style={{ height: '42px', flex: 1 }}>
-              🔍 Search
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setShowAdvanced(!showAdvanced)} 
-              className="btn btn-secondary" 
-              style={{ height: '42px', padding: '0 15px', whiteSpace: 'nowrap' }}
-            >
-              {showAdvanced ? 'Hide Advanced' : '⚙️ Advanced Filters'}
+          <div className="form-buttons-group">
+            <button type="submit" className="btn-search-submit font-body">
+              <Search size={16} />
+              <span>Search</span>
             </button>
           </div>
         </div>
 
-        {/* Advanced Filters Area */}
-        {showAdvanced && (
-          <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--spacing-md)', alignItems: 'flex-end', padding: 'var(--spacing-md)', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.05)' }}>
-
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Select Event</label>
-            <select 
-              className="form-input" 
-              value={eventId}
-              onChange={(e) => {
-                setEventId(e.target.value);
-                setCategoryId(""); // Reset category when event changes
-              }}
-            >
-              <option value="">All Events</option>
-              {events.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
-            </select>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Category</label>
-            <select 
-              className="form-input" 
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-            >
-              <option value="">All Categories</option>
-              {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-            </select>
-          </div>
-
-          {type === "program" && (
-            <>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Stage</label>
+        {/* Filter Dropdowns in Down Section */}
+        <div className="filters-down-section">
+          <div className="filters-down-grid">
+            {/* Festival section is primarily for Program search or section filtering */}
+            {events.length > 0 && (
+              <div className="form-field-group">
+                <label className="form-field-label font-body">
+                  {type === "program" ? "Festival Section" : "Filter Section"}
+                </label>
                 <select 
-                  className="form-input" 
-                  value={stageType}
-                  onChange={(e) => setStageType(e.target.value)}
+                  className="form-select-input font-body" 
+                  value={eventId}
+                  onChange={(e) => {
+                    setEventId(e.target.value);
+                    setCategoryId("");
+                  }}
                 >
-                  <option value="">All Stages</option>
-                  <option value="ON_STAGE">ON STAGE</option>
-                  <option value="OFF_STAGE">OFF STAGE</option>
+                  <option value="">All Festival Sections</option>
+                  {events.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
                 </select>
               </div>
+            )}
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Type</label>
-                <select 
-                  className="form-input" 
-                  value={programType}
-                  onChange={(e) => setProgramType(e.target.value)}
-                >
-                  <option value="">All Types</option>
-                  <option value="INDIVIDUAL">INDIVIDUAL</option>
-                  <option value="GROUP">GROUP</option>
-                  <option value="GENERAL">GENERAL</option>
-                </select>
-              </div>
-            </>
-          )}
+            <div className="form-field-group">
+              <label className="form-field-label font-body">Category</label>
+              <select 
+                className="form-select-input font-body" 
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
+                <option value="">All Categories</option>
+                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+              </select>
+            </div>
+
+            {type === "program" && (
+              <>
+                <div className="form-field-group">
+                  <label className="form-field-label font-body">Stage</label>
+                  <select 
+                    className="form-select-input font-body" 
+                    value={stageType}
+                    onChange={(e) => setStageType(e.target.value)}
+                  >
+                    <option value="">All Stages</option>
+                    <option value="ON_STAGE">ON STAGE</option>
+                    <option value="OFF_STAGE">OFF STAGE</option>
+                  </select>
+                </div>
+
+                <div className="form-field-group">
+                  <label className="form-field-label font-body">Type</label>
+                  <select 
+                    className="form-select-input font-body" 
+                    value={programType}
+                    onChange={(e) => setProgramType(e.target.value)}
+                  >
+                    <option value="">All Types</option>
+                    <option value="INDIVIDUAL">INDIVIDUAL</option>
+                    <option value="GROUP">GROUP</option>
+                    <option value="GENERAL">GENERAL</option>
+                  </select>
+                </div>
+              </>
+            )}
           </div>
-        )}
+        </div>
         
         {(query || eventId || categoryId || stageType || programType) && (
-          <div style={{ marginTop: '10px', display: 'flex', gap: '5px' }}>
-             <button 
+          <div className="clear-filters-row">
+            <button 
               type="button" 
-              onClick={() => {
-                setQuery("");
-                setEventId("");
-                setCategoryId("");
-                setStageType("");
-                setProgramType("");
-                router.push(`/search?type=${type}`);
-              }}
-              style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: '0.8rem' }}
-             >
-               Clear Filters
-             </button>
+              onClick={handleClear}
+              className="clear-all-link font-body"
+            >
+              ✕ Reset search & filters
+            </button>
           </div>
         )}
       </form>
+
+      <style jsx>{`
+        .search-client-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 1.5rem;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .search-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        /* Top Row: Target + Search Term + Search Button */
+        .search-top-row {
+          display: grid;
+          grid-template-columns: 240px 1fr auto;
+          gap: 12px;
+          align-items: flex-end;
+        }
+
+        .form-field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .form-field-label {
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+
+        .form-select-input,
+        .form-text-input {
+          height: 46px;
+          padding: 0 1rem;
+          border-radius: 10px;
+          border: 1px solid var(--border);
+          background: var(--bg);
+          color: var(--text);
+          font-size: 0.9rem;
+          outline: none;
+          transition: border-color 0.2s, background 0.2s;
+        }
+
+        .form-select-input:focus,
+        .form-text-input:focus {
+          border-color: var(--indigo);
+          background: var(--surface);
+        }
+
+        .input-with-icon {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .input-search-icon {
+          position: absolute;
+          left: 14px;
+          color: var(--muted);
+          pointer-events: none;
+        }
+
+        .input-with-icon .form-text-input {
+          width: 100%;
+          padding-left: 42px;
+          padding-right: 36px;
+        }
+
+        .clear-query-btn {
+          position: absolute;
+          right: 12px;
+          background: transparent;
+          border: none;
+          color: var(--muted);
+          cursor: pointer;
+        }
+
+        .form-buttons-group {
+          display: flex;
+          gap: 8px;
+        }
+
+        .btn-search-submit {
+          height: 46px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0 1.75rem;
+          background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
+          color: var(--gold-ink);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 10px;
+          font-weight: 700;
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          white-space: nowrap;
+        }
+
+        .btn-search-submit:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(200, 151, 63, 0.35);
+        }
+
+        /* Down Section: Category, Stage, Type, Festival Section */
+        .filters-down-section {
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 1.25rem;
+        }
+
+        .filters-down-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 12px;
+        }
+
+        .clear-filters-row {
+          display: flex;
+          justify-content: flex-end;
+          padding-top: 2px;
+        }
+
+        .clear-all-link {
+          background: transparent;
+          border: none;
+          color: var(--live);
+          font-size: 0.82rem;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .clear-all-link:hover {
+          text-decoration: underline;
+        }
+
+        @media (max-width: 720px) {
+          .search-top-row {
+            grid-template-columns: 1fr;
+          }
+          .btn-search-submit {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -203,6 +203,43 @@ model GlobalSetting {
   posterPrimaryColor            String?   @default("#1e293b")
   posterSecondaryColor          String?   @default("#f97316")
   posterTextColor               String?   @default("#1e293b")
+  posterTextAlignment           String?   @default("left") // "left" | "center" | "right"
+  posterType                    String?   @default("TEXT_ONLY")
+  posterShowGrade               Boolean   @default(true)
+  posterMarginTop               Int?      @default(15) // legacy fallback
+  posterMarginLeft              Int?      @default(10) // legacy fallback
+  posterContentWidth            Int?      @default(60) // legacy fallback
+
+  // Independent position fields (percentages 0-100)
+  posterProgramTop              Int?      @default(36)
+  posterProgramLeft             Int?      @default(30)
+  posterProgramWidth            Int?      @default(40)
+  posterProgramFontSize         Int?      @default(36) // in px or scale
+
+  posterCategoryTop             Int?      @default(40)
+  posterCategoryLeft            Int?      @default(43)
+  posterCategoryFontSize        Int?      @default(18)
+  posterCategoryColor           String?   @default("#ffffff")
+  posterCategoryShow            Boolean   @default(true)
+
+  posterNumberTop               Int?      @default(40)
+  posterNumberLeft              Int?      @default(55)
+  posterNumberFontSize          Int?      @default(18)
+  posterNumberColor             String?   @default("#1e293b")
+  posterNumberShow              Boolean   @default(true)
+
+  posterWinnersTop              Int?      @default(46)
+  posterWinnersLeft             Int?      @default(18)
+  posterWinnersWidth            Int?      @default(36)
+  posterWinnerNameSize          Int?      @default(20)
+  posterWinnerTeamSize          Int?      @default(13)
+  posterWinnerTeamColor         String?   @default("#64748b")
+  posterWinnerGap               Int?      @default(18)
+
+  // Granular visibility toggles
+  posterShowRankBadge           Boolean   @default(true)  // 01, 02, 03 circular badge
+  posterShowChestNumber         Boolean   @default(true)  // (286)
+  posterShowTeam                Boolean   @default(true)  // Team / College name
 
   eventId                       String?   @unique
   event                         Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)

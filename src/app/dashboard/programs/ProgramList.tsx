@@ -29,12 +29,17 @@ export default function ProgramList({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Extract unique categories from programs or categories prop
-  const availableCategories = Array.from(
-    new Map(
-      categories.concat(programs.map(p => p.category).filter(Boolean)).map(c => [c.id || c.name, c])
-    ).values()
-  );
+  // Extract strictly unique categories by name
+  const seenNames = new Set<string>();
+  const availableCategories: any[] = [];
+  for (const c of categories.concat(programs.map(p => p.category).filter(Boolean))) {
+    if (!c || !c.name) continue;
+    const key = c.name.trim().toUpperCase();
+    if (!seenNames.has(key)) {
+      seenNames.add(key);
+      availableCategories.push(c);
+    }
+  }
 
   const filteredPrograms = programs.filter(program => {
     // Event filter matching name or ID
@@ -44,12 +49,14 @@ export default function ProgramList({
       }
     }
 
-    // Category filter matching ID or Name
+    // Category filter matching ID or Name (case-insensitive)
     if (selectedCategoryId !== "ALL") {
       if (selectedCategoryId === "GENERAL") {
         if (program.categoryId || program.category) return false;
       } else {
-        if (program.categoryId !== selectedCategoryId && program.category?.name !== selectedCategoryId) {
+        const progCatName = program.category?.name?.trim().toUpperCase();
+        const selKey = selectedCategoryId.trim().toUpperCase();
+        if (program.categoryId !== selectedCategoryId && progCatName !== selKey) {
           return false;
         }
       }

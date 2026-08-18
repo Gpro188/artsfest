@@ -29,15 +29,31 @@ export async function addCandidate(data: { name: string, categoryId: string, tea
     let chestNumber: string | null = null;
     let isApproved = false;
 
+    let finalCategoryId = data.categoryId;
+
     if (session.user.role === "ADMIN") {
       isApproved = true;
       const team = await prisma.team.findUnique({ where: { id: data.teamId } });
       const cat = await prisma.category.findUnique({ where: { id: data.categoryId } });
+
+      // If category eventId does not match team eventId, match the category with the same name under the team's event
+      if (team && cat && cat.eventId !== team.eventId) {
+        const matchingCatInTeamEvent = await prisma.category.findFirst({
+          where: {
+            eventId: team.eventId,
+            name: { equals: cat.name, mode: "insensitive" }
+          }
+        });
+        if (matchingCatInTeamEvent) {
+          finalCategoryId = matchingCatInTeamEvent.id;
+        }
+      }
+
       const prefixCode = team?.prefixCode || "C";
       const offset = cat?.chestNumberOffset || 0;
 
       const existingCandidates = await prisma.candidate.findMany({
-        where: { teamId: data.teamId, categoryId: data.categoryId, isApproved: true, chestNumber: { not: null } },
+        where: { teamId: data.teamId, categoryId: finalCategoryId, isApproved: true, chestNumber: { not: null } },
         select: { chestNumber: true }
       });
 
@@ -68,7 +84,7 @@ export async function addCandidate(data: { name: string, categoryId: string, tea
     await prisma.candidate.create({
       data: {
         name: data.name,
-        categoryId: data.categoryId,
+        categoryId: finalCategoryId,
         teamId: data.teamId,
         photo: data.photo,
         chestNumber,
