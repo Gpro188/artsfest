@@ -11,6 +11,8 @@ interface SidebarProps {
   username: string;
   festName: string;
   festMoto: string;
+  festLogo?: string | null;
+  teamName?: string;
 }
 
 interface NavItem {
@@ -185,6 +187,8 @@ export default function DashboardSidebar({
   username,
   festName,
   festMoto,
+  festLogo,
+  teamName,
 }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
