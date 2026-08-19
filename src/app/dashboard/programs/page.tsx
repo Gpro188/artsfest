@@ -38,7 +38,7 @@ export default async function ProgramsPage() {
         select: { id: true, name: true }
       }
     }
-  });
+  }) : null;
 
   const events = parentEvent ? [parentEvent, ...subEvents] : subEvents;
 
@@ -69,7 +69,6 @@ export default async function ProgramsPage() {
     seenCategoryNames.add(trimmed);
     return true;
   });
-  const currentEventId = events[0]?.id || "";
 
   return (
     <div className="animate-fade-in">
