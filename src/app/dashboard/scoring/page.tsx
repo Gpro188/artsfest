@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import ScoringForm from "./ScoringForm";
 import ResultList from "./ResultList";
 import TeamScorePreview from "./TeamScorePreview";
-import ExcelExport from "./ExcelExport";
+import ResultsExportPrintBar from "./ResultsExportPrintBar";
 import PendingProgramsList from "./PendingProgramsList";
 import EventSwitcher from "@/app/components/EventSwitcher";
 
@@ -59,57 +59,59 @@ export default async function ScoringPage(props: {
     );
   }
 
-  const activeEvent = await prisma.event.findUnique({
-    where: { id: activeEventId },
-    select: {
-      id: true,
-      name: true,
-      generalPointMatrix: {
-        select: {
-          id: true,
-          generalPoints: true
-        }
-      },
-      teams: {
-        select: {
-          id: true,
-          name: true,
-          flagColor: true
-        }
-      },
-      programs: {
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          categoryId: true,
-          category: {
-            select: {
-              id: true,
-              name: true,
-              pointMatrix: {
-                select: {
-                  id: true,
-                  individualPoints: true,
-                  groupPoints: true,
-                  generalPoints: true
+  const [activeEvent, eventCategories] = await Promise.all([
+    prisma.event.findUnique({
+      where: { id: activeEventId },
+      select: {
+        id: true,
+        name: true,
+        generalPointMatrix: {
+          select: {
+            id: true,
+            generalPoints: true
+          }
+        },
+        teams: {
+          select: {
+            id: true,
+            name: true,
+            flagColor: true
+          }
+        },
+        programs: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            categoryId: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+                pointMatrix: {
+                  select: {
+                    id: true,
+                    individualPoints: true,
+                    groupPoints: true,
+                    generalPoints: true
+                  }
                 }
               }
-            }
-          },
-          assignments: {
-            select: {
-              id: true,
-              candidate: {
-                select: {
-                  id: true,
-                  name: true,
-                  chestNumber: true,
-                  team: {
-                    select: {
-                      id: true,
-                      name: true,
-                      flagColor: true
+            },
+            assignments: {
+              select: {
+                id: true,
+                candidate: {
+                  select: {
+                    id: true,
+                    name: true,
+                    chestNumber: true,
+                    team: {
+                      select: {
+                        id: true,
+                        name: true,
+                        flagColor: true
+                      }
                     }
                   }
                 }
@@ -118,8 +120,13 @@ export default async function ScoringPage(props: {
           }
         }
       }
-    }
-  });
+    }),
+    prisma.category.findMany({
+      where: { eventId: activeEventId },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
+    })
+  ]);
 
   if (!activeEvent) redirect("/dashboard/scoring");
 
@@ -137,12 +144,11 @@ export default async function ScoringPage(props: {
         teamId: true,
         programId: true,
         createdAt: true,
-        candidate: { select: { name: true, chestNumber: true, team: { select: { name: true, flagColor: true } }, category: { select: { name: true } } } },
+        candidate: { select: { name: true, chestNumber: true, categoryId: true, team: { select: { name: true, flagColor: true } }, category: { select: { name: true } } } },
         team: { select: { name: true, flagColor: true } },
-        program: { select: { id: true, name: true, category: { select: { name: true } } } }
+        program: { select: { id: true, name: true, type: true, categoryId: true, category: { select: { name: true } } } }
       },
-      orderBy: { createdAt: 'desc' },
-      take: 200 // Limit to 200 for speed
+      orderBy: { createdAt: 'desc' }
     }),
     prisma.program.findMany({
       where: { eventId: activeEventId, assignments: { some: {} } },
@@ -200,12 +206,19 @@ export default async function ScoringPage(props: {
             Enter marks, assign ranks and grades, calculate points, and publish results for live standings.
           </p>
         </div>
-        <ExcelExport results={results} />
       </div>
 
       <div data-tour="scoring-switcher">
         <EventSwitcher events={events} activeEventId={activeEventId} />
       </div>
+
+      {/* Filterable Print & Excel Export Bar */}
+      <ResultsExportPrintBar
+        eventId={activeEventId}
+        eventName={activeEvent.name}
+        categories={eventCategories}
+        results={results}
+      />
       
       {events.length === 0 ? (
         <div className="glass-panel" style={{ padding: 'var(--spacing-lg)', textAlign: 'center' }}>
