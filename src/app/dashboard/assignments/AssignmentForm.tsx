@@ -147,15 +147,23 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
 
   const handleAssign = async (programId: string) => {
     setLoadingId(programId);
-    await assignProgram(selectedCandidateId, programId);
-    router.refresh();
+    const res = await assignProgram(selectedCandidateId, programId);
+    if (res && !res.success && res.error) {
+      alert(res.error);
+    } else {
+      router.refresh();
+    }
     setLoadingId(null);
   };
 
   const handleUnassign = async (programId: string) => {
     setLoadingId(programId);
-    await unassignProgram(selectedCandidateId, programId);
-    router.refresh();
+    const res = await unassignProgram(selectedCandidateId, programId);
+    if (res && !res.success && res.error) {
+      alert(res.error);
+    } else {
+      router.refresh();
+    }
     setLoadingId(null);
   };
 
@@ -170,9 +178,7 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
       if (teamEventId || teamParentEventId) {
         isEventMatch = (
           p.eventId === teamEventId ||
-          (teamParentEventId && p.eventId === teamParentEventId) ||
-          (teamEventId && p.event?.parentId === teamEventId) ||
-          (teamParentEventId && p.event?.parentId === teamParentEventId)
+          (teamParentEventId && p.eventId === teamParentEventId)
         );
       }
       if (!isEventMatch) return false;

@@ -100,12 +100,26 @@ export default async function AssignmentsPage() {
     }
   });
 
-  const programWhere: any = session.user.eventId ? {
-    OR: [
-      { eventId: session.user.eventId },
-      { event: { parentId: session.user.eventId } }
-    ]
-  } : undefined;
+  let programWhere: any = undefined;
+  if (session.user.role === "MANAGER" && teamId) {
+    const team = await prisma.team.findUnique({ where: { id: teamId }, include: { event: true } });
+    if (team) {
+      const parentId = team.event.parentId || team.eventId;
+      programWhere = {
+        OR: [
+          { eventId: parentId },
+          { event: { parentId: parentId } }
+        ]
+      };
+    }
+  } else if (session.user.eventId) {
+    programWhere = {
+      OR: [
+        { eventId: session.user.eventId },
+        { event: { parentId: session.user.eventId } }
+      ]
+    };
+  }
 
   const programs = await prisma.program.findMany({
     where: programWhere,
