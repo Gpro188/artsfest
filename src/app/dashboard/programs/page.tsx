@@ -20,6 +20,7 @@ export default async function ProgramsPage() {
     select: {
       id: true,
       name: true,
+      parentId: true,
       createdAt: true,
       categories: {
         select: { id: true, name: true }
@@ -33,6 +34,7 @@ export default async function ProgramsPage() {
     select: {
       id: true,
       name: true,
+      parentId: true,
       createdAt: true,
       categories: {
         select: { id: true, name: true }

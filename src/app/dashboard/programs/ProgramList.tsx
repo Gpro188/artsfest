@@ -11,7 +11,7 @@ type ProgramType = {
   type: string;
   categoryId: string | null;
   category: { name: string } | null;
-  event: { name: string };
+  event: { id: string, name: string };
   _count: { assignments: number };
 };
 
@@ -44,7 +44,11 @@ export default function ProgramList({
   const filteredPrograms = programs.filter(program => {
     // Event filter matching name or ID
     if (selectedEventId !== "ALL") {
-      if (program.event?.name !== selectedEventId && (program as any).eventId !== selectedEventId) {
+      const selectedEvent = events.find(e => e.name === selectedEventId || e.id === selectedEventId);
+      const isDirectMatch = program.event?.name === selectedEventId || (program as any).eventId === selectedEventId;
+      const isParentMatch = selectedEvent?.parentId && ((program as any).eventId === selectedEvent.parentId || program.event?.id === selectedEvent.parentId);
+      
+      if (!isDirectMatch && !isParentMatch) {
         return false;
       }
     }
