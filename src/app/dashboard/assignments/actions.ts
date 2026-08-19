@@ -29,17 +29,45 @@ export async function assignProgram(candidateId: string, programId: string) {
       where: { id: candidateId },
       include: { 
         programs: { include: { program: true } }, 
-        category: { include: { pointMatrix: true } }
+        category: { include: { pointMatrix: true } },
+        team: true
       }
     });
 
-    const program = await prisma.program.findUnique({ where: { id: programId } });
+    const program = await prisma.program.findUnique({ 
+      where: { id: programId },
+      include: { category: true }
+    });
 
     if (!candidate || !program) return { success: false, error: "Candidate or Program not found" };
 
-    // Validation 1: Category Match
-    if (program.type !== "GENERAL" && program.categoryId !== candidate.categoryId) {
+    // Validation 1: Category Match (Match by categoryId or matching Category Name in the event)
+    let isCategoryMatch = (program.type === "GENERAL" || program.categoryId === candidate.categoryId);
+    if (!isCategoryMatch && program.category && candidate.category) {
+      if (program.category.name.trim().toLowerCase() === candidate.category.name.trim().toLowerCase()) {
+        isCategoryMatch = true;
+      }
+    }
+
+    if (!isCategoryMatch) {
       return { success: false, error: "Category mismatch" };
+    }
+
+    // Auto-normalize candidate categoryId if candidate was linked to the duplicate category in another sub-event
+    if (candidate.category && candidate.team && candidate.category.eventId !== candidate.team.eventId) {
+      const correctCat = await prisma.category.findFirst({
+        where: {
+          eventId: candidate.team.eventId,
+          name: { equals: candidate.category.name, mode: "insensitive" }
+        }
+      });
+      if (correctCat && correctCat.id !== candidate.categoryId) {
+        await prisma.candidate.update({
+          where: { id: candidateId },
+          data: { categoryId: correctCat.id }
+        });
+        candidate.categoryId = correctCat.id;
+      }
     }
 
     // Validation 2: Max Individual Limit

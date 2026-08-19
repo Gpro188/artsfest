@@ -111,7 +111,16 @@ export default async function AssignmentsPage() {
     where: programWhere,
     include: { 
       event: true,
-      category: true
+      category: true,
+      assignments: {
+        select: {
+          candidate: {
+            select: {
+              teamId: true
+            }
+          }
+        }
+      }
     }
   });
 

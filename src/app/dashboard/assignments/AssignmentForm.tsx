@@ -299,8 +299,14 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
               </div>
             ) : (
               availableFiltered.map(program => {
-                const isLimitReached = program.type === "INDIVIDUAL" && currentIndividualCount >= maxIndividualLimit;
-                const canAssign = !isLimitReached;
+                const teamLimit = program.candidateLimitPerTeam || 1;
+                const teamAssignedCount = program.assignments 
+                  ? program.assignments.filter((a: any) => a.candidate?.teamId === selectedCandidate.teamId).length 
+                  : 0;
+                const isTeamLimitReached = teamAssignedCount >= teamLimit;
+                const isIndLimitReached = program.type === "INDIVIDUAL" && currentIndividualCount >= maxIndividualLimit;
+                
+                const canAssign = !isIndLimitReached && !isTeamLimitReached;
                 const isLoading = loadingId === program.id;
 
                 return (
@@ -314,20 +320,45 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                     background: 'var(--surface-color)',
                     opacity: canAssign ? 1 : 0.6
                   }}>
-                    <div>
-                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{program.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                        {program.type} {program.category && `• ${program.category.name}`}
+                    <div style={{ flex: 1, marginRight: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{program.name}</span>
+                        {program.programCode && (
+                          <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: 'rgba(0,0,0,0.06)', borderRadius: '4px', color: 'var(--text-secondary)' }}>
+                            {program.programCode}
+                          </span>
+                        )}
                       </div>
-                      {!canAssign && (
+
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <span>{program.type} {program.category && `• ${program.category.name}`}</span>
+                        <span style={{ 
+                          padding: '2px 6px', 
+                          borderRadius: '4px', 
+                          fontSize: '0.7rem', 
+                          fontWeight: 500,
+                          backgroundColor: isTeamLimitReached ? 'rgba(239, 68, 68, 0.1)' : 'rgba(15, 92, 70, 0.08)',
+                          color: isTeamLimitReached ? 'var(--error)' : 'var(--primary)'
+                        }}>
+                          Team Limit: {teamAssignedCount}/{teamLimit}
+                        </span>
+                      </div>
+
+                      {isIndLimitReached && (
                         <div style={{ fontSize: '0.7rem', color: 'var(--error)', marginTop: '4px', fontWeight: 600 }}>
-                          Limit reached ({currentIndividualCount}/{maxIndividualLimit})
+                          Student limit reached ({currentIndividualCount}/{maxIndividualLimit} individual)
+                        </div>
+                      )}
+                      {!isIndLimitReached && isTeamLimitReached && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--error)', marginTop: '4px', fontWeight: 600 }}>
+                          Team limit reached ({teamAssignedCount}/{teamLimit} candidate slots filled)
                         </div>
                       )}
                     </div>
                     <button 
                       onClick={() => handleAssign(program.id)}
                       disabled={!canAssign || loadingId !== null}
+                      title={!canAssign ? (isIndLimitReached ? 'Candidate limit reached' : 'Team limit reached') : 'Assign candidate'}
                       style={{ 
                         width: '36px', height: '36px', 
                         borderRadius: 'var(--radius-md)',
