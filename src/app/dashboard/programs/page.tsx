@@ -14,8 +14,9 @@ export default async function ProgramsPage() {
     redirect("/dashboard");
   }
 
+  const eventId = session.user.eventId as string;
   const subEvents = await prisma.event.findMany({
-    where: { parentId: session.user.eventId },
+    where: { parentId: eventId },
     select: {
       id: true,
       name: true,
@@ -27,8 +28,8 @@ export default async function ProgramsPage() {
     orderBy: { createdAt: 'desc' }
   });
 
-  const parentEvent = await prisma.event.findUnique({
-    where: { id: session.user.eventId },
+  const parentEvent = eventId ? await prisma.event.findUnique({
+    where: { id: eventId },
     select: {
       id: true,
       name: true,
@@ -41,11 +42,13 @@ export default async function ProgramsPage() {
 
   const events = parentEvent ? [parentEvent, ...subEvents] : subEvents;
 
+  const currentEventId = session.user.eventId as string;
+
   const programs = await prisma.program.findMany({
     where: {
       OR: [
-        { eventId: session.user.eventId },
-        { event: { parentId: session.user.eventId } }
+        { eventId: currentEventId },
+        { event: { parentId: currentEventId } }
       ]
     },
     include: {
