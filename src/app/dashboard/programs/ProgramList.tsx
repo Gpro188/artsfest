@@ -137,7 +137,7 @@ export default function ProgramList({
               <option value="ALL">All Categories</option>
               <option value="GENERAL">General (No Category)</option>
               {availableCategories.map(c => (
-                <option key={c.id || c.name} value={c.id || c.name}>{c.name}</option>
+                <option key={c.id || c.name} value={c.name}>{c.name}</option>
               ))}
             </select>
           </div>
