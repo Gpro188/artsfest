@@ -114,11 +114,16 @@ export async function getFestBranding(eventId?: string | null) {
 
 export async function getHomepageSettings(eventId: string) {
   try {
+    if (!eventId) return null;
+
     let settings = await prisma.homepageSetting.findUnique({
       where: { eventId }
     });
 
     if (!settings) {
+      const eventExists = await prisma.event.findUnique({ where: { id: eventId }, select: { id: true } });
+      if (!eventExists) return null;
+
       settings = await prisma.homepageSetting.create({
         data: {
           eventId,
