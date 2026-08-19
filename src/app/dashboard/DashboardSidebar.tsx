@@ -216,18 +216,18 @@ export default function DashboardSidebar({
               width: "40px",
               height: "40px",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+              background: festLogo ? "transparent" : "linear-gradient(135deg, #6366f1, #4f46e5)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              boxShadow: "0 2px 8px rgba(99,102,241,0.35)",
+              boxShadow: festLogo ? "none" : "0 2px 8px rgba(99,102,241,0.35)",
             }}
           >
             <img
-              src="/logo.png"
+              src={festLogo || "/logo.png"}
               alt="Logo"
-              style={{ width: "26px", height: "26px", objectFit: "contain" }}
+              style={{ width: festLogo ? "100%" : "26px", height: festLogo ? "100%" : "26px", objectFit: "contain", borderRadius: "10px" }}
             />
           </div>
           <div>
