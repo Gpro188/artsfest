@@ -10,7 +10,6 @@ interface ThemeApplicatorProps {
 
 export default function ThemeApplicator({ primaryColor, secondaryColor, bgColor }: ThemeApplicatorProps) {
   useEffect(() => {
-    // Only apply custom colors if explicitly provided and valid
     if (typeof document !== "undefined") {
       if (primaryColor) {
         document.documentElement.style.setProperty("--primary", primaryColor);
@@ -18,8 +17,29 @@ export default function ThemeApplicator({ primaryColor, secondaryColor, bgColor 
       if (secondaryColor) {
         document.documentElement.style.setProperty("--secondary", secondaryColor);
       }
+      if (bgColor) {
+        document.documentElement.style.setProperty("--bg", bgColor);
+        
+        // Determine if it's a dark or light theme based on background brightness
+        const brightness = getBrightness(bgColor);
+        const isDark = brightness < 128;
+        
+        if (isDark) {
+          document.documentElement.style.setProperty("--surface", adjustColor(bgColor, 15));
+          document.documentElement.style.setProperty("--text", "#f8fafc");
+          document.documentElement.style.setProperty("--muted", "#94a3b8");
+          document.documentElement.style.setProperty("--border", adjustColor(bgColor, 30));
+          document.documentElement.style.setProperty("--ink", adjustColor(bgColor, -10)); // Darker than bg for headers
+        } else {
+          document.documentElement.style.setProperty("--surface", "#ffffff");
+          document.documentElement.style.setProperty("--text", "#0f172a");
+          document.documentElement.style.setProperty("--muted", "#64748b");
+          document.documentElement.style.setProperty("--border", "#e2e8f0");
+          document.documentElement.style.setProperty("--ink", "#0f172a"); // Dark text for headers
+        }
+      }
     }
-  }, [primaryColor, secondaryColor]);
+  }, [primaryColor, secondaryColor, bgColor]);
 
   return null;
 }
