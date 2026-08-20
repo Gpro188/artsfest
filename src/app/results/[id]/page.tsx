@@ -7,12 +7,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import FestHeader from "@/app/components/FestHeader";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // Cache results for 60 seconds
 
 export default async function ProgramResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const res = await getProgramResults(id);
-  const session = await getServerSession(authOptions);
 
   if (!res.success || !res.data) {
     notFound();
@@ -23,7 +22,7 @@ export default async function ProgramResultsPage({ params }: { params: Promise<{
   if (!program) {
     notFound();
   }
-  const userRole = session?.user?.role;
+
 
   const settings = rawSettings || {
     festName: "Arts Fest",
@@ -51,7 +50,7 @@ export default async function ProgramResultsPage({ params }: { params: Promise<{
 
       <main className="program-result-main">
         <div className="program-result-container">
-          <ProgramResultsView program={program} settings={settings} userRole={userRole} />
+          <ProgramResultsView program={program} settings={settings} />
         </div>
       </main>
 

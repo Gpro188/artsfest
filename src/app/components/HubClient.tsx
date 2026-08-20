@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function HubClient({ events }: { events: any[] }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const searchParams = useSearchParams();
+  const initialEventId = searchParams.get("eventId");
+  
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (initialEventId) {
+      const idx = events.findIndex(e => e.id === initialEventId);
+      if (idx !== -1) return idx;
+    }
+    return 0;
+  });
 
   if (events.length === 0) {
     return (

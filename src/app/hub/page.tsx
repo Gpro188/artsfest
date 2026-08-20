@@ -3,21 +3,13 @@ import HubClient from "../components/HubClient";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import HubTourWrapper from "./HubTourWrapper";
+import { Suspense } from "react";
 
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+export const revalidate = 30; // Revalidate every 30 seconds to save serverless invocations
 
-export default async function HubPage(props: {
-  searchParams: Promise<{ eventId?: string }>;
-}) {
-  const searchParams = await props.searchParams;
-  const session = await getServerSession(authOptions);
-
-  // Prioritize URL eventId, then logged-in user's eventId
-  const activeEventId = searchParams.eventId || session?.user?.eventId || undefined;
-  
-  const settings = await getSettings(activeEventId);
-  const res = await getHubData(activeEventId);
+export default async function HubPage() {
+  const settings = await getSettings();
+  const res = await getHubData();
   const events = (res.success && res.data) ? res.data : [];
 
   return (
@@ -36,7 +28,9 @@ export default async function HubPage(props: {
 
       <main style={{ flex: 1, padding: 'var(--spacing-xl) 0' }}>
         <div className="container">
-          <HubClient events={events} />
+          <Suspense fallback={<div className="glass-panel" style={{ padding: '50px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading Hub...</div>}>
+            <HubClient events={events} />
+          </Suspense>
         </div>
       </main>
 
