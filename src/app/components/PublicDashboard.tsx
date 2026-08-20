@@ -201,7 +201,7 @@ export default function PublicDashboard({
           className="advanced-search-btn font-body"
         >
           <SlidersHorizontal size={16} />
-          <span>Advanced</span>
+          <span>Advanced Search</span>
         </Link>
       </div>
 
@@ -299,15 +299,20 @@ export default function PublicDashboard({
           </div>
           {filteredResults.length > 0 ? (
             <div className="search-results-list">
-              {filteredResults.map((result, i) => {
-                const teamColor = getTeamColor(
-                  result.candidate?.team?.name || result.team?.name,
-                  result.candidate?.team?.flagColor || result.team?.flagColor
-                );
+              {filteredResults.map((prog, i) => {
+                const programWinners = prog.results?.filter((r: any) => r.rank && r.rank <= 3) || [];
+                const topWinner = programWinners[0] || prog.results?.[0];
+                const teamColor = topWinner
+                  ? getTeamColor(
+                      topWinner.candidate?.team?.name || topWinner.team?.name,
+                      topWinner.candidate?.team?.flagColor || topWinner.team?.flagColor
+                    )
+                  : "var(--indigo)";
+                
                 return (
                   <Link
-                    key={result.id || i}
-                    href={`/results/${result.program?.id}`}
+                    key={prog.id || i}
+                    href={`/results/${prog.id}`}
                     className="search-item-row"
                   >
                     <div className="search-item-left">
@@ -315,29 +320,20 @@ export default function PublicDashboard({
                         className="search-item-badge"
                         style={{ backgroundColor: teamColor }}
                       >
-                        {getTeamInitials(result.candidate?.team?.name || result.team?.name)}
+                        {prog.name.charAt(0)}
                       </div>
                       <div className="search-item-info">
                         <div className="search-item-name font-display">
-                          {result.candidate?.name || result.team?.name}
+                          {prog.name}
                         </div>
                         <div className="search-item-meta">
-                          {result.program?.name} •{' '}
-                          {result.candidate?.chestNumber ? (
-                            <span className="font-mono-num">{result.candidate.chestNumber} • </span>
-                          ) : null}
-                          <span style={{ color: teamColor, fontWeight: 600 }}>
-                            {result.candidate?.team?.name || result.team?.name}
-                          </span>
+                          {prog.category?.name}
                         </div>
                       </div>
                     </div>
                     <div className="search-item-right">
                       <div className="search-item-rank font-display">
-                        {result.rank ? `Rank #${result.rank}` : result.grade ? `Grade ${result.grade}` : 'Result'}
-                      </div>
-                      <div className="search-item-pts font-mono-num">
-                        +{result.points} pts
+                        View Result
                       </div>
                     </div>
                   </Link>
