@@ -19,7 +19,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import { useSession } from "next-auth/react";
 
 export default function ProgramResultsView({
   program,
@@ -28,9 +27,6 @@ export default function ProgramResultsView({
   program: any;
   settings: any;
 }) {
-  const { data: session } = useSession();
-  const userRole = session?.user?.role;
-  const isAuthorizedMedia = userRole === "ADMIN" || userRole === "MEDIA";
   const [isPosterMode, setIsPosterMode] = useState(false);
   const [posterStyle, setPosterStyle] = useState<"photo" | "nophoto">("nophoto");
   const [isGenerating, setIsGenerating] = useState(false);

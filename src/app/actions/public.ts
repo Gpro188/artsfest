@@ -51,7 +51,7 @@ const getCachedPublicEventData = unstable_cache(
           }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 10
+        take: 100
       }),
 
       // 2. Get Teams
