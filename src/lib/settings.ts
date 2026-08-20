@@ -3,46 +3,33 @@ import { prisma } from "./prisma";
 export async function getSettings(eventId?: string | null) {
   try {
     if (eventId) {
-      let settings = await prisma.globalSetting.findFirst({
-        where: {
-          OR: [
-            { eventId },
-            { event: { subEvents: { some: { id: eventId } } } },
-            { event: { parent: { id: eventId } } }
-          ],
-          posterBgUrl: { not: null }
-        },
-        orderBy: { updatedAt: 'desc' }
+      let settings = await prisma.globalSetting.findUnique({
+        where: { eventId }
       });
 
       if (!settings) {
-        settings = await prisma.globalSetting.findUnique({
-          where: { eventId }
-        });
-      }
-
-      if (!settings) {
-        settings = await prisma.globalSetting.findFirst({
-          where: { posterBgUrl: { not: null } },
-          orderBy: { updatedAt: 'desc' }
-        });
-      }
-
-      if (!settings) {
-        // Fetch event name to pre-populate settings
         const event = await prisma.event.findUnique({
-          where: { id: eventId }
+          where: { id: eventId },
+          select: { id: true, name: true, parentId: true }
         });
-        settings = await prisma.globalSetting.create({
-          data: {
-            id: eventId,
-            festName: event?.name || "Arts Fest",
-            festMoto: "Celebrating Creativity",
-            event: {
-              connect: { id: eventId }
+        
+        // If it's a sub-event and has no settings, try to inherit from parent
+        if (event?.parentId) {
+          settings = await prisma.globalSetting.findUnique({
+            where: { eventId: event.parentId }
+          });
+        }
+
+        if (!settings && event) {
+          settings = await prisma.globalSetting.create({
+            data: {
+              id: eventId,
+              festName: event.name || "Arts Fest",
+              festMoto: "Celebrating Creativity",
+              event: { connect: { id: eventId } }
             }
-          }
-        });
+          });
+        }
       }
       return settings;
     }
