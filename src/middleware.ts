@@ -30,9 +30,10 @@ export default function middleware(req: NextRequest) {
   
   const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
   const isVercel = hostname.endsWith('.vercel.app');
+  const isNetlify = hostname.endsWith('.netlify.app');
 
   // If it's a custom domain
-  if (!isLocalhost && !isVercel) {
+  if (!isLocalhost && !isVercel && !isNetlify) {
     // Rewrite to our dynamic route
     return NextResponse.rewrite(new URL(`/_domain/${hostname}${path}`, req.url));
   }
