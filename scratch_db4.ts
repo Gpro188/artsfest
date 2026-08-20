@@ -1,0 +1,1 @@
+import { PrismaClient } from '@prisma/client'; const prisma = new PrismaClient(); async function main() { const results = await prisma.result.count({where:{program:{eventId:'2c7e1c2f-3e3b-4496-b266-071c5863d021'},isPublished:true}}); console.log('GIRLS Results:', results); } main().finally(()=>prisma.$disconnect());

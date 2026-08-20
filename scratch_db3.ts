@@ -1,0 +1,1 @@
+import { PrismaClient } from '@prisma/client'; const prisma = new PrismaClient(); async function main() { const events = await prisma.event.findMany({select:{id:true,name:true, _count:{select:{programs:{where:{results:{some:{isPublished:true}}}}}}}}); console.log(events); } main().finally(()=>prisma.$disconnect());

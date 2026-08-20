@@ -155,7 +155,7 @@ export default function PublicDashboard({
           <div className="stat-divider" />
           <div className="stat-segment highlight-emerald">
             <div className="stat-num font-mono-num">{data.stats.publishedPrograms}</div>
-            <div className="stat-label">Results Published</div>
+            <div className="stat-label">Programs Published</div>
           </div>
           <div className="stat-divider" />
           <div className="stat-segment">

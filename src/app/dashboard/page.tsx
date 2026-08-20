@@ -123,16 +123,16 @@ export default async function DashboardPage() {
           programs: { some: {} },
         },
       }),
-      prisma.result.count({
+      prisma.program.count({
         where: {
-          isPublished: true,
-          program: eventId ? { eventId } : undefined,
+          ...(eventId ? { eventId } : {}),
+          results: { some: { isPublished: true } },
         },
       }),
-      prisma.result.count({
+      prisma.program.count({
         where: {
-          isPublished: false,
-          program: eventId ? { eventId } : undefined,
+          ...(eventId ? { eventId } : {}),
+          results: { none: { isPublished: true } },
         },
       }),
     ]);
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
         trend: "Registered",
       },
       {
-        label: "Results Published",
+        label: "Programs Published",
         value: publishedResults,
         icon: "🏆",
         accentStart: "#8b5cf6",
@@ -179,7 +179,7 @@ export default async function DashboardPage() {
         trend: "Live",
       },
       {
-        label: "Results Pending",
+        label: "Programs Pending",
         value: pendingResults,
         icon: "⏳",
         accentStart: "#ef4444",

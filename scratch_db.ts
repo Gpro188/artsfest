@@ -1,9 +1,1 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-async function main() {
-  const users = await prisma.user.findMany({
-    select: { username: true, role: true, eventId: true }
-  });
-  console.log(users);
-}
-main();
+import { PrismaClient } from '@prisma/client'; const prisma = new PrismaClient(); async function main() { console.log('Results:', await prisma.result.count({where:{isPublished:true}})); console.log('Programs:', await prisma.program.count({where:{results:{some:{isPublished:true}}}})); } main().catch(console.error).finally(()=>prisma.$disconnect());
