@@ -90,7 +90,7 @@ export async function assignProgram(candidateId: string, programId: string) {
     });
 
     if (teamAssignmentsCount >= teamLimit) {
-      return { success: false, error: `Your team has already assigned ${teamLimit} candidate(s) to this program (Max limit reached).` };
+      return { success: false, error: `Your team has already assigned all ${teamLimit} candidate slot(s) allowed for this ${program.type.toLowerCase()} program (Max limit reached).` };
     }
 
     await prisma.programAssignment.create({

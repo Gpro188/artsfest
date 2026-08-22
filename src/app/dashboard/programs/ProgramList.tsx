@@ -10,6 +10,7 @@ type ProgramType = {
   name: string;
   type: string;
   categoryId: string | null;
+  candidateLimitPerTeam?: number;
   category: { name: string } | null;
   event: { id: string, name: string };
   _count: { assignments: number };
@@ -196,9 +197,22 @@ export default function ProgramList({
                     {program.category.name}
                   </span>
                 )}
+                <span style={{ 
+                  color: program.type === "INDIVIDUAL" ? '#6366f1' : '#f59e0b', 
+                  fontSize: '0.75rem', 
+                  padding: '2px 8px', 
+                  backgroundColor: program.type === "INDIVIDUAL" ? 'rgba(99, 102, 241, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
+                  border: `1px solid ${program.type === "INDIVIDUAL" ? 'rgba(99, 102, 241, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+                  borderRadius: '12px',
+                  fontWeight: 600
+                }}>
+                  {program.type === "INDIVIDUAL" 
+                    ? `👤 Solo Limit: ${program.candidateLimitPerTeam || 1}` 
+                    : `👥 Team Limit: ${program.candidateLimitPerTeam || 1} slots`}
+                </span>
               </h4>
               <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                Event: {program.event.name} • Assignments: {program._count.assignments}
+                Event: {program.event.name} • Total Assigned: {program._count.assignments}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>

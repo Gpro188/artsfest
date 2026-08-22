@@ -63,13 +63,18 @@ export default function ProgramBulkActions({ events, programs, categories }: { e
           const category = targetEvent?.categories?.find((c: any) => c.name.trim().toLowerCase() === catName.toLowerCase())
             || categories.find((c: any) => c.name.trim().toLowerCase() === catName.toLowerCase());
           
+          const teamsAllowed = parseInt(row["Teams Allowed"] || row["Teams Per Group"] || row["Squads"]) || 0;
+          const membersPerTeam = parseInt(row["Members Per Squad"] || row["Members Per Team"] || row["Squad Size"]) || 0;
+          const calculatedLimit = teamsAllowed > 0 && membersPerTeam > 0 ? (teamsAllowed * membersPerTeam) : null;
+          const candidateLimit = calculatedLimit || parseInt(row["Candidate Limit"] || row["Limit"]) || 1;
+
           return {
             programCode: row["Program Code"] || row["Code"] || row["code"] || null,
             name: row["Name"] || row["name"] || row["Program Name"] || "",
             type: (row["Type"] || row["type"] || "INDIVIDUAL").toUpperCase(),
             categoryId: category?.id || null,
-            candidateLimitPerTeam: row["Candidate Limit"] || row["Limit"] || 1,
-            duration: row["Duration"] || 10
+            candidateLimitPerTeam: candidateLimit,
+            duration: parseInt(row["Duration"]) || 10
           };
         });
 
@@ -104,16 +109,20 @@ export default function ProgramBulkActions({ events, programs, categories }: { e
         "Type": "INDIVIDUAL",
         "Category": categories[0]?.name || "Senior",
         "Duration": 10,
-        "Candidate Limit": 1
+        "Candidate Limit": 1,
+        "Teams Allowed": 1,
+        "Members Per Team": 1
       },
       {
         "Target Event": selectedEvent?.name || "Main Festival",
         "Program Code": "G201",
-        "Name": "Duff Muttu",
+        "Name": "Group Song",
         "Type": "GROUP",
         "Category": categories[0]?.name || "Senior",
         "Duration": 15,
-        "Candidate Limit": 10
+        "Candidate Limit": 10,
+        "Teams Allowed": 2,
+        "Members Per Team": 5
       }
     ];
     const ws = XLSX.utils.json_to_sheet(template);

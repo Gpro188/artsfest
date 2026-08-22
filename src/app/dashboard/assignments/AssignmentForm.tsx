@@ -346,7 +346,9 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                           backgroundColor: isTeamLimitReached ? 'rgba(239, 68, 68, 0.1)' : 'rgba(15, 92, 70, 0.08)',
                           color: isTeamLimitReached ? 'var(--error)' : 'var(--primary)'
                         }}>
-                          Team Limit: {teamAssignedCount}/{teamLimit}
+                          {program.type === "INDIVIDUAL" 
+                            ? `Team Limit: ${teamAssignedCount}/${teamLimit}` 
+                            : `Squad Slots: ${teamAssignedCount}/${teamLimit}`}
                         </span>
                       </div>
 
@@ -357,7 +359,9 @@ export default function AssignmentForm({ candidates, programs, isAssignmentOpen 
                       )}
                       {!isIndLimitReached && isTeamLimitReached && (
                         <div style={{ fontSize: '0.7rem', color: 'var(--error)', marginTop: '4px', fontWeight: 600 }}>
-                          Team limit reached ({teamAssignedCount}/{teamLimit} candidate slots filled)
+                          {program.type === "INDIVIDUAL" 
+                            ? `Team limit reached (${teamAssignedCount}/${teamLimit} candidate slots filled)`
+                            : `Group limit reached (${teamAssignedCount}/${teamLimit} squad slots filled for your team)`}
                         </div>
                       )}
                     </div>
