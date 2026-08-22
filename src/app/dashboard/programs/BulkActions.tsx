@@ -58,8 +58,10 @@ export default function ProgramBulkActions({ events, programs, categories }: { e
         }
 
         const mappedPrograms = data.map((row: any) => {
-          const catName = row["Category"] || row["category"] || "";
-          const category = categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+          const catName = (row["Category"] || row["category"] || "").toString().trim();
+          const targetEvent = events.find(e => e.id === selectedEventId) || selectedEvent;
+          const category = targetEvent?.categories?.find((c: any) => c.name.trim().toLowerCase() === catName.toLowerCase())
+            || categories.find((c: any) => c.name.trim().toLowerCase() === catName.toLowerCase());
           
           return {
             programCode: row["Program Code"] || row["Code"] || row["code"] || null,

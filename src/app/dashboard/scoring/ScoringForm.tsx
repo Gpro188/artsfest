@@ -44,21 +44,37 @@ export default function ScoringForm({ events }: { events: any[] }) {
     return true;
   });
 
-  // Extract unique categories from type-filtered programs
-  const categoryMap = new Map();
+  // Extract unique categories from type-filtered programs, deduplicating by normalized name
+  const seenCatNames = new Map<string, string>();
+  const categories: { id: string, name: string }[] = [];
+
   typeFilteredPrograms.forEach((p: any) => {
-    if (p.category) {
-      categoryMap.set(p.category.id, p.category.name);
+    if (p.category && p.category.name) {
+      const norm = p.category.name.trim().toUpperCase();
+      if (!seenCatNames.has(norm)) {
+        seenCatNames.set(norm, p.category.id);
+        categories.push({ id: p.category.id, name: p.category.name.trim() });
+      }
     } else {
-      categoryMap.set("general-cat", "General / No Category");
+      if (!seenCatNames.has("GENERAL-CAT")) {
+        seenCatNames.set("GENERAL-CAT", "general-cat");
+        categories.push({ id: "general-cat", name: "General / No Category" });
+      }
     }
   });
-  const categories = Array.from(categoryMap.entries()).map(([id, name]) => ({ id, name }));
+
+  const selectedCategoryObj = categories.find(c => c.id === categoryId);
 
   // Final filtered programs for step 4
   const programs = typeFilteredPrograms.filter((p: any) => {
     if (categoryId === "general-cat") return !p.category;
-    if (categoryId) return p.category?.id === categoryId;
+    if (categoryId) {
+      if (p.category?.id === categoryId) return true;
+      if (p.category?.name && selectedCategoryObj?.name && p.category.name.trim().toUpperCase() === selectedCategoryObj.name.trim().toUpperCase()) {
+        return true;
+      }
+      return false;
+    }
     return true;
   });
 

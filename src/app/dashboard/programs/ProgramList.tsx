@@ -236,7 +236,10 @@ export default function ProgramList({
       {editingProgram && (
         <EditProgramModal 
           program={editingProgram} 
-          categories={categories}
+          categories={
+            events.find(e => e.id === editingProgram.event?.id || e.id === (editingProgram as any).eventId)?.categories 
+            || categories
+          }
           onClose={() => setEditingProgram(null)} 
         />
       )}
