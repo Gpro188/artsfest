@@ -11,6 +11,8 @@ type ProgramType = {
   type: string;
   categoryId: string | null;
   candidateLimitPerTeam?: number;
+  teamsAllowed?: number | null;
+  membersPerSquad?: number | null;
   category: { name: string } | null;
   event: { id: string, name: string };
   _count: { assignments: number };
@@ -208,7 +210,9 @@ export default function ProgramList({
                 }}>
                   {program.type === "INDIVIDUAL" 
                     ? `👤 Solo Limit: ${program.candidateLimitPerTeam || 1}` 
-                    : `👥 Team Limit: ${program.candidateLimitPerTeam || 1} slots`}
+                    : (program.teamsAllowed && program.teamsAllowed > 1 
+                        ? `👥 ${program.teamsAllowed} Squads × ${program.membersPerSquad || 5} (${program.candidateLimitPerTeam || (program.teamsAllowed * (program.membersPerSquad || 5))} slots)`
+                        : `👥 Team Limit: ${program.candidateLimitPerTeam || 1} slots`)}
                 </span>
               </h4>
               <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>

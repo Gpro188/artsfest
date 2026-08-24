@@ -3,7 +3,17 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function createProgram(data: { programCode?: string | null, name: string, type: string, categoryId: string | null, eventId: string, candidateLimitPerTeam?: number, duration?: number }) {
+export async function createProgram(data: { 
+  programCode?: string | null, 
+  name: string, 
+  type: string, 
+  categoryId: string | null, 
+  eventId: string, 
+  candidateLimitPerTeam?: number, 
+  teamsAllowed?: number,
+  membersPerSquad?: number,
+  duration?: number 
+}) {
   try {
     await prisma.program.create({
       data: {
@@ -13,6 +23,8 @@ export async function createProgram(data: { programCode?: string | null, name: s
         categoryId: data.categoryId,
         eventId: data.eventId,
         candidateLimitPerTeam: data.candidateLimitPerTeam || 1,
+        teamsAllowed: data.teamsAllowed || (data.type === "INDIVIDUAL" ? 1 : Math.max(1, Math.round((data.candidateLimitPerTeam || 1) / (data.membersPerSquad || 5)))),
+        membersPerSquad: data.membersPerSquad || (data.type === "INDIVIDUAL" ? 1 : 5),
         duration: data.duration || 10,
       }
     });
@@ -25,7 +37,15 @@ export async function createProgram(data: { programCode?: string | null, name: s
   }
 }
 
-export async function updateProgram(id: string, data: { programCode?: string | null, name: string, type: string, categoryId: string | null, candidateLimitPerTeam?: number }) {
+export async function updateProgram(id: string, data: { 
+  programCode?: string | null, 
+  name: string, 
+  type: string, 
+  categoryId: string | null, 
+  candidateLimitPerTeam?: number,
+  teamsAllowed?: number,
+  membersPerSquad?: number
+}) {
   try {
     await prisma.program.update({
       where: { id },
@@ -35,6 +55,8 @@ export async function updateProgram(id: string, data: { programCode?: string | n
         type: data.type,
         categoryId: data.categoryId,
         candidateLimitPerTeam: data.candidateLimitPerTeam,
+        teamsAllowed: data.teamsAllowed || (data.type === "INDIVIDUAL" ? 1 : 1),
+        membersPerSquad: data.membersPerSquad || (data.type === "INDIVIDUAL" ? 1 : 5),
       }
     });
 
@@ -48,10 +70,6 @@ export async function updateProgram(id: string, data: { programCode?: string | n
 
 export async function bulkImportPrograms(eventId: string, programs: any[]) {
   try {
-    // We do this in a transaction or loop
-    // To make it safer, we'll create them one by one or use createMany
-    // Note: SQLite doesn't support nested createMany if we were doing that, but here it's flat.
-    
     const results = await prisma.program.createMany({
       data: programs.map(p => ({
         programCode: p.programCode?.toString() || null,
@@ -60,6 +78,8 @@ export async function bulkImportPrograms(eventId: string, programs: any[]) {
         categoryId: p.categoryId,
         eventId: eventId,
         candidateLimitPerTeam: parseInt(p.candidateLimitPerTeam) || 1,
+        teamsAllowed: parseInt(p.teamsAllowed) || 1,
+        membersPerSquad: parseInt(p.membersPerSquad) || 5,
         duration: parseInt(p.duration) || 10,
       }))
     });

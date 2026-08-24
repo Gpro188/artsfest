@@ -10,14 +10,10 @@ export default function EditProgramModal({ program, categories, onClose }: { pro
   const [categoryId, setCategoryId] = useState(program.categoryId || "");
   const [candidateLimitPerTeam, setCandidateLimitPerTeam] = useState(program.candidateLimitPerTeam || 1);
   const [teamsAllowed, setTeamsAllowed] = useState(
-    program.type !== "INDIVIDUAL" && program.candidateLimitPerTeam > 5 && program.candidateLimitPerTeam % 5 === 0 
-      ? program.candidateLimitPerTeam / 5 
-      : 1
+    program.teamsAllowed || (program.type !== "INDIVIDUAL" && program.candidateLimitPerTeam > 5 && program.candidateLimitPerTeam % 5 === 0 ? program.candidateLimitPerTeam / 5 : 1)
   );
   const [membersPerSquad, setMembersPerSquad] = useState(
-    program.type !== "INDIVIDUAL" && program.candidateLimitPerTeam > 1 
-      ? Math.max(1, Math.round(program.candidateLimitPerTeam / (program.candidateLimitPerTeam > 5 && program.candidateLimitPerTeam % 5 === 0 ? program.candidateLimitPerTeam / 5 : 1))) 
-      : 5
+    program.membersPerSquad || (program.type !== "INDIVIDUAL" && program.candidateLimitPerTeam > 1 ? Math.max(1, Math.round(program.candidateLimitPerTeam / (program.teamsAllowed || 1))) : 5)
   );
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +52,9 @@ export default function EditProgramModal({ program, categories, onClose }: { pro
       name, 
       type, 
       categoryId: type === "GENERAL" ? null : (categoryId || null),
-      candidateLimitPerTeam: parseInt(candidateLimitPerTeam.toString()) || 1
+      candidateLimitPerTeam: parseInt(candidateLimitPerTeam.toString()) || 1,
+      teamsAllowed: type === "INDIVIDUAL" ? 1 : teamsAllowed,
+      membersPerSquad: type === "INDIVIDUAL" ? 1 : membersPerSquad
     });
     if (result.success) {
       onClose();

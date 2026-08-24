@@ -52,6 +52,8 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
       categoryId: type === "GENERAL" ? null : categoryId,
       eventId,
       candidateLimitPerTeam: parseInt(candidateLimitPerTeam.toString()) || 1,
+      teamsAllowed: type === "INDIVIDUAL" ? 1 : teamsAllowed,
+      membersPerSquad: type === "INDIVIDUAL" ? 1 : membersPerSquad,
       duration: parseInt(duration.toString()) || 10,
     });
     

@@ -426,10 +426,10 @@ export default function AssignmentForm({
 
     // Determine squads count
     const candidateLimit = activeProgram?.candidateLimitPerTeam || 1;
-    // Squads calculation: if group with limit > 5, 2 squads or 1 squad
-    const squadCount = (activeProgram?.type !== "INDIVIDUAL" && candidateLimit >= 10 && candidateLimit % 5 === 0) 
-      ? Math.floor(candidateLimit / 5) 
-      : 1;
+    // Squads calculation: check teamsAllowed field or fall back to limit calculation
+    const squadCount = (activeProgram?.type !== "INDIVIDUAL" && (activeProgram?.teamsAllowed || 1) > 1)
+      ? (activeProgram.teamsAllowed || 1)
+      : (activeProgram?.type !== "INDIVIDUAL" && candidateLimit >= 10 && candidateLimit % 5 === 0 ? Math.floor(candidateLimit / 5) : (activeProgram?.teamsAllowed || 1));
 
     // Filter candidates belonging to active team and matching category
     const teamCandidates = candidates.filter(c => {
