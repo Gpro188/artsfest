@@ -87,10 +87,10 @@ async function recalculateProgramResults(programId: string, manualUpdateId?: str
   }
 }
 
-// NEW VERSION: Supports direct rank/grade selection and Team-based scoring
 export async function submitMarks(data: { 
   eventId: string, 
   programId: string, 
+  candidateId?: string,
   chestNumber?: string, 
   teamId?: string,
   marks: number,
@@ -108,15 +108,14 @@ export async function submitMarks(data: {
 
     if (!program) return { success: false, error: "Program not found" };
 
-    let candidateId: string | null = null;
+    let candidateId: string | null = data.candidateId || null;
     let teamId: string | null = data.teamId || null;
 
-    if (data.chestNumber) {
+    if (!candidateId && data.chestNumber) {
       const candidate = await prisma.candidate.findUnique({
         where: { chestNumber: data.chestNumber }
       });
-      if (!candidate) return { success: false, error: "Candidate not found" };
-      candidateId = candidate.id;
+      if (candidate) candidateId = candidate.id;
     }
 
     if (!candidateId && !teamId) {

@@ -121,6 +121,24 @@ export default async function AssignmentsPage() {
     };
   }
 
+  let teamsWhere: any = undefined;
+  if (teamId) {
+    teamsWhere = { id: teamId };
+  } else if (session.user.eventId) {
+    teamsWhere = {
+      OR: [
+        { eventId: session.user.eventId },
+        { event: { parentId: session.user.eventId } }
+      ]
+    };
+  }
+
+  const teams = await prisma.team.findMany({
+    where: teamsWhere,
+    select: { id: true, name: true, prefixCode: true, flagColor: true, eventId: true },
+    orderBy: { name: 'asc' }
+  });
+
   const programs = await prisma.program.findMany({
     where: programWhere,
     include: { 
@@ -128,14 +146,28 @@ export default async function AssignmentsPage() {
       category: true,
       assignments: {
         select: {
+          id: true,
+          candidateId: true,
+          slotNumber: true,
           candidate: {
             select: {
-              teamId: true
+              id: true,
+              name: true,
+              chestNumber: true,
+              teamId: true,
+              team: {
+                select: {
+                  id: true,
+                  name: true,
+                  flagColor: true
+                }
+              }
             }
           }
         }
       }
-    }
+    },
+    orderBy: { name: 'asc' }
   });
 
   return (
@@ -143,7 +175,7 @@ export default async function AssignmentsPage() {
       <div style={{ marginBottom: 'var(--spacing-lg)' }}>
         <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>Program Assignments</h1>
         <p className="page-description">
-          Enroll approved candidates into competition programs. Category limits and eligibility rules are enforced automatically.
+          Enroll approved candidates into competition programs. Assign individually or manage group sessions and squads.
         </p>
       </div>
       
@@ -161,11 +193,15 @@ export default async function AssignmentsPage() {
         </div>
       ) : (
         <div data-tour="assignments-form" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-          <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Assign Candidates to Programs</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)', fontSize: '0.85rem' }}>
-            Select a candidate below to see available programs and make assignments. Validations enforce category rules and entry limits.
-          </p>
-          <AssignmentForm candidates={candidates as any} programs={programs as any} isAssignmentOpen={isAssignmentOpen} statusMessage={assignmentStatusMessage} />
+          <AssignmentForm 
+            candidates={candidates as any} 
+            programs={programs as any} 
+            teams={teams as any}
+            userRole={session.user.role}
+            userTeamId={teamId}
+            isAssignmentOpen={isAssignmentOpen} 
+            statusMessage={assignmentStatusMessage} 
+          />
         </div>
       )}
     </div>

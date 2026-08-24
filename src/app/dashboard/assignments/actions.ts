@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
-export async function assignProgram(candidateId: string, programId: string) {
+export async function assignProgram(candidateId: string, programId: string, slotNumber?: number | null) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return { success: false, error: "Unauthorized" };
@@ -96,7 +96,8 @@ export async function assignProgram(candidateId: string, programId: string) {
     await prisma.programAssignment.create({
       data: {
         candidateId,
-        programId
+        programId,
+        slotNumber: slotNumber || 1
       }
     });
 
@@ -108,6 +109,28 @@ export async function assignProgram(candidateId: string, programId: string) {
       return { success: false, error: "Candidate is already assigned to this program." };
     }
     return { success: false, error: error.message || "Failed to assign program." };
+  }
+}
+
+export async function batchAssignProgram(candidateIds: string[], programId: string, slotNumber?: number | null) {
+  try {
+    let successCount = 0;
+    let lastError = "";
+    for (const id of candidateIds) {
+      const res = await assignProgram(id, programId, slotNumber);
+      if (res.success) {
+        successCount++;
+      } else {
+        lastError = res.error || "Assignment failed";
+      }
+    }
+    revalidatePath("/dashboard/assignments");
+    if (successCount === 0 && lastError) {
+      return { success: false, error: lastError };
+    }
+    return { success: true, count: successCount };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Batch assignment failed" };
   }
 }
 

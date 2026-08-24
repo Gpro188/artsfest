@@ -23,9 +23,9 @@ export default function ScoringForm({ events }: { events: any[] }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null);
 
-  // Sync state with props when switching events
+  // Sync state with props only if eventId is empty or not in events
   useEffect(() => {
-    if (events.length > 0) {
+    if (events.length > 0 && (!eventId || !events.some(e => e.id === eventId))) {
       setEventId(events[0].id);
       setProgramType("");
       setCategoryId("");
@@ -33,7 +33,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
       setParticipantId("");
       setBulkEntries({});
     }
-  }, [events]);
+  }, [events, eventId]);
 
   const selectedEvent = events.find(e => e.id === eventId);
   const allPrograms = selectedEvent?.programs || [];
@@ -80,6 +80,67 @@ export default function ScoringForm({ events }: { events: any[] }) {
 
   const selectedProgram = programs.find((p: any) => p.id === programId);
   const isIndividual = selectedProgram?.type === "INDIVIDUAL";
+
+  // Compute participants list with Squad support
+  const participants = isIndividual 
+    ? (selectedProgram?.assignments?.map((a: any) => ({
+        id: a.candidate.id,
+        candidateId: a.candidate.id,
+        teamId: a.candidate.teamId,
+        chestNumber: a.candidate.chestNumber,
+        name: a.candidate.name,
+        teamName: a.candidate.team?.name,
+        flagColor: a.candidate.team?.flagColor
+      })) || [])
+    : (() => {
+        // Group assignments by (teamId, slotNumber)
+        const teamSlotMap = new Map<string, { team: any, slotNumber: number, candidates: any[] }>();
+        
+        (selectedProgram?.assignments || []).forEach((a: any) => {
+          const tId = a.candidate?.teamId || a.candidate?.team?.id;
+          if (!tId) return;
+          const slot = a.slotNumber || 1;
+          const key = `${tId}_slot_${slot}`;
+          if (!teamSlotMap.has(key)) {
+            teamSlotMap.set(key, { team: a.candidate.team, slotNumber: slot, candidates: [] });
+          }
+          teamSlotMap.get(key)!.candidates.push(a.candidate);
+        });
+
+        const resultList: any[] = [];
+        
+        if (teamSlotMap.size > 0) {
+          teamSlotMap.forEach((data, key) => {
+            const squadLetter = String.fromCharCode(64 + data.slotNumber);
+            const leader = data.candidates[0];
+            const squadLabel = data.slotNumber > 1 ? `Squad ${squadLetter}` : (teamSlotMap.size > 1 ? `Squad ${squadLetter}` : `Team Entry`);
+            
+            resultList.push({
+              id: leader ? leader.id : `${data.team?.id}_${data.slotNumber}`,
+              candidateId: leader ? leader.id : undefined,
+              teamId: data.team?.id,
+              chestNumber: leader?.chestNumber ? `Leader #${leader.chestNumber}` : `Squad ${squadLetter}`,
+              name: `${data.team?.name || 'Team'} (${squadLabel})`,
+              squadMembers: data.candidates.map((c: any) => c.name + (c.chestNumber ? ` (#${c.chestNumber})` : '')).join(', '),
+              memberCount: data.candidates.length,
+              teamName: data.team?.name,
+              flagColor: data.team?.flagColor
+            });
+          });
+        } else {
+          (selectedEvent?.teams || []).forEach((t: any) => {
+            resultList.push({
+              id: t.id,
+              teamId: t.id,
+              chestNumber: null,
+              name: t.name,
+              teamName: t.name,
+              flagColor: t.flagColor
+            });
+          });
+        }
+        return resultList;
+      })();
 
   // Calculate points config for the selected program
   const getPointsConfig = () => {
@@ -145,16 +206,18 @@ export default function ScoringForm({ events }: { events: any[] }) {
     }
 
     if (!participantId) {
-      setStatus({ type: 'error', message: `Please select a ${isIndividual ? 'candidate' : 'team'}` });
+      setStatus({ type: 'error', message: `Please select a participant / squad` });
       setLoading(false);
       return;
     }
+
+    const selectedParticipant = participants.find((p: any) => p.id === participantId);
     
     const result = await submitMarks({
       eventId,
       programId,
-      chestNumber: isIndividual ? participantId : undefined,
-      teamId: !isIndividual ? participantId : undefined,
+      candidateId: isIndividual ? participantId : selectedParticipant?.candidateId,
+      teamId: !isIndividual && !selectedParticipant?.candidateId ? selectedParticipant?.teamId : undefined,
       marks: parseFloat(marks) || 0,
       manualRank: rank ? parseInt(rank) : null,
       manualGrade: grade || null
@@ -185,13 +248,16 @@ export default function ScoringForm({ events }: { events: any[] }) {
 
     const entriesToSave = Object.entries(bulkEntries)
       .filter(([_, data]) => data.rank || data.grade || (parseFloat(data.marks) > 0))
-      .map(([id, data]) => ({
-        candidateId: isIndividual ? id : undefined,
-        teamId: !isIndividual ? id : undefined,
-        rank: data.rank ? parseInt(data.rank) : null,
-        grade: data.grade || null,
-        marks: parseFloat(data.marks) || 0
-      }));
+      .map(([id, data]) => {
+        const p = participants.find((part: any) => part.id === id);
+        return {
+          candidateId: isIndividual ? id : p?.candidateId,
+          teamId: !isIndividual && !p?.candidateId ? p?.teamId : (!isIndividual ? p?.teamId : undefined),
+          rank: data.rank ? parseInt(data.rank) : null,
+          grade: data.grade || null,
+          marks: parseFloat(data.marks) || 0
+        };
+      });
 
     if (entriesToSave.length === 0) {
       setStatus({ type: 'error', message: 'No places or grades entered yet. Please assign at least one place/grade.' });
@@ -206,30 +272,12 @@ export default function ScoringForm({ events }: { events: any[] }) {
     });
 
     if (res.success) {
-      setStatus({ type: 'success', message: `Successfully recorded results for ${entriesToSave.length} participants!` });
-      setBulkEntries({});
+      setStatus({ type: 'success', message: `Successfully recorded results for ${entriesToSave.length} participant(s)!` });
     } else {
       setStatus({ type: 'error', message: res.error || "Failed to submit bulk results" });
     }
     setLoading(false);
   };
-
-  // Extract participants list for bulk entry
-  const participants = isIndividual 
-    ? (selectedProgram?.assignments?.map((a: any) => ({
-        id: a.candidate.id,
-        chestNumber: a.candidate.chestNumber,
-        name: a.candidate.name,
-        teamName: a.candidate.team?.name,
-        flagColor: a.candidate.team?.flagColor
-      })) || [])
-    : (selectedEvent?.teams?.map((t: any) => ({
-        id: t.id,
-        chestNumber: null,
-        name: t.name,
-        teamName: t.name,
-        flagColor: t.flagColor
-      })) || []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
@@ -412,19 +460,11 @@ export default function ScoringForm({ events }: { events: any[] }) {
               style={{ padding: '8px', fontSize: '0.85rem', fontWeight: 700 }}
             >
               <option value="">-- Select --</option>
-              {isIndividual ? (
-                selectedProgram?.assignments?.map((a: any) => (
-                  <option key={a.candidate.id} value={a.candidate.chestNumber}>
-                    {a.candidate.chestNumber} - {a.candidate.name}
-                  </option>
-                ))
-              ) : (
-                selectedEvent?.teams?.map((t: any) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))
-              )}
+              {participants.map((p: any) => (
+                <option key={p.id} value={p.id}>
+                  {p.chestNumber ? `[${p.chestNumber}] ` : ''}{p.name}
+                </option>
+              ))}
             </select>
           </div>
         )}
@@ -457,7 +497,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                     {selectedProgram?.name}
                   </h4>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Total Enrolled: {participants.length} {isIndividual ? 'Candidates' : 'Teams'}
+                    Total Enrolled: {participants.length} {isIndividual ? 'Candidates' : 'Squads/Teams'}
                   </span>
                 </div>
 
@@ -486,7 +526,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                   <thead>
                     <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-secondary)' }}>
                       <th style={{ padding: '10px 12px', width: '80px' }}>Chest No</th>
-                      <th style={{ padding: '10px 12px' }}>Student / Participant</th>
+                      <th style={{ padding: '10px 12px' }}>Participant / Squad</th>
                       <th style={{ padding: '10px 12px' }}>Team</th>
                       <th style={{ padding: '10px 12px', width: '150px' }}>Place (Rank)</th>
                       <th style={{ padding: '10px 12px', width: '130px' }}>Grade</th>
@@ -509,8 +549,13 @@ export default function ScoringForm({ events }: { events: any[] }) {
                           <td style={{ padding: '10px 12px', fontWeight: 800, color: 'var(--primary)' }}>
                             {p.chestNumber || `T-${idx + 1}`}
                           </td>
-                          <td style={{ padding: '10px 12px', fontWeight: 700 }}>
-                            {p.name}
+                          <td style={{ padding: '10px 12px' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
+                            {p.squadMembers && (
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                👥 {p.squadMembers}
+                              </div>
+                            )}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
                             <span style={{

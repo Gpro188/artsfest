@@ -101,11 +101,13 @@ export default async function ScoringPage(props: {
             assignments: {
               select: {
                 id: true,
+                slotNumber: true,
                 candidate: {
                   select: {
                     id: true,
                     name: true,
                     chestNumber: true,
+                    teamId: true,
                     team: {
                       select: {
                         id: true,
