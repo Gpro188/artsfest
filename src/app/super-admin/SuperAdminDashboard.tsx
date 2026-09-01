@@ -268,28 +268,9 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
         </div>
         <div className="sa-instructions-content font-body">
           <p style={{ marginBottom: "8px" }}><strong>Step 1: Set the Custom Domain below</strong></p>
-          <p style={{ marginBottom: "16px" }}>Find your festival in the directory below and click <strong>"Set Domain"</strong>. Enter the domain (e.g. <code>bilhikma.online</code>).</p>
+          <p style={{ marginBottom: "16px" }}>Find your festival in the directory below and click <strong>"Set Domain"</strong>. Enter the domain (e.g. <code>bilhikma.online</code>) without the <code>www.</code> prefix.</p>
           
-          <p style={{ marginBottom: "8px" }}><strong>Step 2: Update next.config.ts in the code</strong></p>
-          <p style={{ marginBottom: "8px" }}>Next.js needs to know how to route the domain. Add the domain to the <code>rewrites()</code> function in <code>next.config.ts</code>:</p>
-          <pre style={{ background: "var(--bg)", padding: "10px", borderRadius: "8px", overflowX: "auto", marginBottom: "16px", fontSize: "0.8rem", border: "1px solid var(--border)" }}><code>{`async rewrites() {
-  return {
-    beforeFiles: [
-      {
-        source: "/",
-        has: [{ type: "host", value: "yourdomain.com" }],
-        destination: "/fest/<FEST_ID>",
-      },
-      {
-        source: "/:path+",
-        has: [{ type: "host", value: "yourdomain.com" }],
-        destination: "/fest/<FEST_ID>/:path+",
-      }
-    ]
-  }
-}`}</code></pre>
-          
-          <p style={{ marginBottom: "8px" }}><strong>Step 3: Add the domain in Vercel & Update DNS</strong></p>
+          <p style={{ marginBottom: "8px" }}><strong>Step 2: Add the domain in Vercel & Update DNS</strong></p>
           <ul style={{ paddingLeft: '20px', marginTop: '4px', marginBottom: "0", lineHeight: "1.6" }}>
             <li>Go to <strong>Vercel Dashboard &rarr; Project &rarr; Settings &rarr; Domains</strong> and add the domain.</li>
             <li>In your domain registrar (GoDaddy, Namecheap, etc.), add the DNS records Vercel provides.</li>

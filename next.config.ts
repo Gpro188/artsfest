@@ -29,52 +29,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: "/",
-          has: [
-            {
-              type: "host",
-              value: "bilhikma.online",
-            },
-          ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d",
-        },
-        {
-          source: "/:path+",
-          has: [
-            {
-              type: "host",
-              value: "bilhikma.online",
-            },
-          ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/:path+",
-        },
-        {
-          source: "/",
-          has: [
-            {
-              type: "host",
-              value: "www.bilhikma.online",
-            },
-          ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d",
-        },
-        {
-          source: "/:path+",
-          has: [
-            {
-              type: "host",
-              value: "www.bilhikma.online",
-            },
-          ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/:path+",
-        }
-      ],
-    };
-  },
 };
 
 export default nextConfig;

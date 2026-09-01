@@ -34,8 +34,10 @@ export default function middleware(req: NextRequest) {
 
   // If it's a custom domain
   if (!isLocalhost && !isVercel && !isNetlify) {
+    // Normalize by stripping www. to match database records easily
+    const normalizedHostname = hostname.replace(/^www\./, '');
     // Rewrite to our dynamic route
-    return NextResponse.rewrite(new URL(`/_domain/${hostname}${path}`, req.url));
+    return NextResponse.rewrite(new URL(`/_domain/${normalizedHostname}${path}`, req.url));
   }
 
   // Otherwise, let the normal Next.js router handle it
