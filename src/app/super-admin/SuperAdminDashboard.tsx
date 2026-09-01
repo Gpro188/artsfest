@@ -325,7 +325,7 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
             </thead>
             <tbody>
               {data.events.map(ev => {
-                const publicUrl = `/fest/${ev.id}/results`;
+                const publicUrl = `/fest/${ev.id}`;
                 return (
                   <tr key={ev.id}>
                     <td>
