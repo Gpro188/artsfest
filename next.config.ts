@@ -33,16 +33,6 @@ const nextConfig: NextConfig = {
     return {
       beforeFiles: [
         {
-          source: "/:path*",
-          has: [
-            {
-              type: "host",
-              value: "bilhikma.online",
-            },
-          ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results/:path*",
-        },
-        {
           source: "/",
           has: [
             {
@@ -53,14 +43,14 @@ const nextConfig: NextConfig = {
           destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results",
         },
         {
-          source: "/:path*",
+          source: "/:path+",
           has: [
             {
               type: "host",
-              value: "www.bilhikma.online",
+              value: "bilhikma.online",
             },
           ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results/:path*",
+          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results/:path+",
         },
         {
           source: "/",
@@ -71,6 +61,16 @@ const nextConfig: NextConfig = {
             },
           ],
           destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results",
+        },
+        {
+          source: "/:path+",
+          has: [
+            {
+              type: "host",
+              value: "www.bilhikma.online",
+            },
+          ],
+          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results/:path+",
         }
       ],
     };
