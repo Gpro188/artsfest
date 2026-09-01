@@ -257,6 +257,47 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
         </div>
       </div>
 
+      {/* ─── 2.5. DOMAIN CONFIGURATION INSTRUCTIONS ─── */}
+      <div className="sa-card sa-instructions-card">
+        <div className="sa-card-header">
+          <div className="sa-header-badge">🌐</div>
+          <div>
+            <h3 className="sa-card-title font-display">Custom Domain Configuration Guide</h3>
+            <p className="sa-card-subtitle font-body">How to point a custom domain exclusively to a festival</p>
+          </div>
+        </div>
+        <div className="sa-instructions-content font-body">
+          <p style={{ marginBottom: "8px" }}><strong>Step 1: Set the Custom Domain below</strong></p>
+          <p style={{ marginBottom: "16px" }}>Find your festival in the directory below and click <strong>"Set Domain"</strong>. Enter the domain (e.g. <code>bilhikma.online</code>).</p>
+          
+          <p style={{ marginBottom: "8px" }}><strong>Step 2: Update next.config.ts in the code</strong></p>
+          <p style={{ marginBottom: "8px" }}>Next.js needs to know how to route the domain. Add the domain to the <code>rewrites()</code> function in <code>next.config.ts</code>:</p>
+          <pre style={{ background: "var(--bg)", padding: "10px", borderRadius: "8px", overflowX: "auto", marginBottom: "16px", fontSize: "0.8rem", border: "1px solid var(--border)" }}><code>{`async rewrites() {
+  return {
+    beforeFiles: [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "yourdomain.com" }],
+        destination: "/fest/<FEST_ID>/results/:path*",
+      },
+      {
+        source: "/",
+        has: [{ type: "host", value: "yourdomain.com" }],
+        destination: "/fest/<FEST_ID>/results",
+      }
+    ]
+  }
+}`}</code></pre>
+          
+          <p style={{ marginBottom: "8px" }}><strong>Step 3: Add the domain in Vercel & Update DNS</strong></p>
+          <ul style={{ paddingLeft: '20px', marginTop: '4px', marginBottom: "0", lineHeight: "1.6" }}>
+            <li>Go to <strong>Vercel Dashboard &rarr; Project &rarr; Settings &rarr; Domains</strong> and add the domain.</li>
+            <li>In your domain registrar (GoDaddy, Namecheap, etc.), add the DNS records Vercel provides.</li>
+            <li>Usually: <strong>A Record</strong> for <code>@</code> pointing to <code>76.76.21.21</code> and a <strong>CNAME</strong> for <code>www</code> pointing to <code>cname.vercel-dns.com.</code></li>
+          </ul>
+        </div>
+      </div>
+
       {/* ─── 3. FESTIVALS TENANT DIRECTORY TABLE ─── */}
       <div className="sa-card">
         <div className="sa-card-header">
