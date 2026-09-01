@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
               value: "bilhikma.online",
             },
           ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results",
+          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d",
         },
         {
           source: "/:path+",
@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
               value: "bilhikma.online",
             },
           ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results/:path+",
+          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/:path+",
         },
         {
           source: "/",
@@ -60,7 +60,7 @@ const nextConfig: NextConfig = {
               value: "www.bilhikma.online",
             },
           ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results",
+          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d",
         },
         {
           source: "/:path+",
@@ -70,7 +70,7 @@ const nextConfig: NextConfig = {
               value: "www.bilhikma.online",
             },
           ],
-          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/results/:path+",
+          destination: "/fest/ca1ace2d-34f2-4e9e-a8e8-1431a9b2813d/:path+",
         }
       ],
     };

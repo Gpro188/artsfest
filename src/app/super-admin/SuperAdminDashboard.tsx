@@ -276,14 +276,14 @@ export default function SuperAdminDashboard({ initialData }: SuperAdminDashboard
   return {
     beforeFiles: [
       {
-        source: "/:path*",
-        has: [{ type: "host", value: "yourdomain.com" }],
-        destination: "/fest/<FEST_ID>/results/:path*",
-      },
-      {
         source: "/",
         has: [{ type: "host", value: "yourdomain.com" }],
-        destination: "/fest/<FEST_ID>/results",
+        destination: "/fest/<FEST_ID>",
+      },
+      {
+        source: "/:path+",
+        has: [{ type: "host", value: "yourdomain.com" }],
+        destination: "/fest/<FEST_ID>/:path+",
       }
     ]
   }
