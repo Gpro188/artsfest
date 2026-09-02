@@ -25,7 +25,7 @@ export default async function CustomDomainHomepage({ params }: { params: Promise
       event={event} 
       homepageSetting={event.homepageSetting} 
       globalSetting={globalSetting} 
-      baseResultUrl={`/_domain/${domain}/results`}
+      baseResultUrl={`/domain/${domain}/results`}
     />
   );
 }

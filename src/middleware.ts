@@ -37,7 +37,7 @@ export default function middleware(req: NextRequest) {
     // Normalize by stripping www. to match database records easily
     const normalizedHostname = hostname.replace(/^www\./, '');
     // Rewrite to our dynamic route
-    return NextResponse.rewrite(new URL(`/_domain/${normalizedHostname}${path}`, req.url));
+    return NextResponse.rewrite(new URL(`/domain/${normalizedHostname}${path}`, req.url));
   }
 
   // Otherwise, let the normal Next.js router handle it
