@@ -43,6 +43,7 @@ export const metadata: Metadata = {
   description:
     "Dpro ArtsFes is a premium multi-tenant festival management suite by Dpro Technologies. Manage teams, programs, and live standings.",
   applicationName: "Dpro ArtsFes",
+  colorScheme: "light",
   keywords: [
     "dpro",
     "dpro technologies",
