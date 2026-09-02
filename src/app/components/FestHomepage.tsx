@@ -78,10 +78,11 @@ export default function FestHomepage({ event, homepageSetting, globalSetting, ba
     >
       
       {/* Hero Section */}
-      <section 
-        className={styles.heroSection} 
-        style={{ backgroundImage: heroBgUrl ? `url(${heroBgUrl})` : 'none' }}
-      >
+      <section className={styles.heroSection}>
+        <div 
+          className={styles.heroBg} 
+          style={{ backgroundImage: heroBgUrl ? `url(${heroBgUrl})` : 'none' }} 
+        />
         <div className={styles.heroOverlay} />
         <div className={styles.heroContent}>
           {heroLogo && (
