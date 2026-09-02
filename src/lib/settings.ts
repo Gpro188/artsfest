@@ -114,14 +114,14 @@ export async function getHomepageSettings(eventId: string) {
       settings = await prisma.homepageSetting.create({
         data: {
           eventId,
-          heroTitle: "Dpro Arts Fest 2026",
+          heroTitle: "Arts Fest 2026",
           heroSubtitle: "A Celebration of Innovation and Creativity",
-          heroBgUrl: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80",
+          heroBgUrl: "",
           aboutTitle: "About the Extravaganza",
           aboutText: "Welcome to the ultimate arts fest experience! We bring together the brightest minds to showcase incredible talent across multiple disciplines. Join us in this wonderful celebration.",
-          primaryColor: "#4F46E5",
-          secondaryColor: "#0EA5E9",
-          bgColor: "#0F172A",
+          primaryColor: "#2075BC",
+          secondaryColor: "#119398",
+          bgColor: "#FFFFFF",
           committeeMembers: [
             { name: "John Doe", role: "Festival Chairman", imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" },
             { name: "Jane Smith", role: "Creative Director", imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" }
