@@ -35,7 +35,7 @@ export default function middleware(req: NextRequest) {
   // If it's a custom domain
   if (!isLocalhost && !isVercel && !isNetlify) {
     // Exclude core app routes from custom domain rewriting so they can still be accessed
-    const coreRoutes = ['/login', '/dashboard', '/super-admin', '/print', '/hub', '/test'];
+    const coreRoutes = ['/login', '/dashboard', '/super-admin', '/print', '/hub', '/test', '/search', '/results/'];
     const isCoreRoute = coreRoutes.some(route => url.pathname.startsWith(route));
 
     if (!isCoreRoute) {
