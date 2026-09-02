@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description,
+    icons: globalSetting.festLogo ? { icon: globalSetting.festLogo } : undefined,
     keywords: [
       festName,
       "dpro",

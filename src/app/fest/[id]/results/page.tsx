@@ -3,10 +3,28 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import PublicDashboard from "../../../components/PublicDashboard";
 import VisitTracker from "../../../components/VisitTracker";
-import { getSettings } from "@/lib/settings";
+import { getSettings, getHomepageSettings } from "@/lib/settings";
 import FestHeader from "../../../components/FestHeader";
+import type { Metadata } from "next";
 
 export const revalidate = 30; // Revalidate standings every 30 seconds
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const event = await prisma.event.findUnique({ where: { id } });
+  if (!event) return { title: "Results Not Found" };
+  
+  const globalSetting = await getSettings(event.id);
+  const homepage = await getHomepageSettings(event.id);
+  const festName = homepage?.heroTitle || globalSetting.festName || event.name;
+  const title = `Live Results | ${festName}`;
+  
+  return {
+    title,
+    description: `Live leaderboard and standings for ${festName}`,
+    icons: globalSetting.festLogo ? { icon: globalSetting.festLogo } : undefined,
+  };
+}
 
 export default async function FestPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;

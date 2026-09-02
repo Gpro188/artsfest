@@ -34,10 +34,16 @@ export default function middleware(req: NextRequest) {
 
   // If it's a custom domain
   if (!isLocalhost && !isVercel && !isNetlify) {
-    // Normalize by stripping www. to match database records easily
-    const normalizedHostname = hostname.replace(/^www\./, '');
-    // Rewrite to our dynamic route
-    return NextResponse.rewrite(new URL(`/domain/${normalizedHostname}${path}`, req.url));
+    // Exclude core app routes from custom domain rewriting so they can still be accessed
+    const coreRoutes = ['/login', '/dashboard', '/super-admin', '/print', '/hub', '/test'];
+    const isCoreRoute = coreRoutes.some(route => url.pathname.startsWith(route));
+
+    if (!isCoreRoute) {
+      // Normalize by stripping www. to match database records easily
+      const normalizedHostname = hostname.replace(/^www\./, '');
+      // Rewrite to our dynamic route
+      return NextResponse.rewrite(new URL(`/domain/${normalizedHostname}${path}`, req.url));
+    }
   }
 
   // Otherwise, let the normal Next.js router handle it
