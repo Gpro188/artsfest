@@ -105,9 +105,9 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
             <p className="fest-power-text font-body">
               ⚡ Powered by <strong>Dpro Artsfest System</strong>
             </p>
-            <Link href="/" className="fest-power-link font-body">
+            <a href="https://dpro-artsfest.vercel.app/" target="_blank" rel="noopener noreferrer" className="fest-power-link font-body">
               Host your arts fest on this platform ➔
-            </Link>
+            </a>
           </div>
         </div>
       </footer>
