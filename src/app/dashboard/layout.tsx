@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { getSettings, getHomepageSettings } from "@/lib/settings";
 import DashboardSidebar from "./DashboardSidebar";
 import TourWrapper from "@/components/TourWrapper";
-import ThemeApplicator from "@/app/components/ThemeApplicator";
 
 import { Metadata } from "next";
 
@@ -69,11 +68,6 @@ export default async function DashboardLayout({
 
   return (
     <div className="dashboard-container">
-      <ThemeApplicator 
-        primaryColor={homepageSettings?.primaryColor}
-        secondaryColor={homepageSettings?.secondaryColor}
-        bgColor={homepageSettings?.bgColor}
-      />
       <DashboardSidebar 
         role={role} 
         username={username} 
