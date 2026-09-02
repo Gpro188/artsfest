@@ -20,10 +20,16 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   const festName = homepage?.heroTitle || globalSetting.festName || event.name;
   const title = `Live Results | ${festName}`;
   
+  let keywords = [festName, "dpro", "artsfest results", "live leaderboard", "festival standings"];
+  if (decodedDomain === 'bilhikma.online') {
+    keywords.push("jamia jalaliyya arts fest", "jalaliyya artsfest", "bilhikma artfest", "bil hikma artsfest", "jasia artsfest", "bil hikma jasia", "bil hikma artsfets");
+  }
+
   return {
     title,
     description: `Live leaderboard and standings for ${festName}`,
     icons: globalSetting.festLogo ? { icon: globalSetting.festLogo } : undefined,
+    keywords,
   };
 }
 

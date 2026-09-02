@@ -18,11 +18,16 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   const title = `${festName} | Dpro Artsfest System`;
   const description = homepage?.heroSubtitle || homepage?.aboutText || `Join us in the wonderful celebration of arts and creativity at ${festName}.`;
   
+  let keywords = [festName, "dpro", "artsfest", "festival management"];
+  if (decodedDomain === 'bilhikma.online') {
+    keywords.push("jamia jalaliyya arts fest", "jalaliyya artsfest", "bilhikma artfest", "bil hikma artsfest", "jasia artsfest", "bil hikma jasia", "bil hikma artsfets");
+  }
+
   return {
     title,
     description,
     icons: globalSetting.festLogo ? { icon: globalSetting.festLogo } : undefined,
-    keywords: [festName, "dpro", "artsfest"],
+    keywords,
     openGraph: {
       title,
       description,
