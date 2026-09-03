@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
-export async function addCandidate(data: { name: string, categoryId: string, teamId: string, photo?: string }) {
+export async function addCandidate(data: { name: string, categoryId: string, teamId: string, photo?: string, chestNumber?: string }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return { success: false, error: "Unauthorized" };
@@ -26,7 +26,7 @@ export async function addCandidate(data: { name: string, categoryId: string, tea
       }
     }
 
-    let chestNumber: string | null = null;
+    let chestNumber: string | null = data.chestNumber || null;
     let isApproved = false;
 
     let finalCategoryId = data.categoryId;
@@ -52,32 +52,36 @@ export async function addCandidate(data: { name: string, categoryId: string, tea
       const prefixCode = team?.prefixCode || "C";
       const offset = cat?.chestNumberOffset || 0;
 
-      const existingCandidates = await prisma.candidate.findMany({
-        where: { teamId: data.teamId, categoryId: finalCategoryId, isApproved: true, chestNumber: { not: null } },
-        select: { chestNumber: true }
-      });
-
-      let nextSeq = 1;
-      if (existingCandidates.length > 0) {
-        const seqs = existingCandidates
-          .map(c => c.chestNumber!)
-          .map(cn => {
-             const isNum = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
-             if (isNum) return parseInt(cn, 10) - parseInt(prefixCode, 10) - offset;
-             const numPart = parseInt(cn.replace(prefixCode, ''), 10);
-             return numPart - offset + 1;
-          })
-          .filter(n => !isNaN(n));
-        if (seqs.length > 0) nextSeq = Math.max(...seqs) + 1;
-      }
-
-      const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
-      if (isNumericPrefix) {
-        chestNumber = (parseInt(prefixCode, 10) + offset + nextSeq).toString();
+      if (data.chestNumber) {
+        chestNumber = data.chestNumber;
       } else {
-        const finalNum = offset + nextSeq;
-        const formattedNum = finalNum.toString().padStart(2, '0');
-        chestNumber = `${prefixCode}${formattedNum}`;
+        const existingCandidates = await prisma.candidate.findMany({
+          where: { teamId: data.teamId, categoryId: finalCategoryId, isApproved: true, chestNumber: { not: null } },
+          select: { chestNumber: true }
+        });
+
+        let nextSeq = 1;
+        if (existingCandidates.length > 0) {
+          const seqs = existingCandidates
+            .map(c => c.chestNumber!)
+            .map(cn => {
+               const isNum = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+               if (isNum) return parseInt(cn, 10) - parseInt(prefixCode, 10) - offset;
+               const numPart = parseInt(cn.replace(prefixCode, ''), 10);
+               return numPart - offset + 1;
+            })
+            .filter(n => !isNaN(n));
+          if (seqs.length > 0) nextSeq = Math.max(...seqs) + 1;
+        }
+
+        const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
+        if (isNumericPrefix) {
+          chestNumber = (parseInt(prefixCode, 10) + offset + nextSeq).toString();
+        } else {
+          const finalNum = offset + nextSeq;
+          const formattedNum = finalNum.toString().padStart(2, '0');
+          chestNumber = `${prefixCode}${formattedNum}`;
+        }
       }
     }
 
@@ -230,14 +234,16 @@ export async function approveCandidate(id: string, prefixCode?: string) {
       }
 
       const isNumericPrefix = !isNaN(parseInt(effectivePrefix)) && /^\d+$/.test(effectivePrefix);
-      let newChestNumber = "";
-
-      if (isNumericPrefix) {
-        newChestNumber = (parseInt(effectivePrefix, 10) + offset + nextSequence).toString();
-      } else {
-        const finalNum = offset + nextSequence;
-        const formattedNum = finalNum.toString().padStart(2, '0');
-        newChestNumber = `${effectivePrefix}${formattedNum}`;
+      let newChestNumber = candidate.chestNumber;
+      
+      if (!newChestNumber) {
+        if (isNumericPrefix) {
+          newChestNumber = (parseInt(effectivePrefix, 10) + offset + nextSequence).toString();
+        } else {
+          const finalNum = offset + nextSequence;
+          const formattedNum = finalNum.toString().padStart(2, '0');
+          newChestNumber = `${effectivePrefix}${formattedNum}`;
+        }
       }
 
       await tx.candidate.update({
@@ -300,14 +306,16 @@ export async function bulkApproveUnapprovedCandidates() {
       }
 
       const isNumericPrefix = !isNaN(parseInt(prefixCode)) && /^\d+$/.test(prefixCode);
-      let newChestNumber = "";
-
-      if (isNumericPrefix) {
-        newChestNumber = (parseInt(prefixCode, 10) + offset + nextSequence).toString();
-      } else {
-        const finalNum = offset + nextSequence;
-        const formattedNum = finalNum.toString().padStart(2, '0');
-        newChestNumber = `${prefixCode}${formattedNum}`;
+      let newChestNumber = candidate.chestNumber;
+      
+      if (!newChestNumber) {
+        if (isNumericPrefix) {
+          newChestNumber = (parseInt(prefixCode, 10) + offset + nextSequence).toString();
+        } else {
+          const finalNum = offset + nextSequence;
+          const formattedNum = finalNum.toString().padStart(2, '0');
+          newChestNumber = `${prefixCode}${formattedNum}`;
+        }
       }
 
       await prisma.candidate.update({

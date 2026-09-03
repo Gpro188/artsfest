@@ -9,7 +9,7 @@ export default async function HomePage() {
   let events: any[] = [];
   let dbError = null;
   try {
-    events = await prisma.event.findMany({
+    let rawEvents = await prisma.event.findMany({
       where: { parentId: null },
       select: {
         id: true,
@@ -17,9 +17,39 @@ export default async function HomePage() {
         createdAt: true,
         _count: {
           select: { teams: true, programs: true, categories: true }
+        },
+        subEvents: {
+          select: {
+            _count: {
+              select: { teams: true, programs: true, categories: true }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
+    });
+    
+    events = rawEvents.map(event => {
+      let totalTeams = event._count.teams;
+      let totalPrograms = event._count.programs;
+      let totalCategories = event._count.categories;
+      
+      if (event.subEvents && event.subEvents.length > 0) {
+        for (const sub of event.subEvents) {
+          totalTeams += sub._count.teams;
+          totalPrograms += sub._count.programs;
+          totalCategories += sub._count.categories;
+        }
+      }
+      
+      return {
+        ...event,
+        _count: {
+          teams: totalTeams,
+          programs: totalPrograms,
+          categories: totalCategories
+        }
+      };
     });
   } catch (error: any) {
     dbError = error.message || "Unknown Database Error";

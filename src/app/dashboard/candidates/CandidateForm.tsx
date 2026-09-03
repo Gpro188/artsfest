@@ -20,6 +20,7 @@ export default function CandidateForm({
   isAdmin?: boolean
 }) {
   const [name, setName] = useState("");
+  const [chestNumber, setChestNumber] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId || teams[0]?.id || "");
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [photo, setPhoto] = useState("");
@@ -54,11 +55,18 @@ export default function CandidateForm({
     setError("");
     setSuccess(false);
     
-    const result = await addCandidate({ name, categoryId, teamId: selectedTeamId, photo });
+    const result = await addCandidate({ 
+      name, 
+      categoryId, 
+      teamId: selectedTeamId, 
+      photo, 
+      chestNumber: chestNumber.trim() || undefined 
+    });
     
     if (result.success) {
       setSuccess(true);
       setName("");
+      setChestNumber("");
       setPhoto("");
     } else {
       setError(result.error || "Failed to add candidate");
@@ -79,7 +87,7 @@ export default function CandidateForm({
         </div>
       )}
       
-      <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1.5fr 1.5fr 1.5fr 1.5fr auto' : '2fr 1.5fr 2fr auto', gap: 'var(--spacing-md)', alignItems: 'end' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1.5fr 1fr 1.5fr 1.5fr 1.5fr auto' : '2fr 1fr 1.5fr 2fr auto', gap: 'var(--spacing-md)', alignItems: 'end' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">Candidate Name</label>
           <input 
@@ -91,6 +99,18 @@ export default function CandidateForm({
             required
           />
           <span className="field-helper">Enter full name.</span>
+        </div>
+
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">Chest Number</label>
+          <input 
+            type="text" 
+            className="form-input" 
+            value={chestNumber}
+            onChange={(e) => setChestNumber(e.target.value)}
+            placeholder="Optional"
+          />
+          <span className="field-helper">Manual Chest No.</span>
         </div>
         
         {isAdmin && (

@@ -87,7 +87,7 @@ export default function CandidateBulkActions({ teams, categories }: { teams: any
             name: (row["Candidate Name"] || row["Name"] || row["name"] || "").toString().trim(),
             teamId: team?.id || selectedTeamId,
             categoryId: category?.id || selectedCategoryId,
-            chestNumber: (row["Chest Number"] || row["chestNumber"] || "").toString().trim() || undefined,
+            chestNumber: (row["Chest Number"] ?? row["chestNumber"] ?? "").toString().trim() || undefined,
             rawTeam: teamName,
             rawCategory: catName
           };

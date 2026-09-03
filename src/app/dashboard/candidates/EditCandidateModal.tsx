@@ -76,18 +76,16 @@ export default function EditCandidateModal({ candidate, categories, role, onClos
             </select>
           </div>
 
-          {(candidate.isApproved || role === "ADMIN") && (
-            <div className="form-group">
-              <label className="form-label">Chest Number</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                value={chestNumber} 
-                onChange={(e) => setChestNumber(e.target.value)} 
-                placeholder="Auto-generated if empty"
-              />
-            </div>
-          )}
+          <div className="form-group">
+            <label className="form-label">Chest Number</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              value={chestNumber} 
+              onChange={(e) => setChestNumber(e.target.value)} 
+              placeholder="Auto-generated if empty"
+            />
+          </div>
 
           <ImageUpload 
             label="Photo (Optional)" 
