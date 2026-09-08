@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcrypt";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export async function updateSettings(data: { 
   festName: string, 
@@ -104,26 +105,27 @@ export async function exportAllData() {
     }
 
     const { eventId } = session.user;
+    const festEventIds = await getFestivalEventIds(eventId);
 
     const data = {
       events: await prisma.event.findMany({
-        where: eventId ? { id: eventId } : undefined,
+        where: festEventIds.length > 0 ? { id: { in: festEventIds } } : undefined,
         include: { categories: true }
       }),
       teams: await prisma.team.findMany({
-        where: eventId ? { eventId } : undefined
+        where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : undefined
       }),
       programs: await prisma.program.findMany({
-        where: eventId ? { eventId } : undefined
+        where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : undefined
       }),
       candidates: await prisma.candidate.findMany({
-        where: eventId ? { team: { eventId } } : undefined
+        where: festEventIds.length > 0 ? { team: { eventId: { in: festEventIds } } } : undefined
       }),
       programAssignments: await prisma.programAssignment.findMany({
-        where: eventId ? { program: { eventId } } : undefined
+        where: festEventIds.length > 0 ? { program: { eventId: { in: festEventIds } } } : undefined
       }),
       results: await prisma.result.findMany({
-        where: eventId ? { program: { eventId } } : undefined
+        where: festEventIds.length > 0 ? { program: { eventId: { in: festEventIds } } } : undefined
       }),
       settings: await prisma.globalSetting.findFirst({
         where: eventId ? { eventId } : { id: "default" }
@@ -144,14 +146,15 @@ export async function resetSystem() {
     }
 
     const { eventId } = session.user;
+    const festEventIds = await getFestivalEventIds(eventId);
 
-    if (eventId) {
-      await prisma.result.deleteMany({ where: { program: { eventId } } });
-      await prisma.programAssignment.deleteMany({ where: { program: { eventId } } });
-      await prisma.candidate.deleteMany({ where: { team: { eventId } } });
-      await prisma.program.deleteMany({ where: { eventId } });
-      await prisma.category.deleteMany({ where: { eventId } });
-      await prisma.team.deleteMany({ where: { eventId } });
+    if (festEventIds.length > 0) {
+      await prisma.result.deleteMany({ where: { program: { eventId: { in: festEventIds } } } });
+      await prisma.programAssignment.deleteMany({ where: { program: { eventId: { in: festEventIds } } } });
+      await prisma.candidate.deleteMany({ where: { team: { eventId: { in: festEventIds } } } });
+      await prisma.program.deleteMany({ where: { eventId: { in: festEventIds } } });
+      await prisma.category.deleteMany({ where: { eventId: { in: festEventIds } } });
+      await prisma.team.deleteMany({ where: { eventId: { in: festEventIds } } });
     } else {
       // Order matters due to foreign keys
       await prisma.result.deleteMany({});

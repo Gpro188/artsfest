@@ -7,6 +7,8 @@ import CandidateList from "./CandidateList";
 import CandidateFilter from "./CandidateFilter";
 import CandidateBulkActions from "./CandidateBulkActions";
 
+import { getFestivalEventIds } from "@/lib/eventScope";
+
 export default async function CandidatesPage(props: { searchParams: Promise<{ teamId?: string, categoryId?: string }> }) {
   const searchParams = await props.searchParams;
   const session = await getServerSession(authOptions);
@@ -23,11 +25,9 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
   let registrationStatusMessage = "";
 
   const userEventId = session.user.eventId;
-  const categoryTeamWhere: any = userEventId ? {
-    OR: [
-      { eventId: userEventId },
-      { event: { parentId: userEventId } }
-    ]
+  const festEventIds = await getFestivalEventIds(userEventId);
+  const categoryTeamWhere: any = festEventIds.length > 0 ? {
+    eventId: { in: festEventIds }
   } : undefined;
 
   const [allTeams, rawAllCategories] = await Promise.all([
@@ -76,13 +76,9 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
   if (session.user.role === "MANAGER") {
     whereClause.teamId = userTeamId;
   } else {
-    // If Admin has an eventId assigned, scope candidates to that event and its sub-events
-    if (session.user.eventId) {
+    if (festEventIds.length > 0) {
       whereClause.team = {
-        OR: [
-          { eventId: session.user.eventId },
-          { event: { parentId: session.user.eventId } }
-        ]
+        eventId: { in: festEventIds }
       };
     }
     if (filterTeamId) whereClause.teamId = filterTeamId;
@@ -165,12 +161,17 @@ export default async function CandidatesPage(props: { searchParams: Promise<{ te
                 currentCategoryId={filterCategoryId}
                 showTeamFilter={session.user.role === "ADMIN"}
              />
-            <a href="/print/candidates" target="_blank" className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>
+            <a 
+              href={session.user.role === "MANAGER" && userTeamId ? `/print/candidates?teamId=${userTeamId}` : (userEventId ? `/print/candidates?eventId=${userEventId}${filterTeamId ? `&teamId=${filterTeamId}` : ''}` : '/print/candidates')} 
+              target="_blank" 
+              className="btn btn-secondary" 
+              style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}
+            >
               Print List
             </a>
             <a 
               data-tour="candidates-idcards"
-              href={`/print/id-cards?${session.user.role === "MANAGER" ? `teamId=${userTeamId}` : (filterTeamId ? `teamId=${filterTeamId}` : '')}${filterCategoryId ? `&categoryId=${filterCategoryId}` : ''}`} 
+              href={`/print/id-cards?${session.user.role === "MANAGER" ? `teamId=${userTeamId}` : (filterTeamId ? `teamId=${filterTeamId}` : (userEventId ? `eventId=${userEventId}` : ''))}${filterCategoryId ? `&categoryId=${filterCategoryId}` : ''}`} 
               target="_blank" 
               className="btn btn-primary" 
               style={{ padding: '0.4rem 1rem', fontSize: '0.875rem', backgroundColor: 'var(--primary)', color: 'white' }}

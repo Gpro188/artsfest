@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import BulkIdCardsClient from "./BulkIdCardsClient";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
-export default async function BulkIdCardsPage({ searchParams }: { searchParams: Promise<{ teamId?: string, categoryId?: string }> }) {
+export default async function BulkIdCardsPage({ searchParams }: { searchParams: Promise<{ teamId?: string, categoryId?: string, eventId?: string }> }) {
   const params = await searchParams;
-  let eventId = undefined;
+  const session = await getServerSession(authOptions);
+  let eventId = params.eventId || session?.user?.eventId || undefined;
   
-  if (params.teamId) {
+  if (!eventId && params.teamId) {
     const team = await prisma.team.findUnique({
       where: { id: params.teamId },
       select: { eventId: true }
@@ -14,7 +18,7 @@ export default async function BulkIdCardsPage({ searchParams }: { searchParams: 
     if (team) {
       eventId = team.eventId;
     }
-  } else if (params.categoryId) {
+  } else if (!eventId && params.categoryId) {
     const category = await prisma.category.findUnique({
       where: { id: params.categoryId },
       select: { eventId: true }
@@ -24,14 +28,23 @@ export default async function BulkIdCardsPage({ searchParams }: { searchParams: 
     }
   }
 
-  const settings = await getSettings(eventId);
+  const festEventIds = await getFestivalEventIds(eventId);
+  const settings = await getSettings(festEventIds[0] || eventId);
+
+  const candidateWhere: any = {
+    teamId: params.teamId || undefined,
+    categoryId: params.categoryId || undefined,
+    isApproved: true
+  };
+
+  if (!params.teamId && festEventIds.length > 0) {
+    candidateWhere.team = {
+      eventId: { in: festEventIds }
+    };
+  }
 
   const candidates = await prisma.candidate.findMany({
-    where: {
-      teamId: params.teamId || undefined,
-      categoryId: params.categoryId || undefined,
-      isApproved: true
-    },
+    where: candidateWhere,
     include: {
       team: true,
       category: true,

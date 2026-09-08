@@ -6,11 +6,14 @@ import bcrypt from "bcrypt";
 
 export async function createTeam(data: any) {
   try {
-    const existingPrefix = await prisma.team.findUnique({
-      where: { prefixCode: data.prefixCode }
+    const existingPrefix = await prisma.team.findFirst({
+      where: {
+        eventId: data.eventId,
+        prefixCode: data.prefixCode
+      }
     });
     
-    if (existingPrefix) return { success: false, error: "Prefix code already exists" };
+    if (existingPrefix) return { success: false, error: "Prefix code already exists in this event" };
 
     const existingManager = await prisma.user.findUnique({
       where: { username: data.managerUsername }
@@ -47,12 +50,26 @@ export async function createTeam(data: any) {
     return { success: true };
   } catch (error) {
     console.error("Failed to create team:", error);
-    return { success: false, error: "Failed to create team. Ensure prefix is unique." };
+    return { success: false, error: "Failed to create team. Ensure prefix is unique in this event." };
   }
 }
 
 export async function updateTeam(id: string, data: any) {
   try {
+    const existingTeam = await prisma.team.findUnique({ where: { id } });
+    if (!existingTeam) return { success: false, error: "Team not found" };
+
+    if (data.prefixCode && data.prefixCode !== existingTeam.prefixCode) {
+      const existingPrefix = await prisma.team.findFirst({
+        where: {
+          id: { not: id },
+          eventId: existingTeam.eventId,
+          prefixCode: data.prefixCode
+        }
+      });
+      if (existingPrefix) return { success: false, error: "Prefix code already exists in this event" };
+    }
+
     const updateData: any = {
       name: data.name,
       prefixCode: data.prefixCode,

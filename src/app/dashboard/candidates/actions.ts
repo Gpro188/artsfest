@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export async function addCandidate(data: { name: string, categoryId: string, teamId: string, photo?: string, chestNumber?: string }) {
   try {
@@ -53,7 +54,19 @@ export async function addCandidate(data: { name: string, categoryId: string, tea
       const offset = cat?.chestNumberOffset || 0;
 
       if (data.chestNumber) {
-        chestNumber = data.chestNumber;
+        chestNumber = data.chestNumber.trim();
+        const festEventIds = await getFestivalEventIds(team?.eventId);
+        if (festEventIds.length > 0) {
+          const duplicateInFest = await prisma.candidate.findFirst({
+            where: {
+              chestNumber,
+              team: { eventId: { in: festEventIds } }
+            }
+          });
+          if (duplicateInFest) {
+            return { success: false, error: `Chest number "${chestNumber}" is already assigned in this festival.` };
+          }
+        }
       } else {
         const existingCandidates = await prisma.candidate.findMany({
           where: { teamId: data.teamId, categoryId: finalCategoryId, isApproved: true, chestNumber: { not: null } },
@@ -131,6 +144,23 @@ export async function updateCandidate(id: string, data: { name: string, category
       
       if (candidate.isApproved && data.isApproved !== false) {
         return { success: false, error: "Cannot edit an approved candidate" };
+      }
+    }
+
+    if (data.chestNumber && data.chestNumber.trim() !== (candidate.chestNumber || "")) {
+      const candidateTeam = await prisma.team.findUnique({ where: { id: candidate.teamId }, select: { eventId: true } });
+      const festEventIds = await getFestivalEventIds(candidateTeam?.eventId);
+      if (festEventIds.length > 0) {
+        const duplicateInFest = await prisma.candidate.findFirst({
+          where: {
+            id: { not: id },
+            chestNumber: data.chestNumber.trim(),
+            team: { eventId: { in: festEventIds } }
+          }
+        });
+        if (duplicateInFest) {
+          return { success: false, error: `Chest number "${data.chestNumber.trim()}" is already assigned in this festival.` };
+        }
       }
     }
 
@@ -271,8 +301,16 @@ export async function bulkApproveUnapprovedCandidates() {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
+    const userEventId = session.user.eventId;
+    const festEventIds = await getFestivalEventIds(userEventId);
+
     const unapprovedCandidates = await prisma.candidate.findMany({
-      where: { isApproved: false },
+      where: { 
+        isApproved: false,
+        ...(festEventIds.length > 0 ? {
+          team: { eventId: { in: festEventIds } }
+        } : {})
+      },
       include: { team: true, category: true }
     });
 
@@ -366,35 +404,20 @@ export async function validateCandidatesImport(
     if (!session) return { success: false, error: "Unauthorized" };
 
     const userEventId = session.user.eventId;
-    const eventFilter: any = userEventId ? {
-      OR: [
-        { id: userEventId },
-        { eventId: userEventId },
-        { event: { parentId: userEventId } }
-      ]
-    } : {};
+    const festEventIds = await getFestivalEventIds(userEventId);
 
-    // Fetch all teams and categories
+    // Fetch all teams and categories for this festival family
     const [teams, categories, existingCandidates] = await Promise.all([
       prisma.team.findMany({
-        where: userEventId ? {
-          OR: [
-            { eventId: userEventId },
-            { event: { parentId: userEventId } }
-          ]
-        } : {},
+        where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : {},
         select: { id: true, name: true, prefixCode: true, eventId: true }
       }),
       prisma.category.findMany({
-        where: userEventId ? {
-          OR: [
-            { eventId: userEventId },
-            { event: { parentId: userEventId } }
-          ]
-        } : {},
+        where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : {},
         select: { id: true, name: true, eventId: true }
       }),
       prisma.candidate.findMany({
+        where: festEventIds.length > 0 ? { team: { eventId: { in: festEventIds } } } : {},
         select: {
           id: true,
           name: true,
@@ -679,9 +702,18 @@ export async function bulkImportCandidates(
     let skippedCount = 0;
     const failedRows: Array<{ name: string; chestNumber?: string; error: string }> = [];
 
+    const userEventId = session.user.eventId;
+    const festEventIds = await getFestivalEventIds(userEventId);
+
     // Pre-load teams and categories for quick access and cross-event category resolution
-    const teams = await prisma.team.findMany({ select: { id: true, name: true, prefixCode: true, eventId: true } });
-    const categories = await prisma.category.findMany({ select: { id: true, name: true, chestNumberOffset: true, eventId: true } });
+    const teams = await prisma.team.findMany({
+      where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : {},
+      select: { id: true, name: true, prefixCode: true, eventId: true }
+    });
+    const categories = await prisma.category.findMany({
+      where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : {},
+      select: { id: true, name: true, chestNumberOffset: true, eventId: true }
+    });
 
     for (const c of candidatesList) {
       if (!c.name || !c.teamId || !c.categoryId) {

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 // Helper to determine Grade based on marks
 function calculateGrade(marks: number) {
@@ -112,8 +113,12 @@ export async function submitMarks(data: {
     let teamId: string | null = data.teamId || null;
 
     if (!candidateId && data.chestNumber) {
-      const candidate = await prisma.candidate.findUnique({
-        where: { chestNumber: data.chestNumber }
+      const festEventIds = await getFestivalEventIds(program.eventId);
+      const candidate = await prisma.candidate.findFirst({
+        where: {
+          chestNumber: data.chestNumber,
+          ...(festEventIds.length > 0 ? { team: { eventId: { in: festEventIds } } } : {})
+        }
       });
       if (candidate) candidateId = candidate.id;
     }
@@ -245,7 +250,13 @@ export async function submitBulkProgramResults(data: {
       if (entry.candidateId || entry.chestNumber) {
         let candidateId = entry.candidateId;
         if (!candidateId && entry.chestNumber) {
-          const cand = await prisma.candidate.findUnique({ where: { chestNumber: entry.chestNumber } });
+          const festEventIds = await getFestivalEventIds(program.eventId);
+          const cand = await prisma.candidate.findFirst({
+            where: {
+              chestNumber: entry.chestNumber,
+              ...(festEventIds.length > 0 ? { team: { eventId: { in: festEventIds } } } : {})
+            }
+          });
           if (cand) candidateId = cand.id;
         }
 

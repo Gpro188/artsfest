@@ -1,17 +1,23 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export default async function PrintJudgesSheetPage(props: {
   searchParams: Promise<{ programId?: string; eventId?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const { programId, eventId } = searchParams;
+  const session = await getServerSession(authOptions);
+  const eventId = searchParams.eventId || session?.user?.eventId || undefined;
+  const programId = searchParams.programId;
+  const festEventIds = await getFestivalEventIds(eventId);
 
   if (!programId) {
     // If no specific programId, fetch all programs for the event
     const programs = await prisma.program.findMany({
-      where: eventId ? { eventId } : {},
+      where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : {},
       include: {
         category: true,
         event: true,
@@ -28,7 +34,7 @@ export default async function PrintJudgesSheetPage(props: {
       orderBy: { name: 'asc' }
     });
 
-    const settings = await getSettings(eventId);
+    const settings = await getSettings(festEventIds[0] || eventId);
 
     return (
       <div style={{ padding: '30px', backgroundColor: 'white', color: 'black', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>

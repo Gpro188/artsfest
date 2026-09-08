@@ -1,16 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export default async function PrintVenuePage(props: {
   searchParams: Promise<{ eventId?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const eventId = searchParams.eventId;
-  const settings = await getSettings(eventId);
+  const session = await getServerSession(authOptions);
+  const eventId = searchParams.eventId || session?.user?.eventId || undefined;
+  const festEventIds = await getFestivalEventIds(eventId);
+  const settings = await getSettings(festEventIds[0] || eventId);
 
   const programs = await prisma.program.findMany({
-    where: eventId ? { eventId } : {},
+    where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : {},
     orderBy: [
       { venue: 'asc' },
       { startTime: 'asc' }

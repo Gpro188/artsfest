@@ -1,16 +1,22 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export default async function PrintStageManagerPage(props: {
   searchParams: Promise<{ eventId?: string; venue?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const { eventId, venue } = searchParams;
-  const settings = await getSettings(eventId);
+  const session = await getServerSession(authOptions);
+  const eventId = searchParams.eventId || session?.user?.eventId || undefined;
+  const venue = searchParams.venue;
+  const festEventIds = await getFestivalEventIds(eventId);
+  const settings = await getSettings(festEventIds[0] || eventId);
 
   const whereClause: any = {};
-  if (eventId) whereClause.eventId = eventId;
+  if (festEventIds.length > 0) whereClause.eventId = { in: festEventIds };
   if (venue) whereClause.venue = venue;
 
   const programs = await prisma.program.findMany({

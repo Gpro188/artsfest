@@ -67,7 +67,7 @@ model Category {
 model Team {
   id          String      @id @default(uuid())
   name        String
-  prefixCode  String      @unique
+  prefixCode  String
   eventId     String
   managerId   String?     @unique
   createdAt   DateTime    @default(now())
@@ -80,6 +80,7 @@ model Team {
   manager     User?       @relation("TeamManager", fields: [managerId], references: [id], onDelete: SetNull)
   event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@unique([eventId, prefixCode])
   @@index([eventId])
 }
 
@@ -100,7 +101,7 @@ model PointMatrix {
 model Candidate {
   id          String              @id @default(uuid())
   name        String
-  chestNumber String?             @unique
+  chestNumber String?
   categoryId  String
   teamId      String
   isApproved  Boolean             @default(false)
@@ -112,6 +113,7 @@ model Candidate {
   programs    ProgramAssignment[]
   results     Result[]
 
+  @@index([chestNumber])
   @@index([categoryId])
   @@index([teamId])
 }

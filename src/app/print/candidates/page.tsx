@@ -1,10 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export default async function PrintCandidatesPage(props: { searchParams: Promise<{ teamId?: string; eventId?: string }> }) {
   const searchParams = await props.searchParams;
-  let eventId = searchParams.eventId;
+  const session = await getServerSession(authOptions);
+
+  let eventId = searchParams.eventId || session?.user?.eventId || undefined;
   
   if (!eventId && searchParams.teamId) {
     const team = await prisma.team.findUnique({
@@ -16,11 +21,16 @@ export default async function PrintCandidatesPage(props: { searchParams: Promise
     }
   }
 
-  const settings = await getSettings(eventId);
+  const festEventIds = await getFestivalEventIds(eventId);
+  const settings = await getSettings(festEventIds[0] || eventId);
   
   const whereClause: any = { isApproved: true };
   if (searchParams.teamId) {
     whereClause.teamId = searchParams.teamId;
+  } else if (festEventIds.length > 0) {
+    whereClause.team = {
+      eventId: { in: festEventIds }
+    };
   }
 
   const candidates = await prisma.candidate.findMany({

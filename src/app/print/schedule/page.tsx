@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import PrintButton from "@/components/PrintButton";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export default async function PrintSchedulePage(props: {
   searchParams: Promise<{ eventId?: string; teamId?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  let eventId = searchParams.eventId;
+  const session = await getServerSession(authOptions);
+  let eventId = searchParams.eventId || session?.user?.eventId || undefined;
   const teamId = searchParams.teamId;
 
   if (teamId && !eventId) {
@@ -19,9 +23,10 @@ export default async function PrintSchedulePage(props: {
     }
   }
 
-  const settings = await getSettings(eventId);
+  const festEventIds = await getFestivalEventIds(eventId);
+  const settings = await getSettings(festEventIds[0] || eventId);
 
-  const whereClause: any = eventId ? { eventId } : {};
+  const whereClause: any = festEventIds.length > 0 ? { eventId: { in: festEventIds } } : {};
   if (teamId) {
     whereClause.assignments = {
       some: {
