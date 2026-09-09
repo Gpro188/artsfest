@@ -7,7 +7,7 @@ import EditTeamModal from "./EditTeamModal";
 type TeamType = {
   id: string;
   name: string;
-  prefixCode: string;
+  prefixCode: string | null;
   event: { name: string };
   manager: { username: string } | null;
   leaderName: string | null;
@@ -46,7 +46,11 @@ export default function TeamList({ teams }: { teams: TeamType[] }) {
             )}
             <div>
               <h4 style={{ color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {team.name} <span style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>Prefix: {team.prefixCode}</span>
+                {team.name} {team.prefixCode ? (
+                  <span style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>Prefix: {team.prefixCode}</span>
+                ) : (
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>(No Prefix)</span>
+                )}
               </h4>
               <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                 Event: {team.event.name} • Manager: {team.manager?.username || 'None'} • Candidates: {team._count.candidates}

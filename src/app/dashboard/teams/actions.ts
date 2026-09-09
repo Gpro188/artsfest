@@ -6,14 +6,17 @@ import bcrypt from "bcrypt";
 
 export async function createTeam(data: any) {
   try {
-    const existingPrefix = await prisma.team.findFirst({
-      where: {
-        eventId: data.eventId,
-        prefixCode: data.prefixCode
-      }
-    });
-    
-    if (existingPrefix) return { success: false, error: "Prefix code already exists in this event" };
+    const cleanPrefix = data.prefixCode && data.prefixCode.trim() !== "" ? data.prefixCode.trim() : null;
+
+    if (cleanPrefix) {
+      const existingPrefix = await prisma.team.findFirst({
+        where: {
+          eventId: data.eventId,
+          prefixCode: cleanPrefix
+        }
+      });
+      if (existingPrefix) return { success: false, error: "Prefix code already exists in this event" };
+    }
 
     const existingManager = await prisma.user.findUnique({
       where: { username: data.managerUsername }
@@ -36,7 +39,7 @@ export async function createTeam(data: any) {
       await tx.team.create({
         data: {
           name: data.name,
-          prefixCode: data.prefixCode,
+          prefixCode: cleanPrefix,
           eventId: data.eventId,
           managerId: manager.id,
           leaderName: data.leaderName,
@@ -59,12 +62,16 @@ export async function updateTeam(id: string, data: any) {
     const existingTeam = await prisma.team.findUnique({ where: { id } });
     if (!existingTeam) return { success: false, error: "Team not found" };
 
-    if (data.prefixCode && data.prefixCode !== existingTeam.prefixCode) {
+    const cleanPrefix = data.prefixCode !== undefined
+      ? (data.prefixCode && data.prefixCode.trim() !== "" ? data.prefixCode.trim() : null)
+      : existingTeam.prefixCode;
+
+    if (cleanPrefix && cleanPrefix !== existingTeam.prefixCode) {
       const existingPrefix = await prisma.team.findFirst({
         where: {
           id: { not: id },
           eventId: existingTeam.eventId,
-          prefixCode: data.prefixCode
+          prefixCode: cleanPrefix
         }
       });
       if (existingPrefix) return { success: false, error: "Prefix code already exists in this event" };
@@ -72,7 +79,7 @@ export async function updateTeam(id: string, data: any) {
 
     const updateData: any = {
       name: data.name,
-      prefixCode: data.prefixCode,
+      prefixCode: cleanPrefix,
       leaderName: data.leaderName,
       leaderPhoto: data.leaderPhoto,
       flagColor: data.flagColor,

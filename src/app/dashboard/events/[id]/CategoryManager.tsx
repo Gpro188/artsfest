@@ -38,8 +38,7 @@ export default function CategoryManager({ eventId, categories }: { eventId: stri
           className="form-input" 
           value={offset}
           onChange={(e) => setOffset(e.target.value)}
-          placeholder="Chest Offset (e.g. 40)"
-          required
+          placeholder="Chest Offset (Optional, e.g. 0)"
           style={{ flex: 1 }}
         />
         <button type="submit" className="btn btn-primary" disabled={loading}>

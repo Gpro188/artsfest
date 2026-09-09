@@ -46,16 +46,16 @@ export default function EditCategoryModal({ category, onClose }: { category: Cat
           </div>
 
           <div className="form-group">
-            <label className="form-label">Chest Number Offset</label>
+            <label className="form-label">Chest Number Offset (Optional)</label>
             <input 
               type="number" 
               className="form-input" 
               value={offset}
               onChange={(e) => setOffset(e.target.value)}
-              required
+              placeholder="0"
             />
             <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Base: Team Prefix. Result: Prefix + Offset + Sequence
+              Base: Team Prefix. Result: Prefix + Offset + Sequence. Set to 0 or leave blank if uploading candidates with custom chest numbers.
             </p>
           </div>
 

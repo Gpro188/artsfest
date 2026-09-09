@@ -86,16 +86,18 @@ export default function TeamForm({ events }: { events: EventType[] }) {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Chest No Prefix</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>Chest No Prefix (Optional)</label>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Optional for manual upload</span>
+          </div>
           <input 
             type="text" 
             className="form-input" 
             value={prefixCode}
             onChange={(e) => setPrefixCode(e.target.value)}
-            placeholder="e.g. 1"
-            required
+            placeholder="e.g. 1 (or leave blank)"
           />
-          <span className="field-helper">Used to generate chest numbers (e.g., prefix "1" = 101, 102...).</span>
+          <span className="field-helper">Used for auto-generating chest numbers. Leave blank if assigning or uploading custom chest numbers.</span>
         </div>
       </div>
 

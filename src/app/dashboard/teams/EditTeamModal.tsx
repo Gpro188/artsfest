@@ -45,8 +45,17 @@ export default function EditTeamModal({ team, onClose }: { team: any, onClose: (
               <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label className="form-label">Chest Prefix</label>
-              <input type="text" className="form-input" value={prefixCode} onChange={(e) => setPrefixCode(e.target.value)} required />
+              <label className="form-label">Chest Prefix (Optional)</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={prefixCode || ""} 
+                onChange={(e) => setPrefixCode(e.target.value)} 
+                placeholder="e.g. 1 or leave blank"
+              />
+              <span className="field-helper" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                Leave blank if assigning chest numbers manually.
+              </span>
             </div>
           </div>
 

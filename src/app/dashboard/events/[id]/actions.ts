@@ -3,10 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function createCategory(eventId: string, name: string, chestNumberOffset: number) {
+export async function createCategory(eventId: string, name: string, chestNumberOffset: number = 0) {
   try {
+    const offset = parseInt(String(chestNumberOffset)) || 0;
     await prisma.category.create({
-      data: { eventId, name, chestNumberOffset }
+      data: { eventId, name, chestNumberOffset: offset }
     });
     revalidatePath(`/dashboard/events/${eventId}`);
     return { success: true };
@@ -15,11 +16,12 @@ export async function createCategory(eventId: string, name: string, chestNumberO
   }
 }
 
-export async function updateCategory(id: string, eventId: string, name: string, chestNumberOffset: number) {
+export async function updateCategory(id: string, eventId: string, name: string, chestNumberOffset: number = 0) {
   try {
+    const offset = parseInt(String(chestNumberOffset)) || 0;
     await prisma.category.update({
       where: { id },
-      data: { name, chestNumberOffset }
+      data: { name, chestNumberOffset: offset }
     });
     revalidatePath(`/dashboard/events/${eventId}`);
     return { success: true };

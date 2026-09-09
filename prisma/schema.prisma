@@ -67,7 +67,7 @@ model Category {
 model Team {
   id          String      @id @default(uuid())
   name        String
-  prefixCode  String
+  prefixCode  String?
   eventId     String
   managerId   String?     @unique
   createdAt   DateTime    @default(now())
