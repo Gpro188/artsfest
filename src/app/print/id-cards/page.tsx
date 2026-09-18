@@ -3,44 +3,51 @@ import { getSettings } from "@/lib/settings";
 import BulkIdCardsClient from "./BulkIdCardsClient";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getFestivalEventIds } from "@/lib/eventScope";
+import { resolveFestivalScope } from "@/lib/eventScope";
+import { headers } from "next/headers";
 
 export default async function BulkIdCardsPage({ searchParams }: { searchParams: Promise<{ teamId?: string, categoryId?: string, eventId?: string }> }) {
   const params = await searchParams;
   const session = await getServerSession(authOptions);
-  let eventId = params.eventId || session?.user?.eventId || undefined;
-  
-  if (!eventId && params.teamId) {
-    const team = await prisma.team.findUnique({
-      where: { id: params.teamId },
-      select: { eventId: true }
-    });
-    if (team) {
-      eventId = team.eventId;
-    }
-  } else if (!eventId && params.categoryId) {
-    const category = await prisma.category.findUnique({
-      where: { id: params.categoryId },
-      select: { eventId: true }
-    });
-    if (category) {
-      eventId = category.eventId;
-    }
-  }
+  const headerList = await headers();
+  const host = headerList.get("host") || "";
 
-  const festEventIds = await getFestivalEventIds(eventId);
-  const settings = await getSettings(festEventIds[0] || eventId);
+  const { eventId, festEventIds } = await resolveFestivalScope({
+    eventId: params.eventId,
+    teamId: params.teamId,
+    categoryId: params.categoryId,
+    sessionEventId: session?.user?.eventId,
+    host
+  });
+
+  const settings = await getSettings(eventId);
+
+  // Fetch teams for this festival so user can filter or group by team
+  const teams = await prisma.team.findMany({
+    where: {
+      eventId: { in: festEventIds }
+    },
+    select: {
+      id: true,
+      name: true,
+      flagColor: true,
+      prefixCode: true
+    },
+    orderBy: { name: 'asc' }
+  });
 
   const candidateWhere: any = {
-    teamId: params.teamId || undefined,
-    categoryId: params.categoryId || undefined,
-    isApproved: true
+    isApproved: true,
+    team: {
+      eventId: { in: festEventIds }
+    }
   };
 
-  if (!params.teamId && festEventIds.length > 0) {
-    candidateWhere.team = {
-      eventId: { in: festEventIds }
-    };
+  if (params.teamId) {
+    candidateWhere.teamId = params.teamId;
+  }
+  if (params.categoryId) {
+    candidateWhere.categoryId = params.categoryId;
   }
 
   const candidates = await prisma.candidate.findMany({
@@ -52,8 +59,20 @@ export default async function BulkIdCardsPage({ searchParams }: { searchParams: 
         include: { program: true }
       }
     },
-    orderBy: { name: 'asc' }
+    orderBy: [
+      { team: { name: 'asc' } },
+      { chestNumber: 'asc' },
+      { name: 'asc' }
+    ]
   });
 
-  return <BulkIdCardsClient candidates={candidates as any} settings={settings} />;
+  return (
+    <BulkIdCardsClient 
+      candidates={candidates as any} 
+      settings={settings} 
+      teams={teams} 
+      initialTeamId={params.teamId}
+    />
+  );
 }
+

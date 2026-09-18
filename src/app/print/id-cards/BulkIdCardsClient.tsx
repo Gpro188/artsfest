@@ -1,270 +1,632 @@
 "use client";
 
-import PrintButton from "@/components/PrintButton";
 import { useState, useMemo } from "react";
 
-export default function BulkIdCardsClient({ candidates, settings }: { candidates: any[], settings: any }) {
-  const [paperSize, setPaperSize] = useState("A4");
-  const [cardsPerPage, setCardsPerPage] = useState(4);
-  const [columns, setColumns] = useState(2);
+interface BulkIdCardsProps {
+  candidates: any[];
+  settings: any;
+  teams?: { id: string; name: string; flagColor?: string | null; prefixCode?: string | null }[];
+  initialTeamId?: string;
+}
 
+export default function BulkIdCardsClient({ candidates, settings, teams = [], initialTeamId }: BulkIdCardsProps) {
+  const [paperSize, setPaperSize] = useState<"A4" | "A3">("A4");
+  const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
+  const [cardsPerPage, setCardsPerPage] = useState<number>(4);
+  const [columns, setColumns] = useState<number>(2);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(initialTeamId || "ALL");
+  const [separateByTeam, setSeparateByTeam] = useState<boolean>(true);
+  const [showLogo, setShowLogo] = useState<boolean>(true);
+
+  // Filter candidates by selected team
+  const filteredCandidates = useMemo(() => {
+    if (selectedTeamId === "ALL") return candidates;
+    return candidates.filter(c => c.teamId === selectedTeamId || c.team?.id === selectedTeamId);
+  }, [candidates, selectedTeamId]);
+
+  // Generate pages: either grouped strictly by team (page break between teams) or continuous
   const pages = useMemo(() => {
-    const p = [];
-    for (let i = 0; i < candidates.length; i += cardsPerPage) {
-      p.push(candidates.slice(i, i + cardsPerPage));
+    if (filteredCandidates.length === 0) return [];
+
+    if (separateByTeam && selectedTeamId === "ALL") {
+      // Group candidates by team first
+      const teamMap = new Map<string, any[]>();
+      filteredCandidates.forEach(c => {
+        const tId = c.teamId || c.team?.id || "other";
+        if (!teamMap.has(tId)) teamMap.set(tId, []);
+        teamMap.get(tId)!.push(c);
+      });
+
+      const p: { teamName: string; cards: any[] }[] = [];
+      teamMap.forEach((teamCandidates) => {
+        const teamName = teamCandidates[0]?.team?.name || "Team";
+        for (let i = 0; i < teamCandidates.length; i += cardsPerPage) {
+          p.push({
+            teamName,
+            cards: teamCandidates.slice(i, i + cardsPerPage)
+          });
+        }
+      });
+      return p;
+    } else {
+      // Continuous chunking
+      const p: { teamName?: string; cards: any[] }[] = [];
+      for (let i = 0; i < filteredCandidates.length; i += cardsPerPage) {
+        p.push({
+          cards: filteredCandidates.slice(i, i + cardsPerPage)
+        });
+      }
+      return p;
     }
-    return p;
-  }, [candidates, cardsPerPage]);
+  }, [filteredCandidates, cardsPerPage, separateByTeam, selectedTeamId]);
+
+  // Dimension presets in mm for screen preview
+  const pageWidthMm = paperSize === "A3" 
+    ? (orientation === "portrait" ? 297 : 420)
+    : (orientation === "portrait" ? 210 : 297);
+  const pageHeightMm = paperSize === "A3"
+    ? (orientation === "portrait" ? 420 : 297)
+    : (orientation === "portrait" ? 297 : 210);
+
+  const festName = settings?.festName || "Arts Fest";
+  const festLogo = settings?.festLogo || null;
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f3f4f6', minHeight: '100vh' }}>
-      <div className="no-print" style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <div>
-          <h1 style={{ fontSize: '1.25rem', margin: 0 }}>Bulk ID Card Printing</h1>
-          <p style={{ fontSize: '0.8rem', color: '#666', margin: 0 }}>Found {candidates.length} approved candidates</p>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <div>
-            <label style={{ fontSize: '0.8rem', marginRight: '5px', fontWeight: 'bold' }}>Paper Size:</label>
-            <select 
-              value={paperSize} 
-              onChange={e => setPaperSize(e.target.value)}
-              style={{ padding: '5px', borderRadius: '4px', border: '1px solid #ccc' }}
+    <div style={{ backgroundColor: '#e5e7eb', minHeight: '100vh', paddingBottom: '50px' }}>
+      {/* Top Toolbar (Excluded from Print) */}
+      <div className="no-print" style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 50, 
+        backgroundColor: '#ffffff', 
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+        padding: '12px 24px',
+        borderBottom: '1px solid #d1d5db'
+      }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+          
+          {/* Header Info */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {festLogo && (
+              <img 
+                src={festLogo} 
+                alt="Logo" 
+                style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '6px', border: '1px solid #e5e7eb' }} 
+              />
+            )}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h1 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
+                  {festName}
+                </h1>
+                <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '12px', backgroundColor: '#e0e7ff', color: '#3730a3', fontWeight: 600 }}>
+                  Bulk ID Cards
+                </span>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '2px 0 0 0' }}>
+                Showing <strong>{filteredCandidates.length}</strong> candidates • <strong>{pages.length}</strong> page{pages.length === 1 ? '' : 's'} ({cardsPerPage} cards/page)
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => window.print()} 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                padding: '9px 20px', 
+                backgroundColor: '#4338ca', 
+                color: '#ffffff', 
+                border: 'none', 
+                borderRadius: '8px', 
+                fontWeight: 700, 
+                fontSize: '0.9rem', 
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(79, 70, 229, 0.3)'
+              }}
             >
-              <option value="A4">A4</option>
-              <option value="A3">A3</option>
-            </select>
-          </div>
-          <div>
-            <label style={{ fontSize: '0.8rem', marginRight: '5px', fontWeight: 'bold' }}>Cards per page:</label>
-            <input 
-              type="number" 
-              min="1" 
-              value={cardsPerPage} 
-              onChange={e => setCardsPerPage(parseInt(e.target.value) || 1)}
-              style={{ padding: '5px', borderRadius: '4px', border: '1px solid #ccc', width: '60px' }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: '0.8rem', marginRight: '5px', fontWeight: 'bold' }}>Columns:</label>
-            <input 
-              type="number" 
-              min="1" 
-              value={columns} 
-              onChange={e => setColumns(parseInt(e.target.value) || 1)}
-              style={{ padding: '5px', borderRadius: '4px', border: '1px solid #ccc', width: '60px' }}
-            />
+              🖨️ Print ID Cards
+            </button>
+            <button 
+              onClick={() => window.history.back()} 
+              style={{ 
+                padding: '9px 16px', 
+                backgroundColor: '#f3f4f6', 
+                color: '#374151', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '8px', 
+                fontWeight: 600, 
+                fontSize: '0.85rem', 
+                cursor: 'pointer' 
+              }}
+            >
+              ← Back
+            </button>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <PrintButton label="Print All Cards" color="#4F46E5" />
-          <button onClick={() => window.history.back()} style={{ padding: '8px 16px', backgroundColor: '#9ca3af', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '0.875rem' }}>
-            ← Back
-          </button>
+        {/* Controls Grid */}
+        <div style={{ 
+          marginTop: '12px', 
+          paddingTop: '12px', 
+          borderTop: '1px solid #f3f4f6', 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          alignItems: 'center', 
+          gap: '14px',
+          fontSize: '0.85rem'
+        }}>
+          {/* Team Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ fontWeight: 600, color: '#374151' }}>Filter Team:</label>
+            <select 
+              value={selectedTeamId} 
+              onChange={e => setSelectedTeamId(e.target.value)}
+              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb', fontWeight: 600, minWidth: '150px' }}
+            >
+              <option value="ALL">All Teams ({candidates.length})</option>
+              {teams.map(t => {
+                const count = candidates.filter(c => c.teamId === t.id || c.team?.id === t.id).length;
+                return (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Paper Size */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ fontWeight: 600, color: '#374151' }}>Paper Size:</label>
+            <select 
+              value={paperSize} 
+              onChange={e => setPaperSize(e.target.value as "A4" | "A3")}
+              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb', fontWeight: 600 }}
+            >
+              <option value="A4">A4 (210 × 297 mm)</option>
+              <option value="A3">A3 (297 × 420 mm)</option>
+            </select>
+          </div>
+
+          {/* Orientation */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ fontWeight: 600, color: '#374151' }}>Orientation:</label>
+            <select 
+              value={orientation} 
+              onChange={e => setOrientation(e.target.value as "portrait" | "landscape")}
+              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb' }}
+            >
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+
+          {/* Cards per Page (Typed count) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ fontWeight: 600, color: '#374151' }}>Cards / Page:</label>
+            <input 
+              type="number" 
+              min="1" 
+              max="20"
+              value={cardsPerPage} 
+              onChange={e => setCardsPerPage(Math.max(1, parseInt(e.target.value) || 1))}
+              style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid #d1d5db', width: '65px', textAlign: 'center', fontWeight: 700 }}
+            />
+            {/* Quick presets */}
+            <div style={{ display: 'flex', gap: '3px' }}>
+              {[2, 4, 6, 8].map(n => (
+                <button
+                  key={n}
+                  onClick={() => {
+                    setCardsPerPage(n);
+                    if (n === 2) setColumns(1);
+                    else if (n === 4) setColumns(2);
+                    else if (n === 6) setColumns(2);
+                    else if (n === 8) setColumns(4);
+                  }}
+                  style={{
+                    padding: '4px 7px',
+                    fontSize: '0.75rem',
+                    borderRadius: '4px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: cardsPerPage === n ? '#4f46e5' : '#f3f4f6',
+                    color: cardsPerPage === n ? '#ffffff' : '#374151',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Columns */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ fontWeight: 600, color: '#374151' }}>Columns:</label>
+            <input 
+              type="number" 
+              min="1" 
+              max="6"
+              value={columns} 
+              onChange={e => setColumns(Math.max(1, parseInt(e.target.value) || 1))}
+              style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid #d1d5db', width: '55px', textAlign: 'center', fontWeight: 700 }}
+            />
+          </div>
+
+          {/* Checkboxes */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginLeft: 'auto' }}>
+            {selectedTeamId === "ALL" && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontWeight: 500, color: '#374151' }}>
+                <input 
+                  type="checkbox" 
+                  checked={separateByTeam} 
+                  onChange={e => setSeparateByTeam(e.target.checked)} 
+                />
+                Page break per team
+              </label>
+            )}
+
+            {festLogo && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontWeight: 500, color: '#374151' }}>
+                <input 
+                  type="checkbox" 
+                  checked={showLogo} 
+                  onChange={e => setShowLogo(e.target.checked)} 
+                />
+                Show Logo
+              </label>
+            )}
+          </div>
+
         </div>
       </div>
 
-      <div className="print-container">
-        {pages.map((pageCandidates, pageIndex) => (
-          <div key={pageIndex} className="print-page" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: `repeat(${columns}, 1fr)`,
-            gridAutoRows: '1fr',
-            gap: '10mm', 
-            padding: '10mm',
-            boxSizing: 'border-box',
-            backgroundColor: 'white',
-            margin: '0 auto 20px',
-            boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
-          }}>
-            {pageCandidates.map(candidate => (
-              <div key={candidate.id} className="id-card-wrapper" style={{ 
-                backgroundColor: 'white', 
-                borderRadius: '15px', 
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                position: 'relative',
-                border: '1px solid #e5e7eb',
-                height: '100%'
+      {/* Pages Container */}
+      <div className="print-container" style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
+        {pages.length === 0 ? (
+          <div style={{ padding: '60px 20px', textAlign: 'center', backgroundColor: '#ffffff', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', maxWidth: '500px', width: '90%' }}>
+            <p style={{ fontSize: '1.2rem', fontWeight: 600, color: '#4b5563', margin: '0 0 8px 0' }}>No candidates found</p>
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af', margin: 0 }}>There are no approved candidates matching the selected team or festival criteria.</p>
+          </div>
+        ) : (
+          pages.map((page, pageIndex) => (
+            <div key={pageIndex} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+              
+              {/* Page Indicator (Screen only) */}
+              <div className="no-print" style={{ 
+                width: `${pageWidthMm * 0.9}mm`, 
+                maxWidth: '96vw', 
+                marginBottom: '6px', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                fontSize: '0.75rem', 
+                color: '#6b7280',
+                fontWeight: 600 
               }}>
-                {/* Header Design */}
-                <div style={{ 
-                  backgroundColor: candidate.team.flagColor || '#4F46E5',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  padding: '10px',
-                  textAlign: 'center'
-                }}>
-                  <h2 style={{ margin: 0, fontSize: '1.2vw', fontWeight: 800 }}>{settings.festName}</h2>
-                  <p style={{ margin: 0, fontSize: '0.6vw', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px' }}>Official Candidate Card</p>
-                </div>
+                <span>Page {pageIndex + 1} of {pages.length} {page.teamName ? `• Team: ${page.teamName}` : ''}</span>
+                <span>{paperSize} ({orientation}) • {page.cards.length} card{page.cards.length === 1 ? '' : 's'}</span>
+              </div>
 
-                {/* Photo & Chest Number Section */}
-                <div style={{ padding: '5% 5% 2%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ position: 'relative', width: '30%', aspectRatio: '1/1' }}>
-                    {/* Photo */}
-                    <div style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      borderRadius: '10px', 
-                      backgroundColor: '#f3f4f6', 
-                      border: '3px solid #fff',
-                      boxShadow: '0 3px 10px rgba(0,0,0,0.1)',
-                      overflow: 'hidden'
-                    }}>
-                      {candidate.photo ? (
-                        <img src={candidate.photo} alt={candidate.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2vw' }}>👤</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Faint Background Text */}
-                  <div style={{ 
-                    position: 'absolute', 
-                    top: '25%', 
-                    left: '0', 
-                    right: '0', 
-                    textAlign: 'center', 
-                    zIndex: 1, 
-                    opacity: 0.05, 
-                    fontSize: '3vw', 
-                    fontWeight: 900, 
-                    pointerEvents: 'none',
-                    textTransform: 'uppercase',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden'
-                  }}>
-                    {candidate.team.name}
-                  </div>
-                </div>
-
-                {/* Candidate Name & Team Badge */}
-                <div style={{ textAlign: 'center', padding: '0 5% 2%' }}>
-                  <h3 style={{ margin: '0 0 1%', fontSize: '1.8vw', fontWeight: 900, color: '#1e1b4b' }}>
-                    {candidate.chestNumber || '??'}
-                  </h3>
-                  <div style={{ margin: '0 0 2%', fontSize: '1.1vw', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase' }}>
-                    {candidate.name}
-                  </div>
-                  <div style={{ 
-                    display: 'inline-block', 
-                    padding: '1% 3%', 
-                    backgroundColor: `${candidate.team.flagColor}10`, 
-                    color: candidate.team.flagColor || '#4F46E5',
-                    borderRadius: '15px',
-                    fontSize: '0.8vw',
-                    fontWeight: 800,
-                    border: `1px solid ${candidate.team.flagColor}20`
-                  }}>
-                    {candidate.team.name}
-                  </div>
-                </div>
-
-                {/* Details Section */}
-                <div style={{ padding: '0 5% 5%', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', borderTop: '1px solid #f3f4f6', paddingTop: '3%', marginBottom: '3%' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.7vw', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>Category</div>
-                      <div style={{ fontSize: '1vw', fontWeight: 700, color: '#1e1b4b' }}>{candidate.category.name}</div>
-                    </div>
-                    <div style={{ flex: 1, textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.7vw', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>Event</div>
-                      <div style={{ fontSize: '1vw', fontWeight: 700, color: '#1e1b4b' }}>ARTS FEST 2026</div>
-                    </div>
-                  </div>
-
-                  <div style={{ fontSize: '0.7vw', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, marginBottom: '2%' }}>Programs</div>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr', 
-                    gap: '2%', 
-                    maxHeight: '30%', 
-                    overflow: 'hidden' 
-                  }}>
-                    {candidate.programs.slice(0, 10).map((p: any) => (
-                      <div key={p.id} style={{ 
-                        fontSize: '0.7vw', 
-                        backgroundColor: '#f9fafb', 
-                        padding: '2% 4%', 
-                        borderRadius: '4px',
-                        color: '#4b5563',
-                        border: '1px solid #e5e7eb',
-                        lineHeight: '1.1'
+              {/* The Printable Page */}
+              <div 
+                className="print-page" 
+                style={{ 
+                  width: `${pageWidthMm}mm`, 
+                  minHeight: `${pageHeightMm}mm`,
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                  boxSizing: 'border-box',
+                  padding: '8mm',
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                  gridAutoRows: '1fr',
+                  gap: '6mm',
+                  position: 'relative'
+                }}
+              >
+                {page.cards.map((candidate: any) => {
+                  const flagColor = candidate.team?.flagColor || '#4F46E5';
+                  return (
+                    <div 
+                      key={candidate.id} 
+                      className="id-card-wrapper" 
+                      style={{ 
+                        backgroundColor: '#ffffff', 
+                        borderRadius: '12px', 
+                        border: '1px solid #d1d5db',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                        pageBreakInside: 'avoid',
+                        breakInside: 'avoid'
+                      }}
+                    >
+                      {/* Card Header with Fest Logo and Fest Name */}
+                      <div style={{ 
+                        backgroundColor: flagColor,
+                        color: '#ffffff',
+                        padding: '8px 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        textAlign: 'center',
+                        position: 'relative'
                       }}>
-                        <div style={{ fontWeight: 700, color: '#1e1b4b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {p.program.name}
+                        {showLogo && festLogo && (
+                          <div style={{ 
+                            width: '28px', 
+                            height: '28px', 
+                            borderRadius: '4px', 
+                            backgroundColor: 'rgba(255,255,255,0.95)', 
+                            padding: '2px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            flexShrink: 0 
+                          }}>
+                            <img 
+                              src={festLogo} 
+                              alt="Logo" 
+                              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                            />
+                          </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h2 style={{ 
+                            margin: 0, 
+                            fontSize: '0.95rem', 
+                            fontWeight: 800, 
+                            lineHeight: 1.1, 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '0.5px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {festName}
+                          </h2>
+                          <p style={{ 
+                            margin: '2px 0 0 0', 
+                            fontSize: '0.55rem', 
+                            opacity: 0.9, 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '1px', 
+                            fontWeight: 600 
+                          }}>
+                            Official Candidate Card
+                          </p>
                         </div>
-                        {(p.scheduledTime || p.program.startTime) && (
-                          <div style={{ fontSize: '0.6vw', color: '#6b7280' }}>
-                            {new Date(p.scheduledTime || p.program.startTime).toLocaleDateString([], { day: '2-digit', month: 'short' })} {new Date(p.scheduledTime || p.program.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+
+                      {/* Photo & Watermark Section */}
+                      <div style={{ padding: '12px 12px 6px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                        
+                        {/* Faint Team Name Watermark */}
+                        <div style={{ 
+                          position: 'absolute', 
+                          top: '50%', 
+                          left: '50%', 
+                          transform: 'translate(-50%, -50%)',
+                          width: '100%',
+                          textAlign: 'center', 
+                          zIndex: 0, 
+                          opacity: 0.06, 
+                          fontSize: '2.5rem', 
+                          fontWeight: 900, 
+                          pointerEvents: 'none',
+                          textTransform: 'uppercase',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden'
+                        }}>
+                          {candidate.team?.name}
+                        </div>
+
+                        {/* Candidate Photo */}
+                        <div style={{ 
+                          width: '85px', 
+                          height: '85px', 
+                          borderRadius: '10px', 
+                          backgroundColor: '#f3f4f6', 
+                          border: '3px solid #ffffff',
+                          boxShadow: '0 3px 8px rgba(0,0,0,0.12)',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          zIndex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {candidate.photo ? (
+                            <img 
+                              src={candidate.photo} 
+                              alt={candidate.name} 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                            />
+                          ) : (
+                            <span style={{ fontSize: '2.5rem', color: '#9ca3af' }}>👤</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Candidate Name, Chest Number & Team Badge */}
+                      <div style={{ textAlign: 'center', padding: '0 10px 6px 10px', position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1e1b4b', lineHeight: 1.1 }}>
+                          {candidate.chestNumber || '??'}
+                        </div>
+                        <div style={{ 
+                          fontSize: '0.85rem', 
+                          fontWeight: 700, 
+                          color: '#374151', 
+                          textTransform: 'uppercase', 
+                          margin: '2px 0 4px 0',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {candidate.name}
+                        </div>
+                        <div style={{ 
+                          display: 'inline-block', 
+                          padding: '2px 10px', 
+                          backgroundColor: `${flagColor}15`, 
+                          color: flagColor,
+                          borderRadius: '12px',
+                          fontSize: '0.7rem',
+                          fontWeight: 800,
+                          border: `1px solid ${flagColor}35`,
+                          textTransform: 'uppercase'
+                        }}>
+                          {candidate.team?.name}
+                        </div>
+                      </div>
+
+                      {/* Category and Event Meta */}
+                      <div style={{ padding: '0 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          borderTop: '1px solid #f3f4f6', 
+                          paddingTop: '6px', 
+                          marginBottom: '6px',
+                          fontSize: '0.65rem'
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.55rem' }}>Category</span>
+                            <span style={{ fontWeight: 700, color: '#1e1b4b' }}>{candidate.category?.name}</span>
+                          </div>
+                          <div style={{ flex: 1, textAlign: 'right' }}>
+                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.55rem' }}>Fest</span>
+                            <span style={{ fontWeight: 700, color: '#1e1b4b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{festName}</span>
+                          </div>
+                        </div>
+
+                        {/* Assigned Programs */}
+                        <div style={{ fontSize: '0.55rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
+                          Programs ({candidate.programs?.length || 0})
+                        </div>
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: '1fr 1fr', 
+                          gap: '4px', 
+                          maxHeight: '85px', 
+                          overflow: 'hidden',
+                          flex: 1
+                        }}>
+                          {(candidate.programs || []).slice(0, 6).map((p: any) => {
+                            const progTime = p.scheduledTime || p.program?.startTime;
+                            return (
+                              <div 
+                                key={p.id} 
+                                style={{ 
+                                  fontSize: '0.58rem', 
+                                  backgroundColor: '#f9fafb', 
+                                  padding: '3px 5px', 
+                                  borderRadius: '4px',
+                                  color: '#374151',
+                                  border: '1px solid #e5e7eb',
+                                  lineHeight: '1.15'
+                                }}
+                              >
+                                <div style={{ fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {p.program?.name}
+                                </div>
+                                {progTime && (
+                                  <div style={{ fontSize: '0.5rem', color: '#6b7280', marginTop: '1px' }}>
+                                    {new Date(progTime).toLocaleDateString([], { day: '2-digit', month: 'short' })} {new Date(progTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {(!candidate.programs || candidate.programs.length === 0) && (
+                            <div style={{ gridColumn: 'span 2', fontSize: '0.6rem', color: '#9ca3af', textAlign: 'center', padding: '6px' }}>
+                              No programs assigned
+                            </div>
+                          )}
+                        </div>
+                        {(candidate.programs?.length || 0) > 6 && (
+                          <div style={{ fontSize: '0.5rem', color: '#9ca3af', textAlign: 'center', marginTop: '2px' }}>
+                            + {(candidate.programs?.length || 0) - 6} more
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Footer */}
-                <div style={{ 
-                  padding: '3% 5%', 
-                  backgroundColor: '#f9fafb', 
-                  borderTop: '1px solid #f3f4f6',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ width: '40px', height: '10px', borderBottom: '1px solid #d1d5db' }}></div>
-                    <div style={{ fontSize: '0.5vw', color: '#9ca3af' }}>ADMIN</div>
-                  </div>
-                  <div style={{ textAlign: 'right', fontSize: '0.6vw', color: '#9ca3af' }}>
-                    {new Date().toLocaleDateString()}
-                  </div>
-                </div>
+                      {/* Footer Signature */}
+                      <div style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#f9fafb', 
+                        borderTop: '1px solid #f3f4f6',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-end',
+                        marginTop: 'auto'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ width: '45px', height: '12px', borderBottom: '1px solid #9ca3af' }}></div>
+                          <div style={{ fontSize: '0.45rem', color: '#9ca3af', fontWeight: 600, marginTop: '1px' }}>OFFICIAL</div>
+                        </div>
+                        <div style={{ textAlign: 'right', fontSize: '0.5rem', color: '#9ca3af' }}>
+                          {new Date().toLocaleDateString()}
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        ))}
+
+            </div>
+          ))
+        )}
       </div>
 
+      {/* Print CSS Rules */}
       <style dangerouslySetInnerHTML={{ __html: `
-        .print-page {
-          width: ${paperSize === 'A3' ? '297mm' : '210mm'};
-          height: ${paperSize === 'A3' ? '420mm' : '297mm'};
+        @page {
+          size: ${paperSize} ${orientation};
+          margin: 6mm;
         }
         @media print {
-          @page {
-            size: ${paperSize};
-            margin: 0;
+          .no-print { 
+            display: none !important; 
           }
-          .no-print { display: none !important; }
-          body { background: white !important; margin: 0; padding: 0; }
+          body { 
+            background: #ffffff !important; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+          }
           .print-container {
-            display: block;
+            padding: 0 !important;
+            gap: 0 !important;
+            display: block !important;
           }
           .print-page {
             box-shadow: none !important; 
+            border: none !important;
             margin: 0 !important;
-            page-break-after: always;
-            width: 100vw;
-            height: 100vh;
+            width: 100% !important;
+            min-height: 100vh !important;
+            height: 100vh !important;
+            page-break-after: always !important;
+            break-after: page !important;
+            padding: 2mm !important;
+            box-sizing: border-box !important;
           }
           .id-card-wrapper {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            box-shadow: none !important;
+            border: 1px solid #9ca3af !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          /* Override vw sizes to mm or relative to page for print */
-          .print-page h2 { font-size: calc(12mm / var(--columns)) !important; }
-          .print-page p, .print-page .category, .print-page .footer-text { font-size: calc(6mm / var(--columns)) !important; }
-          .print-page h3 { font-size: calc(18mm / var(--columns)) !important; }
         }
       `}} />
     </div>

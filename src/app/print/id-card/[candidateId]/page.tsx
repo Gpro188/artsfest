@@ -39,19 +39,26 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
       }}>
         {/* Header Design */}
         <div style={{ 
-          height: '70px', 
+          minHeight: '70px', 
           backgroundColor: candidate.team.flagColor || '#4F46E5',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: '10px',
           color: 'white',
-          padding: '10px',
+          padding: '10px 16px',
           textAlign: 'center',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '1px' }}>{settings.festName}</h2>
-          <p style={{ margin: 0, fontSize: '0.6rem', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '2px' }}>Official Candidate Card</p>
+          {settings.festLogo && (
+            <div style={{ width: '36px', height: '36px', borderRadius: '6px', backgroundColor: 'rgba(255,255,255,0.95)', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <img src={settings.festLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+          )}
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, letterSpacing: '1px' }}>{settings.festName}</h2>
+            <p style={{ margin: '2px 0 0 0', fontSize: '0.6rem', opacity: 0.85, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 600 }}>Official Candidate Card</p>
+          </div>
         </div>
 
         {/* Photo & Chest Number Section */}
