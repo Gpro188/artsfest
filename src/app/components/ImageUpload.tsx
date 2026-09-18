@@ -15,28 +15,73 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(initialUrl || null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const compressImage = (file: File, maxWidth = 1200, quality = 0.82): Promise<File | Blob> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith("image/") || file.type === "image/gif" || file.type === "image/svg+xml") {
+        return resolve(file);
+      }
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return resolve(file);
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => {
+              if (blob && blob.size < file.size) {
+                resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" }));
+              } else {
+                resolve(file);
+              }
+            },
+            "image/jpeg",
+            quality
+          );
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
 
-    // Check file size (limit to 500KB as requested)
-    if (file.size > 500 * 1024) {
-      setError("File is too large. Max size is 500KB to save space.");
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const originalFile = e.target.files?.[0];
+    if (!originalFile) return;
+
+    // Support up to 5MB
+    if (originalFile.size > 5 * 1024 * 1024) {
+      setError("File is too large. Max allowed size is 5MB.");
       return;
     }
 
-    // Set local preview
-    const objectUrl = URL.createObjectURL(file);
+    // Set immediate preview
+    const objectUrl = URL.createObjectURL(originalFile);
     setPreview(objectUrl);
 
     setUploading(true);
     setError("");
-    setProgress(10); // initial progress
+    setProgress(15);
 
     try {
-      // 1. Send FormData directly to our API route
+      // Auto-compress large images for fast and reliable upload
+      const fileToUpload = (originalFile.size > 300 * 1024) 
+        ? await compressImage(originalFile)
+        : originalFile;
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", fileToUpload);
       formData.append("folder", folder);
 
       return new Promise<void>((resolve, reject) => {
@@ -44,8 +89,7 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
         
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
-            // progress from 10 to 100
-            const p = 10 + Math.round((event.loaded / event.total) * 90);
+            const p = 15 + Math.round((event.loaded / event.total) * 80);
             setProgress(p);
           }
         };
@@ -57,12 +101,13 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
               if (data.finalUrl) {
                 onUploadComplete(data.finalUrl);
                 setUploading(false);
-                setProgress(0);
+                setProgress(100);
                 resolve();
               } else {
-                 setError("Upload failed: No URL returned.");
-                 setUploading(false);
-                 reject(new Error("Upload failed"));
+                const errMsg = data.error || "Upload failed: No URL returned.";
+                setError(errMsg);
+                setUploading(false);
+                reject(new Error(errMsg));
               }
             } catch (err) {
               setError("Upload failed: Invalid server response.");
@@ -70,16 +115,21 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
               reject(new Error("Invalid response"));
             }
           } else {
-            console.error("Upload error:", xhr.statusText);
-            setError("Upload failed. Server returned an error.");
+            let errorMsg = "Upload failed. Server returned an error.";
+            try {
+              const errData = JSON.parse(xhr.responseText);
+              if (errData.error) errorMsg = errData.error;
+            } catch (err) {}
+            console.error("Upload error details:", xhr.status, xhr.statusText, xhr.responseText);
+            setError(errorMsg);
             setUploading(false);
-            reject(new Error("Upload failed"));
+            reject(new Error(errorMsg));
           }
         };
 
         xhr.onerror = () => {
-          console.error("Upload error: Network Error");
-          setError("Upload failed due to a network error.");
+          console.error("Upload network error");
+          setError("Upload failed due to a network error. Please try again.");
           setUploading(false);
           reject(new Error("Network Error"));
         };
@@ -88,9 +138,9 @@ export default function ImageUpload({ onUploadComplete, folder = "general", labe
         xhr.send(formData);
       });
       
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
-      setError("Failed to start upload. Check your connection.");
+      setError(err?.message || "Failed to upload image. Please try again.");
       setUploading(false);
     }
   };
