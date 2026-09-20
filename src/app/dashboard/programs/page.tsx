@@ -42,7 +42,28 @@ export default async function ProgramsPage() {
     }
   }) : null;
 
-  const events = parentEvent ? [parentEvent, ...subEvents] : subEvents;
+  const rawCategories = (parentEvent?.categories || []).concat(subEvents.flatMap(e => e.categories));
+  const seenCategoryNames = new Set<string>();
+  const allCategories = rawCategories.filter(cat => {
+    const trimmed = cat.name.trim().toUpperCase();
+    if (seenCategoryNames.has(trimmed)) return false;
+    seenCategoryNames.add(trimmed);
+    return true;
+  });
+
+  // Deduplicate events by normalized name, prioritizing parent event / session.user.eventId
+  // Ensure every event has categories populated (falling back to allCategories if empty)
+  const candidateEvents = parentEvent ? [parentEvent, ...subEvents] : subEvents;
+  const seenEventNames = new Set<string>();
+  const events = candidateEvents.filter(ev => {
+    const key = ev.name.trim().toLowerCase();
+    if (seenEventNames.has(key)) return false;
+    seenEventNames.add(key);
+    return true;
+  }).map(ev => ({
+    ...ev,
+    categories: ev.categories && ev.categories.length > 0 ? ev.categories : allCategories
+  }));
 
   const currentEventId = session.user.eventId as string;
 
@@ -61,15 +82,6 @@ export default async function ProgramsPage() {
       }
     },
     orderBy: { createdAt: 'desc' }
-  });
-
-  const rawCategories = events.flatMap(e => e.categories);
-  const seenCategoryNames = new Set<string>();
-  const allCategories = rawCategories.filter(cat => {
-    const trimmed = cat.name.trim().toUpperCase();
-    if (seenCategoryNames.has(trimmed)) return false;
-    seenCategoryNames.add(trimmed);
-    return true;
   });
 
   return (

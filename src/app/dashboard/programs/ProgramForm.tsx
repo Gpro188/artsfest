@@ -12,7 +12,17 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
   const [eventId, setEventId] = useState(events[0]?.id || "");
   
   const selectedEvent = events.find(e => e.id === eventId);
-  const categories = selectedEvent?.categories || [];
+  const fallbackCategories = events.flatMap(e => e.categories || []);
+  const rawCats = (selectedEvent?.categories && selectedEvent.categories.length > 0)
+    ? selectedEvent.categories
+    : fallbackCategories;
+  
+  const seenCatIds = new Set<string>();
+  const categories = rawCats.filter(c => {
+    if (seenCatIds.has(c.id)) return false;
+    seenCatIds.add(c.id);
+    return true;
+  });
   
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [candidateLimitPerTeam, setCandidateLimitPerTeam] = useState(1);
@@ -88,7 +98,8 @@ export default function ProgramForm({ events }: { events: EventType[] }) {
             setEventId(e.target.value);
             // Reset category when event changes
             const ev = events.find(event => event.id === e.target.value);
-            setCategoryId(ev?.categories[0]?.id || "");
+            const newCats = (ev?.categories && ev.categories.length > 0) ? ev.categories : fallbackCategories;
+            setCategoryId(newCats[0]?.id || "");
           }}
           required
         >

@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getFestivalEventIds } from "@/lib/eventScope";
 import AdminScheduler from "./AdminScheduler";
 import ManagerScheduler from "./ManagerScheduler";
 import EventSwitcher from "@/app/components/EventSwitcher";
@@ -30,11 +31,20 @@ export default async function SchedulePage(props: {
     const rawEvents = await prisma.event.findMany({
       where: eventWhere,
       orderBy: { createdAt: 'desc' },
-      select: { id: true, name: true, createdAt: true }
+      select: { id: true, name: true, createdAt: true, parentId: true }
+    });
+
+    // Prioritize root event / session userEventId
+    const sortedRawEvents = [...rawEvents].sort((a, b) => {
+      if (a.id === userEventId) return -1;
+      if (b.id === userEventId) return 1;
+      if (!a.parentId && b.parentId) return -1;
+      if (a.parentId && !b.parentId) return 1;
+      return 0;
     });
 
     const seenEventNames = new Set<string>();
-    const events = rawEvents.filter(ev => {
+    const events = sortedRawEvents.filter(ev => {
       const key = ev.name.trim().toLowerCase();
       if (seenEventNames.has(key)) return false;
       seenEventNames.add(key);
@@ -45,8 +55,10 @@ export default async function SchedulePage(props: {
       ? searchParams.eventId 
       : events[0]?.id;
 
+    const festEventIds = activeEventId ? await getFestivalEventIds(activeEventId) : [];
+
     const programs = await prisma.program.findMany({
-      where: activeEventId ? { eventId: activeEventId } : {},
+      where: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : (activeEventId ? { eventId: activeEventId } : {}),
       include: {
         event: true,
         category: true,

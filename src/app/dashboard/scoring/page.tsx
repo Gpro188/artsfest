@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getFestivalEventIds } from "@/lib/eventScope";
 import ScoringForm from "./ScoringForm";
 import ResultList from "./ResultList";
 import TeamScorePreview from "./TeamScorePreview";
@@ -31,12 +32,21 @@ export default async function ScoringPage(props: {
   const rawEvents = await prisma.event.findMany({
     where: eventWhere,
     orderBy: { createdAt: 'desc' },
-    select: { id: true, name: true, createdAt: true }
+    select: { id: true, name: true, createdAt: true, parentId: true }
+  });
+
+  // Sort rawEvents so the user's root eventId comes first
+  const sortedRawEvents = [...rawEvents].sort((a, b) => {
+    if (a.id === userEventId) return -1;
+    if (b.id === userEventId) return 1;
+    if (!a.parentId && b.parentId) return -1;
+    if (a.parentId && !b.parentId) return 1;
+    return 0;
   });
 
   // Deduplicate events by normalized name to prevent duplicate event switcher tabs
   const seenEventNames = new Set<string>();
-  const events = rawEvents.filter(ev => {
+  const events = sortedRawEvents.filter(ev => {
     const key = ev.name.trim().toLowerCase();
     if (seenEventNames.has(key)) return false;
     seenEventNames.add(key);
@@ -59,7 +69,10 @@ export default async function ScoringPage(props: {
     );
   }
 
-  const [activeEvent, eventCategories] = await Promise.all([
+  // Fetch all related festival event IDs (root event + any sub-events)
+  const festEventIds = await getFestivalEventIds(activeEventId);
+
+  const [dbEvent, allFestCategories, allFestTeams, programsInScope, results, allPrograms, allResultsForScore] = await Promise.all([
     prisma.event.findUnique({
       where: { id: activeEventId },
       select: {
@@ -70,72 +83,70 @@ export default async function ScoringPage(props: {
             id: true,
             generalPoints: true
           }
-        },
-        teams: {
+        }
+      }
+    }),
+    prisma.category.findMany({
+      where: { eventId: { in: festEventIds } },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
+    }),
+    prisma.team.findMany({
+      where: { eventId: { in: festEventIds } },
+      select: {
+        id: true,
+        name: true,
+        flagColor: true
+      },
+      orderBy: { name: 'asc' }
+    }),
+    prisma.program.findMany({
+      where: { eventId: { in: festEventIds } },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        categoryId: true,
+        category: {
           select: {
             id: true,
             name: true,
-            flagColor: true
+            pointMatrix: {
+              select: {
+                id: true,
+                individualPoints: true,
+                groupPoints: true,
+                generalPoints: true
+              }
+            }
           }
         },
-        programs: {
+        assignments: {
           select: {
             id: true,
-            name: true,
-            type: true,
-            categoryId: true,
-            category: {
+            slotNumber: true,
+            candidate: {
               select: {
                 id: true,
                 name: true,
-                pointMatrix: {
-                  select: {
-                    id: true,
-                    individualPoints: true,
-                    groupPoints: true,
-                    generalPoints: true
-                  }
-                }
-              }
-            },
-            assignments: {
-              select: {
-                id: true,
-                slotNumber: true,
-                candidate: {
+                chestNumber: true,
+                teamId: true,
+                team: {
                   select: {
                     id: true,
                     name: true,
-                    chestNumber: true,
-                    teamId: true,
-                    team: {
-                      select: {
-                        id: true,
-                        name: true,
-                        flagColor: true
-                      }
-                    }
+                    flagColor: true
                   }
                 }
               }
             }
           }
         }
-      }
-    }),
-    prisma.category.findMany({
-      where: { eventId: activeEventId },
-      select: { id: true, name: true },
+      },
       orderBy: { name: 'asc' }
-    })
-  ]);
-
-  if (!activeEvent) redirect("/dashboard/scoring");
-
-  // Fetch results, pending programs, and flat results for standings in PARALLEL
-  const [results, allPrograms, allResultsForScore] = await Promise.all([
+    }),
     prisma.result.findMany({
-      where: { program: { eventId: activeEventId } },
+      where: { program: { eventId: { in: festEventIds } } },
       select: {
         id: true,
         points: true,
@@ -153,7 +164,7 @@ export default async function ScoringPage(props: {
       orderBy: { createdAt: 'desc' }
     }),
     prisma.program.findMany({
-      where: { eventId: activeEventId, assignments: { some: {} } },
+      where: { eventId: { in: festEventIds }, assignments: { some: {} } },
       select: {
         id: true,
         name: true,
@@ -163,7 +174,7 @@ export default async function ScoringPage(props: {
       }
     }),
     prisma.result.findMany({
-      where: { program: { eventId: activeEventId } },
+      where: { program: { eventId: { in: festEventIds } } },
       select: {
         points: true,
         isPublished: true,
@@ -172,6 +183,24 @@ export default async function ScoringPage(props: {
       }
     })
   ]);
+
+  if (!dbEvent) redirect("/dashboard/scoring");
+
+  // Deduplicate categories by normalized name for display
+  const seenCatNames = new Set<string>();
+  const eventCategories = allFestCategories.filter(cat => {
+    const key = cat.name.trim().toUpperCase();
+    if (seenCatNames.has(key)) return false;
+    seenCatNames.add(key);
+    return true;
+  });
+
+  // Construct unified activeEvent with all programs and teams across the festival
+  const activeEvent = {
+    ...dbEvent,
+    teams: allFestTeams,
+    programs: programsInScope
+  };
 
   const pendingPrograms = allPrograms.filter(p => p.results.length === 0);
 

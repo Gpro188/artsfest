@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import * as XLSX from "xlsx";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export async function importScheduleFromExcel(eventId: string, base64Data: string) {
   try {
@@ -12,9 +13,11 @@ export async function importScheduleFromExcel(eventId: string, base64Data: strin
     const worksheet = workbook.Sheets[sheetName];
     const data: any[] = XLSX.utils.sheet_to_json(worksheet);
 
-    // Fetch all programs for the event up-front to prevent N+1 select queries
+    const festEventIds = await getFestivalEventIds(eventId);
+
+    // Fetch all programs for the festival up-front to prevent N+1 select queries
     const programs = await prisma.program.findMany({
-      where: { eventId },
+      where: { eventId: { in: festEventIds } },
       select: {
         id: true,
         name: true,
@@ -75,8 +78,9 @@ export async function importScheduleFromExcel(eventId: string, base64Data: strin
 
 export async function checkSchedulingConflicts(eventId: string) {
   try {
+    const festEventIds = await getFestivalEventIds(eventId);
     const assignments = await prisma.programAssignment.findMany({
-      where: { program: { eventId } },
+      where: { program: { eventId: { in: festEventIds } } },
       include: {
         candidate: true,
         program: true,

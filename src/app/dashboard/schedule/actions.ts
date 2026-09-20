@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export async function updateProgramSchedule(id: string, data: { venue: string | null, startTime: string | null, duration?: number, stageType?: string }) {
   try {
@@ -87,8 +88,9 @@ export async function autoScheduleSequentialPrograms(data: {
   breakDurationMinutes: number;
 }) {
   try {
+    const festEventIds = await getFestivalEventIds(data.eventId);
     const programs = await prisma.program.findMany({
-      where: { eventId: data.eventId },
+      where: { eventId: { in: festEventIds } },
       orderBy: { createdAt: 'asc' }
     });
 
