@@ -1,8 +1,18 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 import { getFestivalEventIds } from "@/lib/eventScope";
+
+// Invalidate public caches
+function invalidatePublicResults() {
+  try {
+    (revalidateTag as any)("public-event-data");
+  } catch (e) {}
+  try {
+    if (typeof updateTag === "function") updateTag("public-event-data");
+  } catch (e) {}
+}
 
 // Helper to determine Grade based on marks
 function calculateGrade(marks: number) {
@@ -190,6 +200,7 @@ export async function submitMarks(data: {
     }
 
     revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     console.error("Submission failed:", error);
@@ -303,7 +314,11 @@ export async function submitBulkProgramResults(data: {
     }
 
     revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
     revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
     return { success: true };
   } catch (error) {
     console.error("Bulk submission failed:", error);
@@ -315,6 +330,11 @@ export async function togglePublishResult(id: string, isPublished: boolean) {
   try {
     await prisma.result.update({ where: { id }, data: { isPublished } });
     revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to update publication status" };
@@ -328,7 +348,11 @@ export async function publishProgramResults(programId: string) {
       data: { isPublished: true }
     });
     revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
     revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to publish program results" };
@@ -342,6 +366,11 @@ export async function deleteResult(id: string) {
     await prisma.result.delete({ where: { id } });
     await recalculateProgramResults(result.programId);
     revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to delete result" };
@@ -353,6 +382,11 @@ export async function updateResultMark(id: string, marks: number) {
     const result = await prisma.result.update({ where: { id }, data: { marks } });
     await recalculateProgramResults(result.programId);
     revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to update result" };

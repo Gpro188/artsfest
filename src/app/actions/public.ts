@@ -3,16 +3,21 @@
 import { prisma } from "@/lib/prisma";
 
 import { unstable_cache } from 'next/cache';
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 const getCachedPublicEventData = unstable_cache(
   async (eventId: string) => {
+    // Resolve all festival event IDs (parent + sub-events) to prevent cross-festival data loss
+    const festEventIds = await getFestivalEventIds(eventId);
+    const eventIds = festEventIds.length > 0 ? festEventIds : [eventId];
+
     // Execute all independent database queries in a single parallel batch
     // This reduces cross-continent network roundtrips from 5 sequential trips to 1
     const [
       latestResults,
       teams,
       allPublishedResults,
-      categories,
+      rawCategories,
       totalPrograms,
       publishedProgramsCount,
       totalCandidates,
@@ -21,7 +26,7 @@ const getCachedPublicEventData = unstable_cache(
       // 1. Get Latest Published Programs (with full result winners list)
       prisma.program.findMany({
         where: {
-          eventId,
+          eventId: { in: eventIds },
           results: { some: { isPublished: true } }
         },
         select: {
@@ -56,13 +61,13 @@ const getCachedPublicEventData = unstable_cache(
 
       // 2. Get Teams
       prisma.team.findMany({
-        where: { eventId },
+        where: { eventId: { in: eventIds } },
         select: { id: true, name: true, flagColor: true, leaderName: true, leaderPhoto: true }
       }),
 
       // 3. Get All Published Results for Leaderboard
       prisma.result.findMany({
-        where: { program: { eventId }, isPublished: true },
+        where: { program: { eventId: { in: eventIds } }, isPublished: true },
         select: {
           id: true, points: true, candidateId: true, teamId: true,
           candidate: { select: { id: true, name: true, photo: true, teamId: true, team: { select: { id: true, name: true, flagColor: true } }, category: { select: { id: true, name: true } } } },
@@ -70,18 +75,29 @@ const getCachedPublicEventData = unstable_cache(
         }
       }),
 
-      // 4. Get Categories
+      // 4. Get Categories (all categories in the festival scope)
       prisma.category.findMany({ 
-        where: { eventId },
+        where: { eventId: { in: eventIds } },
         select: { id: true, name: true }
       }),
 
       // 5. Stats
-      prisma.program.count({ where: { eventId } }),
-      prisma.program.count({ where: { eventId, results: { some: { isPublished: true } } } }),
-      prisma.candidate.count({ where: { category: { eventId } } }),
-      prisma.programAssignment.groupBy({ by: ['candidateId'], where: { program: { eventId } } })
+      prisma.program.count({ where: { eventId: { in: eventIds } } }),
+      prisma.program.count({ where: { eventId: { in: eventIds }, results: { some: { isPublished: true } } } }),
+      prisma.candidate.count({ where: { team: { eventId: { in: eventIds } } } }),
+      prisma.programAssignment.groupBy({ by: ['candidateId'], where: { program: { eventId: { in: eventIds } } } })
     ]);
+
+    // Deduplicate categories by normalized name
+    const seenCatNames = new Set<string>();
+    const categories: { id: string; name: string }[] = [];
+    for (const cat of rawCategories) {
+      const norm = cat.name?.trim().toUpperCase();
+      if (norm && !seenCatNames.has(norm)) {
+        seenCatNames.add(norm);
+        categories.push(cat);
+      }
+    }
 
     // --- Team Leaderboard ---
     const teamScores: Record<string, { id: string, name: string, points: number, flagColor: string | null, leaderName: string | null, leaderPhoto: string | null }> = {};

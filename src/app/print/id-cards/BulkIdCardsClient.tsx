@@ -508,54 +508,59 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                         </div>
 
                         {/* Assigned Programs */}
-                        <div style={{ fontSize: '0.55rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
-                          Programs ({candidate.programs?.length || 0})
-                        </div>
-                        <div style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: '1fr 1fr', 
-                          gap: '4px', 
-                          maxHeight: '85px', 
-                          overflow: 'hidden',
-                          flex: 1
-                        }}>
-                          {(candidate.programs || []).slice(0, 6).map((p: any) => {
-                            const progTime = p.scheduledTime || p.program?.startTime;
-                            return (
-                              <div 
-                                key={p.id} 
-                                style={{ 
-                                  fontSize: '0.58rem', 
-                                  backgroundColor: '#f9fafb', 
-                                  padding: '3px 5px', 
-                                  borderRadius: '4px',
-                                  color: '#374151',
-                                  border: '1px solid #e5e7eb',
-                                  lineHeight: '1.15'
-                                }}
-                              >
-                                <div style={{ fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                  {p.program?.name}
-                                </div>
-                                {progTime && (
-                                  <div style={{ fontSize: '0.5rem', color: '#6b7280', marginTop: '1px' }}>
-                                    {new Date(progTime).toLocaleDateString([], { day: '2-digit', month: 'short' })} {new Date(progTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {(() => {
+                          const pList = candidate.programs || [];
+                          const pCount = pList.length;
+                          const isBulkDense = pCount > 6;
+                          const maxToShow = pCount > 10 ? 12 : pCount;
+
+                          return (
+                            <>
+                              <div style={{ fontSize: '0.52rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '3px' }}>
+                                Programs ({pCount})
+                              </div>
+                              <div style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: '1fr 1fr', 
+                                gap: isBulkDense ? '2px 4px' : '4px', 
+                                maxHeight: isBulkDense ? '110px' : '85px', 
+                                overflow: 'hidden',
+                                flex: 1
+                              }}>
+                                {pList.slice(0, maxToShow).map((p: any) => {
+                                  return (
+                                    <div 
+                                      key={p.id} 
+                                      style={{ 
+                                        fontSize: isBulkDense ? '0.52rem' : '0.58rem', 
+                                        backgroundColor: '#f9fafb', 
+                                        padding: isBulkDense ? '2px 4px' : '3px 5px', 
+                                        borderRadius: '3px',
+                                        color: '#374151',
+                                        border: '1px solid #e5e7eb',
+                                        lineHeight: '1.1'
+                                      }}
+                                    >
+                                      <div style={{ fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.program?.name}>
+                                        {p.program?.name}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                                {pCount === 0 && (
+                                  <div style={{ gridColumn: 'span 2', fontSize: '0.6rem', color: '#9ca3af', textAlign: 'center', padding: '6px' }}>
+                                    No programs assigned
                                   </div>
                                 )}
                               </div>
-                            );
-                          })}
-                          {(!candidate.programs || candidate.programs.length === 0) && (
-                            <div style={{ gridColumn: 'span 2', fontSize: '0.6rem', color: '#9ca3af', textAlign: 'center', padding: '6px' }}>
-                              No programs assigned
-                            </div>
-                          )}
-                        </div>
-                        {(candidate.programs?.length || 0) > 6 && (
-                          <div style={{ fontSize: '0.5rem', color: '#9ca3af', textAlign: 'center', marginTop: '2px' }}>
-                            + {(candidate.programs?.length || 0) - 6} more
-                          </div>
-                        )}
+                              {pCount > maxToShow && (
+                                <div style={{ fontSize: '0.48rem', color: '#9ca3af', textAlign: 'center', marginTop: '1px' }}>
+                                  + {pCount - maxToShow} more
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Footer Signature */}

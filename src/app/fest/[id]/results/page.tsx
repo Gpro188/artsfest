@@ -44,26 +44,35 @@ export default async function FestPage(props: { params: Promise<{ id: string }> 
   }
 
   // Gather all related events for the dynamic tab switcher
-  const allEvents: any[] = [];
   let mainEventName = event.name;
   let rootEventId = event.id;
+  const rawSubEvents: any[] = [];
 
-  if (event.parentId) {
+  if (event.parentId && event.parent) {
     // It's a sub-event, so include sibling sub-events
-    mainEventName = event.parent!.name;
-    rootEventId = event.parent!.id;
-    event.parent!.subEvents.forEach(sub => {
-      allEvents.push({ id: sub.id, name: sub.name });
-    });
+    mainEventName = event.parent.name;
+    rootEventId = event.parent.id;
+    rawSubEvents.push(...event.parent.subEvents);
   } else {
     // It's a main event, so include all its sub-events
-    event.subEvents.forEach(sub => {
-      allEvents.push({ id: sub.id, name: sub.name });
-    });
+    rawSubEvents.push(...event.subEvents);
   }
 
-  // Default to showing the active sub-event or the first sub-event
-  const initialActiveId = event.parentId ? event.id : (allEvents[0]?.id || event.id);
+  // Filter out sub-events that clone the main festival name (e.g. BIL HIKMA sub-event)
+  const normMain = mainEventName.trim().toUpperCase();
+  const distinctSubEvents = rawSubEvents.filter(
+    (sub) => sub.name && sub.name.trim().toUpperCase() !== normMain
+  );
+
+  // If there are distinct sub-events (e.g. BOYS / GIRLS), allow switching between them;
+  // otherwise treat as a single festival scoped to the rootEventId
+  const allEvents = distinctSubEvents.length > 0
+    ? distinctSubEvents.map((sub) => ({ id: sub.id, name: sub.name }))
+    : [{ id: rootEventId, name: mainEventName }];
+
+  const initialActiveId = distinctSubEvents.length > 0
+    ? (distinctSubEvents.find((s) => s.id === event.id)?.id || distinctSubEvents[0].id)
+    : rootEventId;
 
   const settings = await getSettings(event.id);
 

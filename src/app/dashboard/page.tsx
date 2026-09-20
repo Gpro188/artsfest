@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import CustomerGuidelines from "./CustomerGuidelines";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -104,7 +105,8 @@ export default async function DashboardPage() {
       ];
     }
   } else {
-    const eventIdFilter = eventId ? { eventId } : undefined;
+    const festEventIds = eventId ? await getFestivalEventIds(eventId) : [];
+    const eventIdFilter = festEventIds.length > 0 ? { eventId: { in: festEventIds } } : (eventId ? { eventId } : undefined);
 
     const [
       eventsCount,
@@ -119,19 +121,19 @@ export default async function DashboardPage() {
       prisma.program.count({ where: eventIdFilter }),
       prisma.candidate.count({
         where: {
-          team: eventId ? { eventId } : undefined,
+          team: festEventIds.length > 0 ? { eventId: { in: festEventIds } } : (eventId ? { eventId } : undefined),
           programs: { some: {} },
         },
       }),
       prisma.program.count({
         where: {
-          ...(eventId ? { eventId } : {}),
+          ...(festEventIds.length > 0 ? { eventId: { in: festEventIds } } : (eventId ? { eventId } : {})),
           results: { some: { isPublished: true } },
         },
       }),
       prisma.program.count({
         where: {
-          ...(eventId ? { eventId } : {}),
+          ...(festEventIds.length > 0 ? { eventId: { in: festEventIds } } : (eventId ? { eventId } : {})),
           results: { none: { isPublished: true } },
         },
       }),
