@@ -149,6 +149,7 @@ export default async function ScoringPage(props: {
       where: { program: { eventId: { in: festEventIds } } },
       select: {
         id: true,
+        marks: true,
         points: true,
         rank: true,
         grade: true,

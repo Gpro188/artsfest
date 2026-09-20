@@ -359,6 +359,24 @@ export async function publishProgramResults(programId: string) {
   }
 }
 
+export async function unpublishProgramResults(programId: string) {
+  try {
+    await prisma.result.updateMany({
+      where: { programId },
+      data: { isPublished: false }
+    });
+    revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to unpublish program results" };
+  }
+}
+
 export async function deleteResult(id: string) {
   try {
     const result = await prisma.result.findUnique({ where: { id }, include: { program: true } });
@@ -390,5 +408,78 @@ export async function updateResultMark(id: string, marks: number) {
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to update result" };
+  }
+}
+
+export async function updateResultDetails(data: {
+  id: string;
+  marks: number;
+  rank?: number | null;
+  grade?: string | null;
+  isPublished?: boolean;
+}) {
+  try {
+    const existing = await prisma.result.findUnique({
+      where: { id: data.id },
+      include: {
+        program: {
+          include: {
+            category: { include: { pointMatrix: true } },
+            event: { include: { generalPointMatrix: true } }
+          }
+        }
+      }
+    });
+
+    if (!existing) return { success: false, error: "Result not found" };
+
+    const program = existing.program;
+    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
+
+    if (program.type === "GENERAL") {
+      if (program.event?.generalPointMatrix?.generalPoints) {
+        try { pointsConfig = JSON.parse(program.event.generalPointMatrix.generalPoints); } catch (e) {}
+      }
+    } else if (program.category?.pointMatrix) {
+      const str = program.type === "INDIVIDUAL" 
+        ? program.category.pointMatrix.individualPoints 
+        : program.category.pointMatrix.groupPoints;
+      if (str) {
+        try { pointsConfig = JSON.parse(str); } catch (e) {}
+      }
+    }
+
+    const rank = data.rank !== undefined ? data.rank : existing.rank;
+    const grade = data.grade !== undefined ? data.grade : existing.grade;
+
+    let points = 0;
+    if (rank === 1) points += pointsConfig.rank1 || 0;
+    else if (rank === 2) points += pointsConfig.rank2 || 0;
+    else if (rank === 3) points += pointsConfig.rank3 || 0;
+
+    if (grade === "A") points += pointsConfig.gradeA || 0;
+    else if (grade === "B") points += pointsConfig.gradeB || 0;
+
+    await prisma.result.update({
+      where: { id: data.id },
+      data: {
+        marks: data.marks,
+        rank: rank || null,
+        grade: grade || null,
+        points,
+        ...(data.isPublished !== undefined ? { isPublished: data.isPublished } : {})
+      }
+    });
+
+    revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update result details:", error);
+    return { success: false, error: "Failed to update result details" };
   }
 }

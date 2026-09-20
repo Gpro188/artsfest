@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { togglePublishResult, deleteResult, publishProgramResults } from "./actions";
+import { togglePublishResult, deleteResult, publishProgramResults, unpublishProgramResults } from "./actions";
 import EditResultModal from "./EditResultModal";
 
 export default function ResultList({ results, role }: { results: any[], role: string }) {
@@ -68,26 +68,44 @@ export default function ResultList({ results, role }: { results: any[], role: st
       ) : (
         programIds.map((pid) => {
           const group = groupedResults[pid];
-          const isFullyPublished = group.results.every(r => r.isPublished);
+          const isFullyPublished = group.results.length > 0 && group.results.every(r => r.isPublished);
+          const hasPublished = group.results.some(r => r.isPublished);
           const hasPending = group.results.some(r => !r.isPublished);
 
           return (
-            <div key={pid} className="glass-panel" style={{ padding: '0', overflow: 'hidden', border: isFullyPublished ? '1px solid var(--success)' : '1px solid var(--warning)' }}>
+            <div key={pid} className="glass-panel" style={{ padding: '0', overflow: 'hidden', border: isFullyPublished ? '1px solid var(--success)' : (hasPublished ? '1px solid var(--primary)' : '1px solid var(--warning)') }}>
               <div style={{ 
                 padding: 'var(--spacing-sm) var(--spacing-md)', 
-                backgroundColor: isFullyPublished ? 'rgba(16, 185, 129, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                backgroundColor: isFullyPublished ? 'rgba(16, 185, 129, 0.1)' : (hasPublished ? 'rgba(99, 102, 241, 0.08)' : 'rgba(234, 179, 8, 0.1)'),
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderBottom: '1px solid var(--border-color)'
+                borderBottom: '1px solid var(--border-color)',
+                flexWrap: 'wrap',
+                gap: '8px'
               }}>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '1rem' }}>{group.program.name}</h4>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {group.program.category?.name || 'General'} • {group.program.type}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h4 style={{ margin: 0, fontSize: '1rem' }}>{group.program.name}</h4>
+                    {isFullyPublished ? (
+                      <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: 'var(--success)', fontWeight: 700 }}>
+                        Published
+                      </span>
+                    ) : hasPublished ? (
+                      <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', fontWeight: 700 }}>
+                        Partially Published
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: 'var(--warning)', fontWeight: 700 }}>
+                        Unpublished
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    {group.program.category?.name || 'General'} • {group.program.type} • {group.results.length} entries
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
                    <a 
                     href={`/print/results/${pid}`}
                     target="_blank"
@@ -97,18 +115,43 @@ export default function ResultList({ results, role }: { results: any[], role: st
                     🖨️ {isFullyPublished ? "Notice Board" : "Announce Print"}
                   </a>
 
-                  {role === "ADMIN" && hasPending && (
-                    <button 
-                      onClick={() => {
-                        if (confirm(`Publish all results for ${group.program.name}?`)) {
-                          publishProgramResults(pid);
-                        }
-                      }}
-                      className="btn btn-primary"
-                      style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}
-                    >
-                      🚀 Publish Results
-                    </button>
+                  {role === "ADMIN" && (
+                    <>
+                      {hasPending && (
+                        <button 
+                          onClick={() => {
+                            if (confirm(`Publish all results for ${group.program.name}?`)) {
+                              publishProgramResults(pid);
+                            }
+                          }}
+                          className="btn btn-primary"
+                          style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}
+                        >
+                          🚀 {hasPublished ? "Publish All" : "Publish Results"}
+                        </button>
+                      )}
+
+                      {hasPublished && (
+                        <button 
+                          onClick={() => {
+                            if (confirm(`Unpublish results for ${group.program.name}? This will hide them from live standings and boards.`)) {
+                              unpublishProgramResults(pid);
+                            }
+                          }}
+                          className="btn btn-secondary"
+                          style={{ 
+                            padding: '0.2rem 0.6rem', 
+                            fontSize: '0.75rem', 
+                            borderColor: 'var(--warning)', 
+                            color: 'var(--warning)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.08)'
+                          }}
+                          title="Hide results from public leaderboards and boards"
+                        >
+                          🔒 Unpublish Results
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -131,7 +174,7 @@ export default function ResultList({ results, role }: { results: any[], role: st
                       fontSize: '0.875rem'
                     }}>
                       <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center', flex: 1 }}>
-                        <div style={{ width: '25px', fontWeight: 'bold', color: result.rank === 1 ? '#FCD34D' : 'inherit' }}>
+                        <div style={{ width: '25px', fontWeight: 'bold', color: result.rank === 1 ? '#FCD34D' : (result.rank === 2 ? '#E2E8F0' : (result.rank === 3 ? '#F97316' : 'inherit')) }}>
                           {result.rank ? `${result.rank}.` : '-'}
                         </div>
                         
@@ -165,23 +208,57 @@ export default function ResultList({ results, role }: { results: any[], role: st
                       </div>
 
                       <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-                         <div style={{ fontWeight: 'bold', width: '35px', textAlign: 'right' }}>{result.marks}</div>
-                         <div style={{ width: '15px', textAlign: 'center', color: 'var(--success)', fontWeight: 'bold' }}>{result.grade || '-'}</div>
+                         <div style={{ fontWeight: 'bold', width: '35px', textAlign: 'right' }} title="Marks / Score">{result.marks}</div>
+                         <div style={{ width: '20px', textAlign: 'center', color: 'var(--success)', fontWeight: 'bold' }} title="Grade">{result.grade || '-'}</div>
                          
+                         {/* Publish status toggle button */}
+                         {role === "ADMIN" ? (
+                           <button
+                             onClick={() => togglePublishResult(result.id, !result.isPublished)}
+                             style={{
+                               padding: '2px 8px',
+                               fontSize: '0.7rem',
+                               borderRadius: '4px',
+                               border: `1px solid ${result.isPublished ? 'var(--success)' : 'var(--warning)'}`,
+                               backgroundColor: result.isPublished ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                               color: result.isPublished ? 'var(--success)' : 'var(--warning)',
+                               cursor: 'pointer',
+                               fontWeight: 600,
+                               transition: 'all 0.2s'
+                             }}
+                             title={result.isPublished ? "Click to unpublish this entry" : "Click to publish this entry"}
+                           >
+                             {result.isPublished ? "✓ Pub" : "Draft"}
+                           </button>
+                         ) : (
+                           <span style={{
+                             fontSize: '0.7rem',
+                             padding: '2px 6px',
+                             borderRadius: '4px',
+                             backgroundColor: result.isPublished ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                             color: result.isPublished ? 'var(--success)' : 'var(--warning)',
+                             fontWeight: 600
+                           }}>
+                             {result.isPublished ? "Pub" : "Draft"}
+                           </span>
+                         )}
+
                          <div style={{ display: 'flex', gap: '4px' }}>
                            {role === "ADMIN" && (
                              <>
                               <button 
                                 onClick={() => setEditingResult(result)}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', padding: '2px' }}
+                                title="Edit Place, Grade, Marks & Status"
                               >
                                 📝
                               </button>
                               <button 
                                 onClick={() => {
-                                  if (confirm('Delete?')) deleteResult(result.id);
+                                  if (confirm(`Delete result for ${participantName}?`)) deleteResult(result.id);
                                 }}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', padding: '2px' }}
+                                title="Delete Result"
                               >
                                 🗑️
                               </button>
