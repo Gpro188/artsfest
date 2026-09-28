@@ -407,102 +407,129 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                       </div>
 
                       {/* Photo & Watermark Section */}
-                      <div style={{ padding: '12px 12px 6px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-                        
-                        {/* Faint Team Name Watermark */}
-                        <div style={{ 
-                          position: 'absolute', 
-                          top: '50%', 
-                          left: '50%', 
-                          transform: 'translate(-50%, -50%)',
-                          width: '100%',
-                          textAlign: 'center', 
-                          zIndex: 0, 
-                          opacity: 0.06, 
-                          fontSize: '2.5rem', 
-                          fontWeight: 900, 
-                          pointerEvents: 'none',
-                          textTransform: 'uppercase',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden'
-                        }}>
-                          {candidate.team?.name}
-                        </div>
+                      {(() => {
+                        const pCount = (candidate.programs || []).length;
+                        const isDense = pCount > 10;
+                        const isUltraDense = pCount > 16;
+                        const photoSize = isUltraDense ? '50px' : isDense ? '64px' : '85px';
 
-                        {/* Candidate Photo */}
-                        <div style={{ 
-                          width: '85px', 
-                          height: '85px', 
-                          borderRadius: '10px', 
-                          backgroundColor: '#f3f4f6', 
-                          border: '3px solid #ffffff',
-                          boxShadow: '0 3px 8px rgba(0,0,0,0.12)',
-                          overflow: 'hidden',
-                          position: 'relative',
-                          zIndex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          {candidate.photo ? (
-                            <img 
-                              src={candidate.photo} 
-                              alt={candidate.name} 
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                            />
-                          ) : (
-                            <span style={{ fontSize: '2.5rem', color: '#9ca3af' }}>👤</span>
-                          )}
-                        </div>
-                      </div>
+                        return (
+                          <>
+                            <div style={{ 
+                              padding: isUltraDense ? '4px 8px 2px 8px' : isDense ? '6px 10px 4px 10px' : '12px 12px 6px 12px', 
+                              display: 'flex', 
+                              flexDirection: 'column', 
+                              alignItems: 'center', 
+                              position: 'relative' 
+                            }}>
+                              
+                              {/* Faint Team Name Watermark */}
+                              <div style={{ 
+                                position: 'absolute', 
+                                top: '50%', 
+                                left: '50%', 
+                                transform: 'translate(-50%, -50%)',
+                                width: '100%',
+                                textAlign: 'center', 
+                                zIndex: 0, 
+                                opacity: 0.05, 
+                                fontSize: isDense ? '1.8rem' : '2.5rem', 
+                                fontWeight: 900, 
+                                pointerEvents: 'none',
+                                textTransform: 'uppercase',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden'
+                              }}>
+                                {candidate.team?.name}
+                              </div>
 
-                      {/* Candidate Name, Chest Number & Team Badge */}
-                      <div style={{ textAlign: 'center', padding: '0 10px 6px 10px', position: 'relative', zIndex: 1 }}>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1e1b4b', lineHeight: 1.1 }}>
-                          {candidate.chestNumber || '??'}
-                        </div>
-                        <div style={{ 
-                          fontSize: '0.85rem', 
-                          fontWeight: 700, 
-                          color: '#374151', 
-                          textTransform: 'uppercase', 
-                          margin: '2px 0 4px 0',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}>
-                          {candidate.name}
-                        </div>
-                        <div style={{ 
-                          display: 'inline-block', 
-                          padding: '2px 10px', 
-                          backgroundColor: `${flagColor}15`, 
-                          color: flagColor,
-                          borderRadius: '12px',
-                          fontSize: '0.7rem',
-                          fontWeight: 800,
-                          border: `1px solid ${flagColor}35`,
-                          textTransform: 'uppercase'
-                        }}>
-                          {candidate.team?.name}
-                        </div>
-                      </div>
+                              {/* Candidate Photo */}
+                              <div style={{ 
+                                width: photoSize, 
+                                height: photoSize, 
+                                borderRadius: isDense ? '8px' : '10px', 
+                                backgroundColor: '#f3f4f6', 
+                                border: isDense ? '2px solid #ffffff' : '3px solid #ffffff',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                zIndex: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}>
+                                {candidate.photo ? (
+                                  <img 
+                                    src={candidate.photo} 
+                                    alt={candidate.name} 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                  />
+                                ) : (
+                                  <span style={{ fontSize: isDense ? '1.6rem' : '2.5rem', color: '#9ca3af' }}>👤</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Candidate Name, Chest Number & Team Badge */}
+                            <div style={{ 
+                              textAlign: 'center', 
+                              padding: isDense ? '0 6px 3px 6px' : '0 10px 6px 10px', 
+                              position: 'relative', 
+                              zIndex: 1 
+                            }}>
+                              <div style={{ 
+                                fontSize: isUltraDense ? '1.1rem' : isDense ? '1.25rem' : '1.4rem', 
+                                fontWeight: 900, 
+                                color: '#1e1b4b', 
+                                lineHeight: 1.05 
+                              }}>
+                                {candidate.chestNumber || '??'}
+                              </div>
+                              <div style={{ 
+                                fontSize: isDense ? '0.75rem' : '0.85rem', 
+                                fontWeight: 700, 
+                                color: '#374151', 
+                                textTransform: 'uppercase', 
+                                margin: '1px 0 3px 0',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                                {candidate.name}
+                              </div>
+                              <div style={{ 
+                                display: 'inline-block', 
+                                padding: isDense ? '1px 7px' : '2px 10px', 
+                                backgroundColor: `${flagColor}15`, 
+                                color: flagColor,
+                                borderRadius: '10px',
+                                fontSize: isDense ? '0.62rem' : '0.7rem',
+                                fontWeight: 800,
+                                border: `1px solid ${flagColor}35`,
+                                textTransform: 'uppercase'
+                              }}>
+                                {candidate.team?.name}
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
 
                       {/* Category and Event Meta */}
-                      <div style={{ padding: '0 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ padding: '0 8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                         <div style={{ 
                           display: 'flex', 
                           borderTop: '1px solid #f3f4f6', 
-                          paddingTop: '6px', 
-                          marginBottom: '6px',
-                          fontSize: '0.65rem'
+                          paddingTop: '3px', 
+                          marginBottom: '4px',
+                          fontSize: '0.62rem'
                         }}>
                           <div style={{ flex: 1 }}>
-                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.55rem' }}>Category</span>
+                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.52rem' }}>Category</span>
                             <span style={{ fontWeight: 700, color: '#1e1b4b' }}>{candidate.category?.name}</span>
                           </div>
                           <div style={{ flex: 1, textAlign: 'right' }}>
-                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.55rem' }}>Fest</span>
+                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.52rem' }}>Fest</span>
                             <span style={{ fontWeight: 700, color: '#1e1b4b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{festName}</span>
                           </div>
                         </div>
@@ -512,42 +539,42 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                           const pList = candidate.programs || [];
                           const pCount = pList.length;
                           
-                          // Dynamic font size, padding, and grid columns based on count so all programs fit without overflow
-                          let fontSize = '0.58rem';
-                          let padding = '3px 5px';
+                          // Dynamic layout parameters
+                          let baseFontSize = 0.58; // in rem
+                          let padding = '2px 4px';
                           let gap = '3px 4px';
                           let gridCols = '1fr 1fr';
-                          let lineHeight = '1.15';
+                          let lineHeight = 1.1;
 
-                          if (pCount > 16) {
-                            fontSize = '0.40rem';
+                          if (pCount > 18) {
+                            baseFontSize = 0.38;
                             padding = '1px 2px';
                             gap = '2px 2px';
-                            gridCols = '1fr 1fr 1fr';
-                            lineHeight = '1.05';
-                          } else if (pCount > 12) {
-                            fontSize = '0.45rem';
+                            gridCols = '1fr 1fr';
+                            lineHeight = 1.02;
+                          } else if (pCount > 14) {
+                            baseFontSize = 0.42;
                             padding = '1px 3px';
+                            gap = '2px 2px';
+                            gridCols = '1fr 1fr';
+                            lineHeight = 1.04;
+                          } else if (pCount > 10) {
+                            baseFontSize = 0.46;
+                            padding = '2px 3px';
                             gap = '2px 3px';
                             gridCols = '1fr 1fr';
-                            lineHeight = '1.1';
-                          } else if (pCount > 8) {
-                            fontSize = '0.50rem';
+                            lineHeight = 1.08;
+                          } else if (pCount > 6) {
+                            baseFontSize = 0.50;
                             padding = '2px 4px';
-                            gap = '2px 3px';
+                            gap = '3px 3px';
                             gridCols = '1fr 1fr';
-                            lineHeight = '1.1';
-                          } else if (pCount > 4) {
-                            fontSize = '0.54rem';
-                            padding = '2px 4px';
-                            gap = '2px 4px';
-                            gridCols = '1fr 1fr';
-                            lineHeight = '1.15';
+                            lineHeight = 1.1;
                           }
 
                           return (
                             <>
-                              <div style={{ fontSize: '0.52rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ fontSize: '0.50rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span>Assigned Programs</span>
                                 <span style={{ fontWeight: 800, color: '#4F46E5' }}>{pCount}</span>
                               </div>
@@ -555,39 +582,41 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                 display: 'grid', 
                                 gridTemplateColumns: gridCols, 
                                 gap: gap, 
-                                maxHeight: pCount > 10 ? '130px' : '95px', 
-                                overflow: 'hidden',
                                 flex: 1,
-                                alignContent: 'start'
+                                alignContent: 'start',
+                                paddingBottom: '4px'
                               }}>
                                 {pList.map((p: any) => {
-                                  const nameLen = (p.program?.name || '').length;
-                                  // Further scale down text if the program name itself is long
-                                  let itemNameFontSize = fontSize;
-                                  if (nameLen > 24 && pCount > 6) {
-                                    itemNameFontSize = '0.40rem';
-                                  } else if (nameLen > 18 && pCount > 6) {
-                                    itemNameFontSize = '0.45rem';
-                                  } else if (nameLen > 20) {
-                                    itemNameFontSize = '0.50rem';
+                                  const rawName = p.program?.name || '';
+                                  const nameLen = rawName.length;
+                                  
+                                  // Granular shrinking based on individual program name length
+                                  let itemFont = baseFontSize;
+                                  if (nameLen > 25) {
+                                    itemFont = Math.min(itemFont, 0.34);
+                                  } else if (nameLen > 18) {
+                                    itemFont = Math.min(itemFont, 0.38);
+                                  } else if (nameLen > 12) {
+                                    itemFont = Math.min(itemFont, 0.44);
                                   }
 
                                   return (
                                     <div 
                                       key={p.id} 
                                       style={{ 
-                                        fontSize: itemNameFontSize, 
+                                        fontSize: `${itemFont}rem`, 
                                         backgroundColor: '#f9fafb', 
                                         padding: padding, 
                                         borderRadius: '3px',
-                                        color: '#374151',
+                                        color: '#1f2937',
                                         border: '1px solid #e5e7eb',
                                         lineHeight: lineHeight,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         textAlign: 'center',
-                                        minHeight: '20px'
+                                        minHeight: pCount > 14 ? '15px' : '18px',
+                                        boxSizing: 'border-box'
                                       }}
                                     >
                                       <div 
@@ -596,14 +625,13 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                           color: '#111827', 
                                           wordBreak: 'break-word',
                                           overflowWrap: 'anywhere',
-                                          display: '-webkit-box',
-                                          WebkitLineClamp: 2,
-                                          WebkitBoxOrient: 'vertical',
-                                          overflow: 'hidden'
+                                          hyphens: 'auto',
+                                          lineHeight: '1.05',
+                                          width: '100%'
                                         }} 
-                                        title={p.program?.name}
+                                        title={rawName}
                                       >
-                                        {p.program?.name}
+                                        {rawName}
                                       </div>
                                     </div>
                                   );
