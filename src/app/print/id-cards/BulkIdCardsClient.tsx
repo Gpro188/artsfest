@@ -561,20 +561,48 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                 alignContent: 'start'
                               }}>
                                 {pList.map((p: any) => {
+                                  const nameLen = (p.program?.name || '').length;
+                                  // Further scale down text if the program name itself is long
+                                  let itemNameFontSize = fontSize;
+                                  if (nameLen > 24 && pCount > 6) {
+                                    itemNameFontSize = '0.40rem';
+                                  } else if (nameLen > 18 && pCount > 6) {
+                                    itemNameFontSize = '0.45rem';
+                                  } else if (nameLen > 20) {
+                                    itemNameFontSize = '0.50rem';
+                                  }
+
                                   return (
                                     <div 
                                       key={p.id} 
                                       style={{ 
-                                        fontSize: fontSize, 
+                                        fontSize: itemNameFontSize, 
                                         backgroundColor: '#f9fafb', 
                                         padding: padding, 
                                         borderRadius: '3px',
                                         color: '#374151',
                                         border: '1px solid #e5e7eb',
-                                        lineHeight: lineHeight
+                                        lineHeight: lineHeight,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        textAlign: 'center',
+                                        minHeight: '20px'
                                       }}
                                     >
-                                      <div style={{ fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.program?.name}>
+                                      <div 
+                                        style={{ 
+                                          fontWeight: 700, 
+                                          color: '#111827', 
+                                          wordBreak: 'break-word',
+                                          overflowWrap: 'anywhere',
+                                          display: '-webkit-box',
+                                          WebkitLineClamp: 2,
+                                          WebkitBoxOrient: 'vertical',
+                                          overflow: 'hidden'
+                                        }} 
+                                        title={p.program?.name}
+                                      >
                                         {p.program?.name}
                                       </div>
                                     </div>

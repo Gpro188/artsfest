@@ -205,9 +205,20 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                 }}>
                   {displayedPrograms.map(p => {
                     const displayTime = p.scheduledTime || p.program.startTime;
+                    const nameLen = (p.program?.name || '').length;
+
+                    let itemFontSize = fontSize;
+                    if (nameLen > 24 && count > 6) {
+                      itemFontSize = '0.45rem';
+                    } else if (nameLen > 18 && count > 6) {
+                      itemFontSize = '0.50rem';
+                    } else if (nameLen > 22) {
+                      itemFontSize = '0.54rem';
+                    }
+
                     return (
                       <div key={p.id} style={{ 
-                        fontSize: fontSize, 
+                        fontSize: itemFontSize, 
                         backgroundColor: '#f9fafb', 
                         padding: padding, 
                         borderRadius: '4px',
@@ -217,19 +228,26 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
-                        minHeight: minHeight
+                        minHeight: minHeight,
+                        textAlign: 'center'
                       }}>
-                        <div style={{ 
-                          fontWeight: 700, 
-                          color: '#1e1b4b', 
-                          whiteSpace: 'nowrap', 
-                          overflow: 'hidden', 
-                          textOverflow: 'ellipsis' 
-                        }} title={p.program.name}>
+                        <div 
+                          style={{ 
+                            fontWeight: 700, 
+                            color: '#1e1b4b', 
+                            wordBreak: 'break-word',
+                            overflowWrap: 'anywhere',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }} 
+                          title={p.program.name}
+                        >
                           {p.program.name}
                         </div>
                         {displayTime && showTime && (
-                          <div style={{ fontSize: '0.52rem', color: '#4F46E5', marginTop: '1px', fontWeight: 600 }}>
+                          <div style={{ fontSize: '0.48rem', color: '#4F46E5', marginTop: '1px', fontWeight: 600 }}>
                             {new Date(displayTime).toLocaleDateString([], { day: '2-digit', month: 'short' })} {new Date(displayTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             {p.program.venue ? ` @ ${p.program.venue}` : ''}
                           </div>
