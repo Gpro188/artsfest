@@ -52,6 +52,7 @@ export default function PublicDashboard({
     topStars: [],
     categoryStars: {},
   });
+  const [selectedCandidateSummary, setSelectedCandidateSummary] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -478,10 +479,19 @@ export default function PublicDashboard({
               <div className="top-stars-container">
                 {/* #1 Featured Star */}
                 {data.topStars[0] && (
-                  <div className="featured-star-card">
-                    <div className="featured-star-badge font-mono-num">
-                      <Sparkles size={14} />
-                      <span>RANK #1 STAR</span>
+                  <div 
+                    className="featured-star-card clickable-star-card"
+                    onClick={() => setSelectedCandidateSummary(data.topStars[0])}
+                    role="button"
+                    tabIndex={0}
+                    title="Click to view total candidate summary breakdown"
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <div className="featured-star-badge font-mono-num" style={{ marginBottom: 0 }}>
+                        <Sparkles size={14} />
+                        <span>RANK #1 STAR</span>
+                      </div>
+                      <span className="view-summary-hint font-body">View Summary ➔</span>
                     </div>
                     <div className="featured-star-body">
                       <div
@@ -511,7 +521,12 @@ export default function PublicDashboard({
                         )}
                       </div>
                       <div className="featured-details">
-                        <h4 className="featured-name font-display">{data.topStars[0].name}</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <h4 className="featured-name font-display">{data.topStars[0].name}</h4>
+                          {data.topStars[0].chestNumber && (
+                            <span className="chest-badge font-mono-num">#{data.topStars[0].chestNumber}</span>
+                          )}
+                        </div>
                         <div className="featured-meta">
                           <span
                             className="featured-team"
@@ -540,7 +555,14 @@ export default function PublicDashboard({
                       const teamColor = getTeamColor(star.teamName, star.teamColor);
 
                       return (
-                        <div key={star.id || idx} className="compact-star-row">
+                        <div 
+                          key={star.id || idx} 
+                          className="compact-star-row clickable-star-row"
+                          onClick={() => setSelectedCandidateSummary(star)}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to view candidate summary"
+                        >
                           <div className="compact-rank font-mono-num">#{rankNum}</div>
                           <div
                             className="compact-avatar"
@@ -556,12 +578,17 @@ export default function PublicDashboard({
                             )}
                           </div>
                           <div className="compact-info">
-                            <div className="compact-name font-display">{star.name}</div>
+                            <div className="compact-name font-display">
+                              {star.name}
+                              {star.chestNumber && (
+                                <span className="compact-chest-tag font-mono-num"> #{star.chestNumber}</span>
+                              )}
+                            </div>
                             <div className="compact-meta">
                               <span style={{ color: teamColor, fontWeight: 600 }}>
                                 {star.teamName}
-                              </span>{' '}
-                              • {star.categoryName}
+                              </span>{' • '}
+                              {star.categoryName}
                             </div>
                           </div>
                           <div className="compact-pts font-mono-num">
@@ -607,10 +634,22 @@ export default function PublicDashboard({
                       currentCategoryStars.map((star, idx) => {
                         const teamColor = getTeamColor(star.teamName, star.teamColor);
                         return (
-                          <div key={star.id || idx} className="cat-star-item">
+                          <div 
+                            key={star.id || idx} 
+                            className="cat-star-item clickable-star-row"
+                            onClick={() => setSelectedCandidateSummary(star)}
+                            role="button"
+                            tabIndex={0}
+                            title="Click to view candidate summary"
+                          >
                             <div className="cat-star-rank font-mono-num">#{idx + 1}</div>
                             <div className="cat-star-info">
-                              <div className="cat-star-name font-display">{star.name}</div>
+                              <div className="cat-star-name font-display">
+                                {star.name}
+                                {star.chestNumber && (
+                                  <span className="compact-chest-tag font-mono-num"> #{star.chestNumber}</span>
+                                )}
+                              </div>
                               <div className="cat-star-team" style={{ color: teamColor }}>
                                 {star.teamName}
                               </div>
@@ -725,6 +764,160 @@ export default function PublicDashboard({
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ─── CANDIDATE SUMMARY MODAL (Hall of Fame Details) ─── */}
+      {selectedCandidateSummary && (
+        <div 
+          className="cand-modal-overlay animate-fade-in"
+          onClick={() => setSelectedCandidateSummary(null)}
+        >
+          <div 
+            className="cand-modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="cand-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div 
+                  className="cand-modal-avatar"
+                  style={{
+                    borderColor: getTeamColor(selectedCandidateSummary.teamName, selectedCandidateSummary.teamColor),
+                  }}
+                >
+                  {selectedCandidateSummary.photo ? (
+                    <img 
+                      src={selectedCandidateSummary.photo} 
+                      alt={selectedCandidateSummary.name} 
+                      className="avatar-img" 
+                    />
+                  ) : (
+                    <div 
+                      className="avatar-placeholder font-display"
+                      style={{
+                        backgroundColor: getTeamColor(
+                          selectedCandidateSummary.teamName,
+                          selectedCandidateSummary.teamColor
+                        ),
+                        fontSize: '1.4rem'
+                      }}
+                    >
+                      {selectedCandidateSummary.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <h3 className="cand-modal-title font-display">{selectedCandidateSummary.name}</h3>
+                    {selectedCandidateSummary.chestNumber && (
+                      <span className="cand-modal-chest font-mono-num">
+                        #{selectedCandidateSummary.chestNumber}
+                      </span>
+                    )}
+                  </div>
+                  <div className="cand-modal-submeta">
+                    <span 
+                      style={{ 
+                        color: getTeamColor(selectedCandidateSummary.teamName, selectedCandidateSummary.teamColor), 
+                        fontWeight: 700 
+                      }}
+                    >
+                      🏛️ {selectedCandidateSummary.teamName}
+                    </span>
+                    {' • '}
+                    <span>{selectedCandidateSummary.categoryName}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setSelectedCandidateSummary(null)}
+                className="cand-modal-close"
+                title="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scorecard Strip */}
+            <div className="cand-modal-score-strip">
+              <div className="cand-modal-score-box">
+                <span className="cand-score-lbl">Total Individual Points</span>
+                <span className="cand-score-val font-mono-num">
+                  {selectedCandidateSummary.points} <span className="pts-small">pts</span>
+                </span>
+              </div>
+              <div className="cand-modal-score-box">
+                <span className="cand-score-lbl">Program Performances</span>
+                <span className="cand-score-val font-mono-num">
+                  {selectedCandidateSummary.programs?.length || 0}
+                </span>
+              </div>
+            </div>
+
+            {/* Program Breakdown List */}
+            <div className="cand-modal-body">
+              <h4 className="cand-breakdown-heading font-display">
+                📋 Individual Programs Breakdown
+              </h4>
+
+              {(!selectedCandidateSummary.programs || selectedCandidateSummary.programs.length === 0) ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--muted)', fontSize: '0.85rem' }}>
+                  No published individual results recorded yet.
+                </div>
+              ) : (
+                <div className="cand-prog-table-wrap">
+                  <table className="cand-prog-table font-body">
+                    <thead>
+                      <tr>
+                        <th>Programme</th>
+                        <th style={{ width: '85px', textAlign: 'center' }}>Place</th>
+                        <th style={{ width: '80px', textAlign: 'center' }}>Grade</th>
+                        <th style={{ width: '90px', textAlign: 'right' }}>Points</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedCandidateSummary.programs.map((p: any, idx: number) => {
+                        const rankLabel = p.rank === 1 ? '🥇 1st' : p.rank === 2 ? '🥈 2nd' : p.rank === 3 ? '🥉 3rd' : '-';
+                        return (
+                          <tr key={p.id || idx}>
+                            <td className="cand-prog-name font-display">{p.programName}</td>
+                            <td style={{ textAlign: 'center', fontWeight: 700 }}>
+                              <span className={`cand-rank-pill ${p.rank === 1 ? 'rank-gold' : p.rank === 2 ? 'rank-silver' : p.rank === 3 ? 'rank-bronze' : ''}`}>
+                                {rankLabel}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center', fontWeight: 800 }}>
+                              {p.grade ? (
+                                <span className="cand-grade-pill">Grade {p.grade}</span>
+                              ) : '-'}
+                            </td>
+                            <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--emerald)' }} className="font-mono-num">
+                              +{p.points} pts
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="cand-modal-footer">
+              <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                ⭐ Hall of Fame calculates strictly INDIVIDUAL program points only.
+              </span>
+              <button 
+                onClick={() => setSelectedCandidateSummary(null)}
+                className="cand-modal-done-btn font-body"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1456,6 +1649,254 @@ export default function PublicDashboard({
           right: 12px;
           color: var(--muted);
           pointer-events: none;
+        }
+
+        .clickable-star-card {
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .clickable-star-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 28px rgba(245, 158, 11, 0.25);
+          border-color: #f59e0b;
+        }
+        .view-summary-hint {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--gold-ink);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          background: rgba(245, 158, 11, 0.12);
+          padding: 3px 8px;
+          border-radius: 6px;
+        }
+        .chest-badge {
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #4F46E5;
+          background: rgba(79, 70, 229, 0.1);
+          padding: 1px 6px;
+          border-radius: 4px;
+        }
+        .compact-chest-tag {
+          font-size: 0.72rem;
+          color: #4F46E5;
+          font-weight: 700;
+        }
+        .clickable-star-row {
+          cursor: pointer;
+          transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+        .clickable-star-row:hover {
+          background-color: rgba(245, 158, 11, 0.08);
+          transform: translateX(4px);
+        }
+
+        /* ─── CANDIDATE SUMMARY MODAL STYLES ─── */
+        .cand-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: rgba(15, 23, 42, 0.75);
+          backdrop-filter: blur(6px);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+        }
+        .cand-modal-card {
+          background: #ffffff;
+          border-radius: 18px;
+          width: 100%;
+          max-width: 580px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          display: flex;
+          flex-direction: column;
+        }
+        .cand-modal-header {
+          padding: 1.25rem 1.5rem;
+          border-bottom: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+        }
+        .cand-modal-avatar {
+          width: 54px;
+          height: 54px;
+          border-radius: 50%;
+          border: 2.5px solid #e2e8f0;
+          overflow: hidden;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8fafc;
+        }
+        .cand-modal-title {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #0f172a;
+          line-height: 1.2;
+        }
+        .cand-modal-chest {
+          font-size: 0.78rem;
+          font-weight: 800;
+          color: #4338ca;
+          background: #eef2ff;
+          padding: 2px 7px;
+          border-radius: 6px;
+        }
+        .cand-modal-submeta {
+          font-size: 0.82rem;
+          color: #64748b;
+          margin-top: 3px;
+        }
+        .cand-modal-close {
+          background: #f1f5f9;
+          border: none;
+          color: #64748b;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+        }
+        .cand-modal-close:hover {
+          background: #e2e8f0;
+          color: #0f172a;
+        }
+        .cand-modal-score-strip {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          padding: 1rem 1.5rem;
+          background: #f8fafc;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .cand-modal-score-box {
+          background: #ffffff;
+          padding: 0.75rem 1rem;
+          border-radius: 10px;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          flex-direction: column;
+        }
+        .cand-score-lbl {
+          font-size: 0.68rem;
+          color: #64748b;
+          text-transform: uppercase;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+        }
+        .cand-score-val {
+          font-size: 1.45rem;
+          font-weight: 800;
+          color: #0f172a;
+          margin-top: 2px;
+        }
+        .pts-small {
+          font-size: 0.85rem;
+          color: #f59e0b;
+        }
+        .cand-modal-body {
+          padding: 1.25rem 1.5rem;
+          flex: 1;
+        }
+        .cand-breakdown-heading {
+          margin: 0 0 0.85rem 0;
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: #1e293b;
+        }
+        .cand-prog-table-wrap {
+          overflow-x: auto;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+        }
+        .cand-prog-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.85rem;
+        }
+        .cand-prog-table th {
+          background: #f8fafc;
+          padding: 8px 12px;
+          text-align: left;
+          font-size: 0.72rem;
+          text-transform: uppercase;
+          color: #64748b;
+          border-bottom: 1px solid #e2e8f0;
+          font-weight: 700;
+        }
+        .cand-prog-table td {
+          padding: 10px 12px;
+          border-bottom: 1px solid #f1f5f9;
+          color: #1e293b;
+        }
+        .cand-prog-table tr:last-child td {
+          border-bottom: none;
+        }
+        .cand-prog-name {
+          font-weight: 700;
+          color: #0f172a;
+        }
+        .cand-rank-pill {
+          padding: 2px 8px;
+          border-radius: 6px;
+          font-size: 0.78rem;
+          font-weight: 800;
+        }
+        .rank-gold {
+          background: rgba(245, 158, 11, 0.15);
+          color: #b45309;
+        }
+        .rank-silver {
+          background: rgba(148, 163, 184, 0.2);
+          color: #475569;
+        }
+        .rank-bronze {
+          background: rgba(249, 115, 22, 0.15);
+          color: #c2410c;
+        }
+        .cand-grade-pill {
+          background: #f1f5f9;
+          color: #334155;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        .cand-modal-footer {
+          padding: 1rem 1.5rem;
+          border-top: 1px solid #f1f5f9;
+          background: #fafafa;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-radius: 0 0 18px 18px;
+          gap: 12px;
+        }
+        .cand-modal-done-btn {
+          padding: 8px 20px;
+          background: #0f172a;
+          color: #ffffff;
+          border: none;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .cand-modal-done-btn:hover {
+          background: #1e293b;
         }
 
         .cat-stars-list {

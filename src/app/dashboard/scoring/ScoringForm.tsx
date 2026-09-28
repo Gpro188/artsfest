@@ -116,11 +116,13 @@ export default function ScoringForm({ events }: { events: any[] }) {
             const squadLabel = data.slotNumber > 1 ? `Squad ${squadLetter}` : (teamSlotMap.size > 1 ? `Squad ${squadLetter}` : `Team Entry`);
             
             resultList.push({
-              id: leader ? leader.id : `${data.team?.id}_${data.slotNumber}`,
-              candidateId: leader ? leader.id : undefined,
+              // For GROUP/GENERAL programs, id identifies the team/squad entry. Never attach candidateId.
+              id: key,
+              candidateId: undefined,
               teamId: data.team?.id,
-              chestNumber: leader?.chestNumber ? `Leader #${leader.chestNumber}` : `Squad ${squadLetter}`,
-              name: `${data.team?.name || 'Team'} (${squadLabel})`,
+              chestNumber: `Squad ${squadLetter}`,
+              name: data.team?.name || 'Institution / Team',
+              squadLabel: squadLabel,
               squadMembers: data.candidates.map((c: any) => c.name + (c.chestNumber ? ` (#${c.chestNumber})` : '')).join(', '),
               memberCount: data.candidates.length,
               teamName: data.team?.name,
@@ -131,9 +133,11 @@ export default function ScoringForm({ events }: { events: any[] }) {
           (selectedEvent?.teams || []).forEach((t: any) => {
             resultList.push({
               id: t.id,
+              candidateId: undefined,
               teamId: t.id,
               chestNumber: null,
               name: t.name,
+              squadLabel: 'Institution / Team',
               teamName: t.name,
               flagColor: t.flagColor
             });
@@ -216,8 +220,8 @@ export default function ScoringForm({ events }: { events: any[] }) {
     const result = await submitMarks({
       eventId,
       programId,
-      candidateId: isIndividual ? participantId : selectedParticipant?.candidateId,
-      teamId: !isIndividual && !selectedParticipant?.candidateId ? selectedParticipant?.teamId : undefined,
+      candidateId: isIndividual ? participantId : undefined,
+      teamId: !isIndividual ? selectedParticipant?.teamId : undefined,
       marks: parseFloat(marks) || 0,
       manualRank: rank ? parseInt(rank) : null,
       manualGrade: grade || null
@@ -251,8 +255,8 @@ export default function ScoringForm({ events }: { events: any[] }) {
       .map(([id, data]) => {
         const p = participants.find((part: any) => part.id === id);
         return {
-          candidateId: isIndividual ? id : p?.candidateId,
-          teamId: !isIndividual && !p?.candidateId ? p?.teamId : (!isIndividual ? p?.teamId : undefined),
+          candidateId: isIndividual ? id : undefined,
+          teamId: !isIndividual ? p?.teamId : undefined,
           rank: data.rank ? parseInt(data.rank) : null,
           grade: data.grade || null,
           marks: parseFloat(data.marks) || 0
@@ -450,7 +454,9 @@ export default function ScoringForm({ events }: { events: any[] }) {
 
         {entryMode === "single" && (
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase' }}>5. Participant</label>
+            <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase' }}>
+              {isIndividual ? "5. Participant" : "5. Institution / Squad"}
+            </label>
             <select 
               className="form-input" 
               value={participantId}
@@ -459,10 +465,13 @@ export default function ScoringForm({ events }: { events: any[] }) {
               disabled={!programId}
               style={{ padding: '8px', fontSize: '0.85rem', fontWeight: 700 }}
             >
-              <option value="">-- Select --</option>
+              <option value="">{isIndividual ? "-- Select Candidate --" : "-- Select Team / Squad --"}</option>
               {participants.map((p: any) => (
                 <option key={p.id} value={p.id}>
-                  {p.chestNumber ? `[${p.chestNumber}] ` : ''}{p.name}
+                  {isIndividual 
+                    ? `${p.chestNumber ? `[#${p.chestNumber}] ` : ''}${p.name} (${p.teamName || 'Independent'})`
+                    : `🏛️ ${p.teamName || p.name} - [${p.chestNumber || p.squadLabel || 'Entry'}] ${p.memberCount ? `(${p.memberCount} members)` : ''}`
+                  }
                 </option>
               ))}
             </select>
@@ -525,9 +534,15 @@ export default function ScoringForm({ events }: { events: any[] }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                   <thead>
                     <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-secondary)' }}>
-                      <th style={{ padding: '10px 12px', width: '80px' }}>Chest No</th>
-                      <th style={{ padding: '10px 12px' }}>Participant / Squad</th>
-                      <th style={{ padding: '10px 12px' }}>Team</th>
+                      <th style={{ padding: '10px 12px', width: isIndividual ? '80px' : '110px' }}>
+                        {isIndividual ? 'Chest No' : 'Entry / Squad'}
+                      </th>
+                      <th style={{ padding: '10px 12px' }}>
+                        {isIndividual ? 'Participant Name' : 'Team / Institution & Participants'}
+                      </th>
+                      <th style={{ padding: '10px 12px', width: '130px' }}>
+                        {isIndividual ? 'Team' : 'Status'}
+                      </th>
                       <th style={{ padding: '10px 12px', width: '150px' }}>Place (Rank)</th>
                       <th style={{ padding: '10px 12px', width: '130px' }}>Grade</th>
                       <th style={{ padding: '10px 12px', width: '110px', textAlign: 'center' }}>Total Points</th>
@@ -547,13 +562,39 @@ export default function ScoringForm({ events }: { events: any[] }) {
                           }}
                         >
                           <td style={{ padding: '10px 12px', fontWeight: 800, color: 'var(--primary)' }}>
-                            {p.chestNumber || `T-${idx + 1}`}
+                            {p.chestNumber || (isIndividual ? `T-${idx + 1}` : `Team-${idx + 1}`)}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
-                            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
-                            {p.squadMembers && (
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                                👥 {p.squadMembers}
+                            {isIndividual ? (
+                              <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
+                            ) : (
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                                    🏛️ {p.teamName || p.name}
+                                  </span>
+                                  {p.squadLabel && (
+                                    <span style={{ 
+                                      fontSize: '0.7rem', 
+                                      fontWeight: 700, 
+                                      padding: '1px 6px', 
+                                      borderRadius: '4px',
+                                      backgroundColor: p.flagColor ? `${p.flagColor}25` : 'rgba(99, 102, 241, 0.15)',
+                                      color: p.flagColor || 'var(--primary)'
+                                    }}>
+                                      {p.squadLabel}
+                                    </span>
+                                  )}
+                                </div>
+                                {p.squadMembers ? (
+                                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.3' }}>
+                                    <strong style={{ color: 'var(--text-primary)' }}>Enrolled ({p.memberCount || 0}):</strong> {p.squadMembers}
+                                  </div>
+                                ) : (
+                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                    Institution entry (results scored to team score)
+                                  </div>
+                                )}
                               </div>
                             )}
                           </td>
@@ -566,7 +607,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                               backgroundColor: p.flagColor ? `${p.flagColor}20` : 'rgba(255,255,255,0.06)',
                               color: p.flagColor || 'var(--text-secondary)'
                             }}>
-                              {p.teamName || 'Independent'}
+                              {isIndividual ? (p.teamName || 'Independent') : (p.squadLabel || 'Team Entry')}
                             </span>
                           </td>
                           <td style={{ padding: '8px 12px' }}>

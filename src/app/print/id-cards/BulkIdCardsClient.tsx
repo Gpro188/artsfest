@@ -507,38 +507,71 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                           </div>
                         </div>
 
-                        {/* Assigned Programs */}
+                        {/* Assigned Programs - Always show ALL programs with shrinking font */}
                         {(() => {
                           const pList = candidate.programs || [];
                           const pCount = pList.length;
-                          const isBulkDense = pCount > 6;
-                          const maxToShow = pCount > 10 ? 12 : pCount;
+                          
+                          // Dynamic font size, padding, and grid columns based on count so all programs fit without overflow
+                          let fontSize = '0.58rem';
+                          let padding = '3px 5px';
+                          let gap = '3px 4px';
+                          let gridCols = '1fr 1fr';
+                          let lineHeight = '1.15';
+
+                          if (pCount > 16) {
+                            fontSize = '0.40rem';
+                            padding = '1px 2px';
+                            gap = '2px 2px';
+                            gridCols = '1fr 1fr 1fr';
+                            lineHeight = '1.05';
+                          } else if (pCount > 12) {
+                            fontSize = '0.45rem';
+                            padding = '1px 3px';
+                            gap = '2px 3px';
+                            gridCols = '1fr 1fr';
+                            lineHeight = '1.1';
+                          } else if (pCount > 8) {
+                            fontSize = '0.50rem';
+                            padding = '2px 4px';
+                            gap = '2px 3px';
+                            gridCols = '1fr 1fr';
+                            lineHeight = '1.1';
+                          } else if (pCount > 4) {
+                            fontSize = '0.54rem';
+                            padding = '2px 4px';
+                            gap = '2px 4px';
+                            gridCols = '1fr 1fr';
+                            lineHeight = '1.15';
+                          }
 
                           return (
                             <>
-                              <div style={{ fontSize: '0.52rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '3px' }}>
-                                Programs ({pCount})
+                              <div style={{ fontSize: '0.52rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span>Assigned Programs</span>
+                                <span style={{ fontWeight: 800, color: '#4F46E5' }}>{pCount}</span>
                               </div>
                               <div style={{ 
                                 display: 'grid', 
-                                gridTemplateColumns: '1fr 1fr', 
-                                gap: isBulkDense ? '2px 4px' : '4px', 
-                                maxHeight: isBulkDense ? '110px' : '85px', 
+                                gridTemplateColumns: gridCols, 
+                                gap: gap, 
+                                maxHeight: pCount > 10 ? '130px' : '95px', 
                                 overflow: 'hidden',
-                                flex: 1
+                                flex: 1,
+                                alignContent: 'start'
                               }}>
-                                {pList.slice(0, maxToShow).map((p: any) => {
+                                {pList.map((p: any) => {
                                   return (
                                     <div 
                                       key={p.id} 
                                       style={{ 
-                                        fontSize: isBulkDense ? '0.52rem' : '0.58rem', 
+                                        fontSize: fontSize, 
                                         backgroundColor: '#f9fafb', 
-                                        padding: isBulkDense ? '2px 4px' : '3px 5px', 
+                                        padding: padding, 
                                         borderRadius: '3px',
                                         color: '#374151',
                                         border: '1px solid #e5e7eb',
-                                        lineHeight: '1.1'
+                                        lineHeight: lineHeight
                                       }}
                                     >
                                       <div style={{ fontWeight: 700, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.program?.name}>
@@ -553,11 +586,6 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                   </div>
                                 )}
                               </div>
-                              {pCount > maxToShow && (
-                                <div style={{ fontSize: '0.48rem', color: '#9ca3af', textAlign: 'center', marginTop: '1px' }}>
-                                  + {pCount - maxToShow} more
-                                </div>
-                              )}
                             </>
                           );
                         })()}

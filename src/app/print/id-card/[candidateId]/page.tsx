@@ -141,18 +141,54 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
 
           {(() => {
             const count = candidate.programs.length;
-            const isDense = count > 8;
-            const isMedium = count > 6 && count <= 8;
             const displayedPrograms = candidate.programs; // show all programs fitted
+
+            // Multi-tier shrink logic
+            let fontSize = '0.65rem';
+            let padding = '4px 6px';
+            let gap = '4px 6px';
+            let gridCols = '1fr 1fr';
+            let showTime = true;
+            let minHeight = 'auto';
+
+            if (count > 16) {
+              fontSize = '0.42rem';
+              padding = '1px 3px';
+              gap = '2px 3px';
+              gridCols = '1fr 1fr 1fr';
+              showTime = false;
+              minHeight = '18px';
+            } else if (count > 12) {
+              fontSize = '0.48rem';
+              padding = '2px 4px';
+              gap = '2px 4px';
+              gridCols = '1fr 1fr 1fr';
+              showTime = false;
+              minHeight = '20px';
+            } else if (count > 8) {
+              fontSize = '0.54rem';
+              padding = '2px 4px';
+              gap = '3px 4px';
+              gridCols = '1fr 1fr';
+              showTime = false;
+              minHeight = '22px';
+            } else if (count > 5) {
+              fontSize = '0.60rem';
+              padding = '3px 5px';
+              gap = '3px 5px';
+              gridCols = '1fr 1fr';
+              showTime = false;
+              minHeight = 'auto';
+            }
 
             return (
               <>
                 <div style={{ 
-                  fontSize: isDense ? '0.55rem' : '0.6rem', 
+                  fontSize: count > 8 ? '0.52rem' : '0.6rem', 
                   color: '#9ca3af', 
                   textTransform: 'uppercase', 
                   fontWeight: 700, 
-                  marginBottom: isDense ? '4px' : '6px', 
+                  marginBottom: count > 8 ? '3px' : '6px', 
                   textAlign: 'center',
                   letterSpacing: '0.5px'
                 }}>
@@ -160,10 +196,10 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                 </div>
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: isDense && count > 12 ? '1fr 1fr 1fr' : '1fr 1fr', 
-                  gap: isDense ? '3px 4px' : isMedium ? '4px 6px' : '6px', 
-                  maxHeight: isDense ? '210px' : '185px', 
-                  overflowY: count > 16 ? 'auto' : 'hidden',
+                  gridTemplateColumns: gridCols, 
+                  gap: gap, 
+                  maxHeight: count > 8 ? '220px' : '185px', 
+                  overflow: 'hidden',
                   alignContent: 'start',
                   flex: 1
                 }}>
@@ -171,9 +207,9 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                     const displayTime = p.scheduledTime || p.program.startTime;
                     return (
                       <div key={p.id} style={{ 
-                        fontSize: isDense ? '0.54rem' : isMedium ? '0.6rem' : '0.65rem', 
+                        fontSize: fontSize, 
                         backgroundColor: '#f9fafb', 
-                        padding: isDense ? '2px 4px' : '4px 6px', 
+                        padding: padding, 
                         borderRadius: '4px',
                         border: '1px solid #e5e7eb',
                         color: '#4b5563',
@@ -181,7 +217,7 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
-                        minHeight: isDense ? '22px' : 'auto'
+                        minHeight: minHeight
                       }}>
                         <div style={{ 
                           fontWeight: 700, 
@@ -192,7 +228,7 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                         }} title={p.program.name}>
                           {p.program.name}
                         </div>
-                        {displayTime && !isDense && (
+                        {displayTime && showTime && (
                           <div style={{ fontSize: '0.52rem', color: '#4F46E5', marginTop: '1px', fontWeight: 600 }}>
                             {new Date(displayTime).toLocaleDateString([], { day: '2-digit', month: 'short' })} {new Date(displayTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             {p.program.venue ? ` @ ${p.program.venue}` : ''}

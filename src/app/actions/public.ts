@@ -69,8 +69,9 @@ const getCachedPublicEventData = unstable_cache(
       prisma.result.findMany({
         where: { program: { eventId: { in: eventIds } }, isPublished: true },
         select: {
-          id: true, points: true, candidateId: true, teamId: true,
-          candidate: { select: { id: true, name: true, photo: true, teamId: true, team: { select: { id: true, name: true, flagColor: true } }, category: { select: { id: true, name: true } } } },
+          id: true, points: true, candidateId: true, teamId: true, rank: true, grade: true, marks: true,
+          program: { select: { id: true, name: true, type: true } },
+          candidate: { select: { id: true, name: true, chestNumber: true, photo: true, teamId: true, team: { select: { id: true, name: true, flagColor: true } }, category: { select: { id: true, name: true } } } },
           team: { select: { id: true, name: true, flagColor: true } }
         }
       }),
@@ -146,24 +147,54 @@ const getCachedPublicEventData = unstable_cache(
     });
     const leaderboard = Object.values(teamScores).sort((a, b) => b.points - a.points);
 
-    // --- Individual Top 5 Stars (Overall) ---
-    const candidateScores: Record<string, { id: string, name: string, teamName: string, teamColor: string | null, points: number, categoryName: string, photo: string | null }> = {};
+    // --- Individual Top 5 Stars (Overall) - STRICTLY INDIVIDUAL PROGRAMS ONLY ---
+    type StarCandidate = {
+      id: string;
+      name: string;
+      chestNumber: string | null;
+      teamName: string;
+      teamColor: string | null;
+      points: number;
+      categoryName: string;
+      photo: string | null;
+      programs: Array<{
+        id: string;
+        programName: string;
+        rank: number | null;
+        grade: string | null;
+        marks: number;
+        points: number;
+      }>;
+    };
+
+    const candidateScores: Record<string, StarCandidate> = {};
     allPublishedResults.forEach(res => {
-      if (!res.candidate) return; // Only count individual stars
+      // Hall of Fame strictly counts INDIVIDUAL program points only
+      if (!res.candidate || res.program?.type !== "INDIVIDUAL") return;
       
       const candId = res.candidate.id;
       if (!candidateScores[candId]) {
         candidateScores[candId] = {
           id: candId,
           name: res.candidate.name,
+          chestNumber: res.candidate.chestNumber || null,
           teamName: res.candidate.team.name,
           teamColor: res.candidate.team.flagColor,
           categoryName: res.candidate.category.name,
           photo: res.candidate.photo,
-          points: 0
+          points: 0,
+          programs: []
         };
       }
       candidateScores[candId].points += res.points;
+      candidateScores[candId].programs.push({
+        id: res.id,
+        programName: res.program.name,
+        rank: res.rank,
+        grade: res.grade,
+        marks: res.marks,
+        points: res.points
+      });
     });
     const topStars = Object.values(candidateScores).sort((a, b) => b.points - a.points).slice(0, 5);
 
