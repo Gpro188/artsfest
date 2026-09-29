@@ -42,16 +42,27 @@ export default function ProgramResultsView({
   const others = results.filter((r: any) => !r.rank || r.rank > 3);
 
   // Top 3 Podium Items
-  const winnerPodiumItems: PodiumItem[] = winners.map((w: any) => ({
-    id: w.id,
-    name: w.candidate?.name || w.team?.name || "Participant",
-    subName: w.candidate?.team?.name || w.team?.name || undefined,
-    points: w.points,
-    rank: w.rank as 1 | 2 | 3,
-    photoUrl: w.candidate?.photo || w.team?.leaderPhoto,
-    teamName: w.candidate?.team?.name || w.team?.name,
-    teamFlagColor: w.candidate?.team?.flagColor || w.team?.flagColor,
-  }));
+  const isGroupOrGeneral = program.type === "GROUP" || program.type === "GENERAL";
+  const winnerPodiumItems: PodiumItem[] = winners.map((w: any) => {
+    const primaryName = isGroupOrGeneral
+      ? (w.candidate?.team?.name || w.team?.name || w.candidate?.name || "Team")
+      : (w.candidate?.name || w.team?.name || "Participant");
+
+    const subName = isGroupOrGeneral
+      ? (w.candidate?.name && w.candidate?.name !== primaryName ? `Rep: ${w.candidate.name}` : undefined)
+      : (w.candidate?.team?.name || w.team?.name || undefined);
+
+    return {
+      id: w.id,
+      name: primaryName,
+      subName: subName,
+      points: w.points,
+      rank: w.rank as 1 | 2 | 3,
+      photoUrl: isGroupOrGeneral ? (w.team?.leaderPhoto || w.candidate?.photo) : (w.candidate?.photo || w.team?.leaderPhoto),
+      teamName: w.candidate?.team?.name || w.team?.name,
+      teamFlagColor: w.candidate?.team?.flagColor || w.team?.flagColor,
+    };
+  });
 
   const finalPosterUrl = program.mediaTemplate?.imageUrl;
   // If final uploaded poster or background template exists, poster is ready
@@ -167,7 +178,9 @@ export default function ProgramResultsView({
     const shareUrl = window.location.href;
     const winnersSummary = winners
       .map((w: any) => {
-        const name = w.candidate?.name || w.team?.name;
+        const name = isGroupOrGeneral
+          ? (w.candidate?.team?.name || w.team?.name || w.candidate?.name)
+          : (w.candidate?.name || w.team?.name);
         const rankText = w.rank === 1 ? "1st" : w.rank === 2 ? "2nd" : "3rd";
         return `${rankText}: ${name}`;
       })
@@ -416,9 +429,13 @@ export default function ProgramResultsView({
                     boxSizing: "border-box"
                   }}>
                     {winners.map((winner: any, idx: number) => {
-                      const name = winner.candidate?.name || winner.team?.name || "Participant";
-                      const team = winner.candidate?.team?.name || winner.team?.name || "";
-                      const chest = winner.candidate?.chestNumber;
+                      const name = isGroupOrGeneral
+                        ? (winner.candidate?.team?.name || winner.team?.name || winner.candidate?.name || "Team")
+                        : (winner.candidate?.name || winner.team?.name || "Participant");
+                      const team = isGroupOrGeneral
+                        ? (winner.candidate?.name && winner.candidate?.name !== name ? `Rep: ${winner.candidate.name}` : "")
+                        : (winner.candidate?.team?.name || winner.team?.name || "");
+                      const chest = isGroupOrGeneral ? undefined : winner.candidate?.chestNumber;
                       const grade = winner.grade;
                       const rankNum = winner.rank ? String(winner.rank).padStart(2, "0") : String(idx + 1).padStart(2, "0");
                       const rankColor = winner.rank === 1
@@ -828,7 +845,14 @@ export default function ProgramResultsView({
                       {/* Participant & Team Column */}
                       <div className="col-participant">
                         <div className="participant-avatar-box">
-                          {res.candidate?.photo ? (
+                          {isGroupOrGeneral ? (
+                            <div
+                              className="participant-monogram font-display"
+                              style={{ backgroundColor: teamColor }}
+                            >
+                              {(res.candidate?.team?.name || res.team?.name || "T").charAt(0)}
+                            </div>
+                          ) : res.candidate?.photo ? (
                             <img
                               src={res.candidate.photo}
                               alt=""
@@ -846,14 +870,26 @@ export default function ProgramResultsView({
 
                         <div className="participant-info-block">
                           <span className="participant-name font-display">
-                            {res.candidate?.name || res.team?.name}
+                            {isGroupOrGeneral
+                              ? (res.candidate?.team?.name || res.team?.name || res.candidate?.name)
+                              : (res.candidate?.name || res.team?.name)}
                           </span>
                           <span className="participant-team-name font-body" style={{ color: teamColor }}>
-                            {res.candidate?.team?.name || res.team?.name}
-                            {res.candidate?.chestNumber && (
-                              <span className="chest-badge font-mono-num">
-                                #{res.candidate.chestNumber}
-                              </span>
+                            {isGroupOrGeneral ? (
+                              res.candidate?.name && res.candidate?.name !== (res.candidate?.team?.name || res.team?.name) ? (
+                                <span>Leader/Rep: {res.candidate.name}</span>
+                              ) : (
+                                <span>Group / Squad Entry</span>
+                              )
+                            ) : (
+                              <>
+                                {res.candidate?.team?.name || res.team?.name}
+                                {res.candidate?.chestNumber && (
+                                  <span className="chest-badge font-mono-num">
+                                    #{res.candidate.chestNumber}
+                                  </span>
+                                )}
+                              </>
                             )}
                           </span>
                         </div>

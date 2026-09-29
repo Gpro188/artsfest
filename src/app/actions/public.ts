@@ -32,6 +32,7 @@ const getCachedPublicEventData = unstable_cache(
         select: {
           id: true,
           name: true,
+          type: true,
           updatedAt: true,
           category: { select: { id: true, name: true } },
           results: {

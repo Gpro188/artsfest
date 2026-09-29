@@ -235,20 +235,38 @@ export default function PublicDashboard({
                     w.candidate?.team?.flagColor || w.team?.flagColor
                   );
                   const rankLabel = w.rank === 1 ? "1st" : w.rank === 2 ? "2nd" : "3rd";
+                  const isGroupProg = activeJustPublished.type && activeJustPublished.type !== "INDIVIDUAL";
+                  const displayName = isGroupProg
+                    ? (w.candidate?.team?.name || w.team?.name || w.candidate?.name)
+                    : (w.candidate?.name || w.team?.name);
+                  const displayTeam = isGroupProg
+                    ? null
+                    : (w.candidate?.team?.name || w.team?.name);
+
                   return (
                     <span key={w.id} className="just-pub-winner-tag font-body">
                       <strong className="rank-tag-lbl font-mono-num">{rankLabel}:</strong>{" "}
-                      {w.candidate?.name || w.team?.name}{" "}
-                      <span style={{ color: teamColor, fontWeight: 700 }}>
-                        ({w.candidate?.team?.name || w.team?.name})
-                      </span>
+                      {displayName}{" "}
+                      {displayTeam && (
+                        <span style={{ color: teamColor, fontWeight: 700 }}>
+                          ({displayTeam})
+                        </span>
+                      )}
                     </span>
                   );
                 })
               ) : rank1Winner ? (
-                <span className="just-pub-winner-tag font-body">
-                  <strong>Winner:</strong> {rank1Winner.candidate?.name || rank1Winner.team?.name}
-                </span>
+                (() => {
+                  const isGroupProg = activeJustPublished.type && activeJustPublished.type !== "INDIVIDUAL";
+                  const displayName = isGroupProg
+                    ? (rank1Winner.candidate?.team?.name || rank1Winner.team?.name || rank1Winner.candidate?.name)
+                    : (rank1Winner.candidate?.name || rank1Winner.team?.name);
+                  return (
+                    <span className="just-pub-winner-tag font-body">
+                      <strong>Winner:</strong> {displayName}
+                    </span>
+                  );
+                })()
               ) : null}
             </div>
           </div>
@@ -731,18 +749,28 @@ export default function PublicDashboard({
                             w.candidate?.team?.flagColor || w.team?.flagColor
                           );
                           const rankLabel = w.rank === 1 ? "1st" : w.rank === 2 ? "2nd" : "3rd";
+                          const isGroupProg = prog.type && prog.type !== "INDIVIDUAL";
+                          const displayName = isGroupProg
+                            ? (w.candidate?.team?.name || w.team?.name || w.candidate?.name)
+                            : (w.candidate?.name || w.team?.name);
+                          const displayTeam = isGroupProg
+                            ? null
+                            : (w.candidate?.team?.name || w.team?.name);
+
                           return (
                             <div key={w.id} className="feed-winner-item">
                               <span className={`feed-winner-rank-badge font-mono-num rank-${w.rank}`}>
-                                {rankLabel}
+                                 {rankLabel}
                               </span>
                               <div className="feed-winner-meta">
                                 <span className="feed-winner-name font-display">
-                                  {w.candidate?.name || w.team?.name}
+                                  {displayName}
                                 </span>
-                                <span className="feed-winner-team" style={{ color: teamColor }}>
-                                  {w.candidate?.team?.name || w.team?.name}
-                                </span>
+                                {displayTeam && (
+                                  <span className="feed-winner-team" style={{ color: teamColor }}>
+                                    {displayTeam}
+                                  </span>
+                                )}
                               </div>
                               <span className="feed-winner-pts font-mono-num">
                                 +{w.points} pts
@@ -751,12 +779,20 @@ export default function PublicDashboard({
                           );
                         })
                       ) : (
-                        <div className="feed-single-winner font-body">
-                          <strong>Winner:</strong> {topWinner?.candidate?.name || topWinner?.team?.name || "Participant"}
-                          {topWinner && (
-                            <span className="feed-winner-pts font-mono-num"> +{topWinner.points} pts</span>
-                          )}
-                        </div>
+                        (() => {
+                          const isGroupProg = prog.type && prog.type !== "INDIVIDUAL";
+                          const displayName = isGroupProg
+                            ? (topWinner?.candidate?.team?.name || topWinner?.team?.name || topWinner?.candidate?.name || "Team")
+                            : (topWinner?.candidate?.name || topWinner?.team?.name || "Participant");
+                          return (
+                            <div className="feed-single-winner font-body">
+                              <strong>Winner:</strong> {displayName}
+                              {topWinner && (
+                                <span className="feed-winner-pts font-mono-num"> +{topWinner.points} pts</span>
+                              )}
+                            </div>
+                          );
+                        })()
                       )}
                     </div>
                   </Link>
@@ -874,6 +910,7 @@ export default function PublicDashboard({
                         <th>Programme</th>
                         <th style={{ width: '85px', textAlign: 'center' }}>Place</th>
                         <th style={{ width: '80px', textAlign: 'center' }}>Grade</th>
+                        <th style={{ width: '75px', textAlign: 'center' }}>Marks</th>
                         <th style={{ width: '90px', textAlign: 'right' }}>Points</th>
                       </tr>
                     </thead>
@@ -892,6 +929,9 @@ export default function PublicDashboard({
                               {p.grade ? (
                                 <span className="cand-grade-pill">Grade {p.grade}</span>
                               ) : '-'}
+                            </td>
+                            <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--muted)' }} className="font-mono-num">
+                              {p.marks !== null && p.marks !== undefined ? p.marks : '-'}
                             </td>
                             <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--emerald)' }} className="font-mono-num">
                               +{p.points} pts
