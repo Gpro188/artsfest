@@ -44,10 +44,17 @@ async function recalculateProgramResults(programId: string, manualUpdateId?: str
   let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
 
   if (programType === "GENERAL") {
-    const eventMatrix = program.event?.generalPointMatrix;
-    if (eventMatrix?.generalPoints) {
+    let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
+    if (!generalPointsStr) {
+      const festIds = await getFestivalEventIds(program.eventId);
+      const pm = await prisma.pointMatrix.findFirst({
+        where: { eventId: { in: festIds }, generalPoints: { not: null } }
+      });
+      generalPointsStr = pm?.generalPoints;
+    }
+    if (generalPointsStr) {
       try {
-        pointsConfig = JSON.parse(eventMatrix.generalPoints);
+        pointsConfig = JSON.parse(generalPointsStr);
       } catch (e) {}
     }
   } else {
@@ -145,7 +152,17 @@ export async function submitMarks(data: {
     if (data.manualRank || data.manualGrade) {
        let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
        if (program.type === "GENERAL") {
-         if (program.event.generalPointMatrix?.generalPoints) pointsConfig = JSON.parse(program.event.generalPointMatrix.generalPoints);
+         let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
+         if (!generalPointsStr) {
+           const festIds = await getFestivalEventIds(program.eventId);
+           const pm = await prisma.pointMatrix.findFirst({
+             where: { eventId: { in: festIds }, generalPoints: { not: null } }
+           });
+           generalPointsStr = pm?.generalPoints;
+         }
+         if (generalPointsStr) {
+           try { pointsConfig = JSON.parse(generalPointsStr); } catch (e) {}
+         }
        } else if (program.category?.pointMatrix) {
          const str = program.type === "INDIVIDUAL" ? program.category.pointMatrix.individualPoints : program.category.pointMatrix.groupPoints;
          if (str) pointsConfig = JSON.parse(str);
@@ -233,8 +250,16 @@ export async function submitBulkProgramResults(data: {
 
     let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
     if (program.type === "GENERAL") {
-      if (program.event.generalPointMatrix?.generalPoints) {
-        try { pointsConfig = JSON.parse(program.event.generalPointMatrix.generalPoints); } catch (e) {}
+      let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
+      if (!generalPointsStr) {
+        const festIds = await getFestivalEventIds(program.eventId);
+        const pm = await prisma.pointMatrix.findFirst({
+          where: { eventId: { in: festIds }, generalPoints: { not: null } }
+        });
+        generalPointsStr = pm?.generalPoints;
+      }
+      if (generalPointsStr) {
+        try { pointsConfig = JSON.parse(generalPointsStr); } catch (e) {}
       }
     } else if (program.category?.pointMatrix) {
       const str = program.type === "INDIVIDUAL" ? program.category.pointMatrix.individualPoints : program.category.pointMatrix.groupPoints;

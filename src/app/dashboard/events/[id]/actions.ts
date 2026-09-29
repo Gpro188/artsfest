@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getFestivalEventIds } from "@/lib/eventScope";
 
 export async function createCategory(eventId: string, name: string, chestNumberOffset: number = 0) {
   try {
@@ -67,12 +68,18 @@ export async function savePointMatrix(categoryId: string, eventId: string, data:
 
 export async function saveGeneralPointMatrix(eventId: string, points: string) {
   try {
-    await prisma.pointMatrix.upsert({
-      where: { eventId },
-      update: { generalPoints: points },
-      create: { eventId, generalPoints: points }
-    });
+    const festIds = await getFestivalEventIds(eventId);
+    await Promise.all(
+      festIds.map(fId =>
+        prisma.pointMatrix.upsert({
+          where: { eventId: fId },
+          update: { generalPoints: points },
+          create: { eventId: fId, generalPoints: points }
+        })
+      )
+    );
     revalidatePath(`/dashboard/events/${eventId}`);
+    revalidatePath("/dashboard/scoring");
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to save general points" };

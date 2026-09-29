@@ -72,7 +72,7 @@ export default async function ScoringPage(props: {
   // Fetch all related festival event IDs (root event + any sub-events)
   const festEventIds = await getFestivalEventIds(activeEventId);
 
-  const [dbEvent, allFestCategories, allFestTeams, programsInScope, results, allPrograms, allResultsForScore] = await Promise.all([
+  const [dbEvent, festGeneralPointMatrix, allFestCategories, allFestTeams, programsInScope, results, allPrograms, allResultsForScore] = await Promise.all([
     prisma.event.findUnique({
       where: { id: activeEventId },
       select: {
@@ -84,6 +84,16 @@ export default async function ScoringPage(props: {
             generalPoints: true
           }
         }
+      }
+    }),
+    prisma.pointMatrix.findFirst({
+      where: {
+        eventId: { in: festEventIds },
+        generalPoints: { not: null }
+      },
+      select: {
+        id: true,
+        generalPoints: true
       }
     }),
     prisma.category.findMany({
@@ -199,6 +209,7 @@ export default async function ScoringPage(props: {
   // Construct unified activeEvent with all programs and teams across the festival
   const activeEvent = {
     ...dbEvent,
+    generalPointMatrix: dbEvent.generalPointMatrix || festGeneralPointMatrix,
     teams: allFestTeams,
     programs: programsInScope
   };
