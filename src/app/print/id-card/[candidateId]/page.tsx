@@ -22,17 +22,21 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
   const settings = await getSettings(candidate.team.eventId);
 
   const progCount = candidate.programs.length;
-  const isHeavy = progCount > 8;
-  const isUltraHeavy = progCount > 14;
+  const isHeavy = progCount > 6;
+  const isUltraHeavy = progCount > 12;
   const isMegaHeavy = progCount > 18;
 
+  // Keep photo well-sized: 80px for mega-heavy (never shrink to 50px!), 95px for heavy, 120px default
+  const photoSize = isUltraHeavy ? '80px' : isHeavy ? '95px' : '120px';
+
   return (
-    <div style={{ padding: '40px', backgroundColor: '#f3f4f6', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ padding: '30px 15px', backgroundColor: '#f3f4f6', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
       {/* ID Card Container */}
       <div id="id-card" style={{ 
         width: '350px', 
-        height: '550px', 
+        minHeight: '550px', 
+        height: 'auto', 
         backgroundColor: 'white', 
         borderRadius: '15px', 
         boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
@@ -40,40 +44,41 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
         flexDirection: 'column',
         overflow: 'hidden',
         position: 'relative',
-        border: '1px solid #e5e7eb'
+        border: '1px solid #e5e7eb',
+        boxSizing: 'border-box'
       }}>
         {/* Header Design */}
         <div style={{ 
-          minHeight: isMegaHeavy ? '40px' : isUltraHeavy ? '48px' : isHeavy ? '58px' : '70px', 
+          minHeight: isUltraHeavy ? '46px' : isHeavy ? '54px' : '66px', 
           backgroundColor: candidate.team.flagColor || '#4F46E5',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '8px',
           color: 'white',
-          padding: isMegaHeavy ? '3px 8px' : isUltraHeavy ? '4px 10px' : isHeavy ? '6px 14px' : '10px 16px',
+          padding: isUltraHeavy ? '5px 10px' : isHeavy ? '7px 14px' : '10px 16px',
           textAlign: 'center',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
           {settings.festLogo && (
-            <div style={{ width: isMegaHeavy ? '20px' : isUltraHeavy ? '24px' : isHeavy ? '30px' : '36px', height: isMegaHeavy ? '20px' : isUltraHeavy ? '24px' : isHeavy ? '30px' : '36px', borderRadius: '6px', backgroundColor: 'rgba(255,255,255,0.95)', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: isUltraHeavy ? '24px' : isHeavy ? '28px' : '34px', height: isUltraHeavy ? '24px' : isHeavy ? '28px' : '34px', borderRadius: '5px', backgroundColor: 'rgba(255,255,255,0.95)', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <img src={settings.festLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
           )}
           <div>
-            <h2 style={{ margin: 0, fontSize: isMegaHeavy ? '0.85rem' : isUltraHeavy ? '0.95rem' : isHeavy ? '1.05rem' : '1.15rem', fontWeight: 800, letterSpacing: '1px' }}>{settings.festName}</h2>
-            <p style={{ margin: '1px 0 0 0', fontSize: isMegaHeavy ? '0.48rem' : '0.55rem', opacity: 0.85, textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>Official Candidate Card</p>
+            <h2 style={{ margin: 0, fontSize: isUltraHeavy ? '0.95rem' : isHeavy ? '1.05rem' : '1.15rem', fontWeight: 800, letterSpacing: '0.8px' }}>{settings.festName}</h2>
+            <p style={{ margin: '1px 0 0 0', fontSize: isUltraHeavy ? '0.50rem' : '0.55rem', opacity: 0.85, textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 600 }}>Official Candidate Card</p>
           </div>
         </div>
 
         {/* Photo & Chest Number Section */}
-        <div style={{ padding: isMegaHeavy ? '4px 16px 2px 16px' : isUltraHeavy ? '8px 20px 4px 20px' : isHeavy ? '14px 20px 6px 20px' : '26px 20px 10px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ position: 'relative', width: isMegaHeavy ? '50px' : isUltraHeavy ? '70px' : isHeavy ? '90px' : '130px', height: isMegaHeavy ? '50px' : isUltraHeavy ? '70px' : isHeavy ? '90px' : '130px' }}>
+        <div style={{ padding: isUltraHeavy ? '8px 16px 3px 16px' : isHeavy ? '14px 20px 5px 20px' : '22px 20px 8px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+          <div style={{ position: 'relative', width: photoSize, height: photoSize, flexShrink: 0, zIndex: 2 }}>
             {/* Photo */}
             <div style={{ 
               width: '100%', 
               height: '100%', 
-              borderRadius: isHeavy ? '10px' : '15px', 
+              borderRadius: isHeavy ? '10px' : '14px', 
               backgroundColor: '#f3f4f6', 
               border: isHeavy ? '2px solid #fff' : '3px solid #fff',
               boxShadow: '0 3px 10px rgba(0,0,0,0.1)',
@@ -82,22 +87,21 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
               {candidate.photo ? (
                 <img src={candidate.photo} alt={candidate.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMegaHeavy ? '1.4rem' : isUltraHeavy ? '1.8rem' : isHeavy ? '2.2rem' : '3rem' }}>👤</div>
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isUltraHeavy ? '2.2rem' : '2.8rem' }}>👤</div>
               )}
             </div>
-
           </div>
 
           {/* Faint Background Text */}
           <div style={{ 
             position: 'absolute', 
-            top: isMegaHeavy ? '55px' : isUltraHeavy ? '75px' : isHeavy ? '90px' : '120px', 
+            top: isUltraHeavy ? '65px' : isHeavy ? '80px' : '105px', 
             left: '0', 
             right: '0', 
             textAlign: 'center', 
             zIndex: 1, 
             opacity: 0.05, 
-            fontSize: isMegaHeavy ? '1.8rem' : isUltraHeavy ? '2.2rem' : '3rem', 
+            fontSize: isUltraHeavy ? '2.2rem' : '2.8rem', 
             fontWeight: 900, 
             pointerEvents: 'none',
             textTransform: 'uppercase'
@@ -107,37 +111,38 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
         </div>
 
         {/* Candidate Name & Team Badge */}
-        <div style={{ textAlign: 'center', padding: isMegaHeavy ? '0 10px 2px 10px' : isUltraHeavy ? '0 12px 3px 12px' : isHeavy ? '0 16px 6px 16px' : '0 20px 10px 20px' }}>
-          <h3 style={{ margin: '0 0 1px 0', fontSize: isMegaHeavy ? '1.1rem' : isUltraHeavy ? '1.3rem' : isHeavy ? '1.5rem' : '1.8rem', fontWeight: 900, color: '#1e1b4b' }}>
+        <div style={{ textAlign: 'center', padding: isUltraHeavy ? '0 10px 3px 10px' : isHeavy ? '0 14px 5px 14px' : '0 20px 8px 20px', position: 'relative', zIndex: 2 }}>
+          <h3 style={{ margin: '0 0 1px 0', fontSize: isUltraHeavy ? '1.35rem' : isHeavy ? '1.5rem' : '1.75rem', fontWeight: 900, color: '#1e1b4b', lineHeight: 1.1 }}>
             {candidate.chestNumber || '??'}
           </h3>
-          <div style={{ margin: '0 0 2px 0', fontSize: isMegaHeavy ? '0.75rem' : isUltraHeavy ? '0.85rem' : isHeavy ? '0.95rem' : '1.1rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase' }}>
+          <div style={{ margin: '0 0 2px 0', fontSize: isUltraHeavy ? '0.82rem' : isHeavy ? '0.92rem' : '1.05rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', lineHeight: 1.15 }}>
             {candidate.name}
           </div>
           <div style={{ 
             display: 'inline-block', 
-            padding: isMegaHeavy ? '1px 8px' : isUltraHeavy ? '1px 10px' : isHeavy ? '2px 12px' : '4px 15px', 
+            padding: isUltraHeavy ? '2px 10px' : '3px 12px', 
             backgroundColor: `${candidate.team.flagColor}15`, 
             color: candidate.team.flagColor || '#4F46E5',
             borderRadius: '20px',
-            fontSize: isMegaHeavy ? '0.62rem' : isUltraHeavy ? '0.68rem' : isHeavy ? '0.75rem' : '0.85rem',
+            fontSize: isUltraHeavy ? '0.68rem' : isHeavy ? '0.74rem' : '0.82rem',
             fontWeight: 800,
-            border: `1px solid ${candidate.team.flagColor}30`
+            border: `1px solid ${candidate.team.flagColor}30`,
+            lineHeight: 1.1
           }}>
             {candidate.team.name}
           </div>
         </div>
 
         {/* Details Section */}
-        <div style={{ padding: isMegaHeavy ? '0 8px 4px 8px' : isUltraHeavy ? '0 12px 8px 12px' : isHeavy ? '0 16px 10px 16px' : '0 20px 20px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', borderTop: '1px solid #f3f4f6', paddingTop: isMegaHeavy ? '2px' : isUltraHeavy ? '3px' : isHeavy ? '5px' : '10px', marginBottom: isMegaHeavy ? '2px' : isUltraHeavy ? '4px' : isHeavy ? '6px' : '10px' }}>
+        <div style={{ padding: isUltraHeavy ? '0 10px 4px 10px' : isHeavy ? '0 14px 6px 14px' : '0 18px 10px 18px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', borderTop: '1px solid #f3f4f6', paddingTop: isUltraHeavy ? '3px' : '5px', marginBottom: isUltraHeavy ? '3px' : '6px' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '0.50rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>Category</div>
-              <div style={{ fontSize: isMegaHeavy ? '0.64rem' : isUltraHeavy ? '0.7rem' : isHeavy ? '0.75rem' : '0.85rem', fontWeight: 700, color: '#1e1b4b' }}>{candidate.category.name}</div>
+              <div style={{ fontSize: isUltraHeavy ? '0.72rem' : '0.80rem', fontWeight: 700, color: '#1e1b4b' }}>{candidate.category.name}</div>
             </div>
             <div style={{ flex: 1, textAlign: 'right' }}>
               <div style={{ fontSize: '0.50rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>Event</div>
-              <div style={{ fontSize: isMegaHeavy ? '0.64rem' : isUltraHeavy ? '0.7rem' : isHeavy ? '0.75rem' : '0.85rem', fontWeight: 700, color: '#1e1b4b' }}>{settings.festName}</div>
+              <div style={{ fontSize: isUltraHeavy ? '0.72rem' : '0.80rem', fontWeight: 700, color: '#1e1b4b' }}>{settings.festName}</div>
             </div>
           </div>
 
@@ -145,63 +150,69 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
             const count = candidate.programs.length;
             const displayedPrograms = candidate.programs; // show all programs fitted
 
-            // Multi-tier shrink logic
-            let baseFontSize = 0.65;
-            let padding = '3px 5px';
-            let gap = '3px 5px';
+            // Adaptive Multi-tier and 3-column shrink logic
+            let baseFontSize = 0.58;
+            let padding = '2.5px 5px';
+            let gap = '3px 4px';
             let gridCols = '1fr 1fr';
-            let showTime = true;
-            let minHeight = 'auto';
+            let showTime = count <= 6;
+            let minHeight = '20px';
 
-            if (count > 20) {
-              baseFontSize = 0.32;
-              padding = '1px 2px';
-              gap = '1.5px 2px';
-              gridCols = '1fr 1fr';
-              showTime = false;
-              minHeight = '14px';
-            } else if (count > 16) {
-              baseFontSize = 0.35;
-              padding = '1px 2px';
-              gap = '2px 2px';
-              gridCols = '1fr 1fr';
-              showTime = false;
-              minHeight = '15px';
-            } else if (count > 12) {
-              baseFontSize = 0.42;
-              padding = '1px 3px';
-              gap = '2px 3px';
-              gridCols = '1fr 1fr';
+            if (count > 18) {
+              // 3 Columns for 19+ programs: max fit, no cutting
+              baseFontSize = 0.38;
+              padding = '1.5px 2px';
+              gap = '2px 2.5px';
+              gridCols = 'repeat(3, 1fr)';
               showTime = false;
               minHeight = '16px';
-            } else if (count > 8) {
-              baseFontSize = 0.48;
-              padding = '2px 4px';
+            } else if (count > 12) {
+              // 3 Columns for 13-18 programs
+              baseFontSize = 0.44;
+              padding = '2px 3px';
+              gap = '2.5px 3px';
+              gridCols = 'repeat(3, 1fr)';
+              showTime = false;
+              minHeight = '17px';
+            } else if (count > 6) {
+              // 2 Columns for 7-12 programs
+              baseFontSize = 0.50;
+              padding = '2.5px 4px';
               gap = '3px 4px';
               gridCols = '1fr 1fr';
               showTime = false;
               minHeight = '18px';
-            } else if (count > 4) {
-              baseFontSize = 0.56;
-              padding = '3px 5px';
+            } else if (count > 2) {
+              baseFontSize = 0.58;
+              padding = '3px 6px';
               gap = '3px 5px';
               gridCols = '1fr 1fr';
-              showTime = false;
-              minHeight = 'auto';
+              showTime = true;
+              minHeight = '22px';
+            } else {
+              baseFontSize = 0.65;
+              padding = '4px 8px';
+              gap = '4px';
+              gridCols = '1fr';
+              showTime = true;
+              minHeight = '26px';
             }
 
             return (
               <>
                 <div style={{ 
-                  fontSize: count > 8 ? '0.48rem' : '0.58rem', 
+                  fontSize: '0.52rem', 
                   color: '#9ca3af', 
                   textTransform: 'uppercase', 
                   fontWeight: 700, 
-                  marginBottom: count > 8 ? '2px' : '4px', 
-                  textAlign: 'center',
+                  marginBottom: '3px', 
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                   letterSpacing: '0.5px'
                 }}>
-                  Assigned Programs ({count})
+                  <span>Assigned Programs</span>
+                  <span style={{ color: '#4F46E5', fontWeight: 800 }}>{count}</span>
                 </div>
                 <div style={{ 
                   display: 'grid', 
@@ -209,7 +220,7 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                   gap: gap, 
                   alignContent: 'start',
                   flex: 1,
-                  paddingBottom: '2px'
+                  paddingBottom: '4px'
                 }}>
                   {displayedPrograms.map(p => {
                     const displayTime = p.scheduledTime || p.program.startTime;
@@ -217,19 +228,17 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                     const nameLen = rawName.length;
 
                     let itemFontSize = baseFontSize;
-                    if (count > 16) {
+                    if (count > 12) {
                       if (nameLen > 24) {
-                        itemFontSize = Math.min(itemFontSize, 0.28);
+                        itemFontSize = Math.min(itemFontSize, 0.32);
                       } else if (nameLen > 16) {
-                        itemFontSize = Math.min(itemFontSize, 0.31);
+                        itemFontSize = Math.min(itemFontSize, 0.35);
                       }
                     } else {
                       if (nameLen > 25) {
-                        itemFontSize = Math.min(itemFontSize, 0.32);
+                        itemFontSize = Math.min(itemFontSize, 0.38);
                       } else if (nameLen > 18) {
-                        itemFontSize = Math.min(itemFontSize, 0.36);
-                      } else if (nameLen > 12) {
-                        itemFontSize = Math.min(itemFontSize, 0.42);
+                        itemFontSize = Math.min(itemFontSize, 0.44);
                       }
                     }
 
@@ -241,7 +250,7 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                         borderRadius: '3px',
                         border: '1px solid #e5e7eb',
                         color: '#4b5563',
-                        lineHeight: '1.0',
+                        lineHeight: '1.04',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
@@ -256,7 +265,7 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                             wordBreak: 'break-word',
                             overflowWrap: 'anywhere',
                             hyphens: 'auto',
-                            lineHeight: '1.02',
+                            lineHeight: '1.04',
                             width: '100%'
                           }} 
                           title={rawName}
@@ -273,7 +282,7 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
                     );
                   })}
                   {count === 0 && (
-                    <span style={{ fontSize: '0.7rem', color: '#9ca3af', gridColumn: 'span 2', textAlign: 'center', padding: '10px 0' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#9ca3af', gridColumn: count > 12 ? 'span 3' : 'span 2', textAlign: 'center', padding: '10px 0' }}>
                       No programs assigned
                     </span>
                   )}
@@ -285,18 +294,19 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
 
         {/* Footer Signature */}
         <div style={{ 
-          padding: '15px', 
+          padding: isUltraHeavy ? '8px 14px' : '12px 16px', 
           backgroundColor: '#f9fafb', 
           borderTop: '1px solid #f3f4f6',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          marginTop: 'auto'
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '80px', height: '30px', borderBottom: '1px solid #d1d5db', marginBottom: '4px' }}></div>
-            <div style={{ fontSize: '0.5rem', color: '#9ca3af' }}>ADMIN SIGN</div>
+            <div style={{ width: '70px', height: '18px', borderBottom: '1px solid #d1d5db', marginBottom: '2px' }}></div>
+            <div style={{ fontSize: '0.48rem', color: '#9ca3af', fontWeight: 600 }}>ADMIN SIGN</div>
           </div>
-          <div style={{ textAlign: 'right', fontSize: '0.6rem', color: '#9ca3af' }}>
+          <div style={{ textAlign: 'right', fontSize: '0.55rem', color: '#9ca3af' }}>
             Generated: {new Date().toLocaleDateString()}
           </div>
         </div>
@@ -308,15 +318,28 @@ export default async function CandidateIdCardPage({ params }: { params: Promise<
        </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        @page {
+          size: auto;
+          margin: 8mm;
+        }
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; margin: 0; padding: 0; }
+          body { 
+            background: white !important; 
+            margin: 0 !important; 
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           #id-card { 
             box-shadow: none !important; 
-            border: 1px solid #eee !important;
-            margin: 0 auto;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            border: 1px solid #d1d5db !important;
+            margin: 0 auto !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
       `}} />

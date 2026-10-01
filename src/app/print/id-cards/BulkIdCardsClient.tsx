@@ -409,15 +409,16 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                       {/* Photo & Watermark Section */}
                       {(() => {
                         const pCount = (candidate.programs || []).length;
-                        const isDense = pCount > 10;
-                        const isUltraDense = pCount > 16;
-                        const isMegaDense = pCount > 20;
-                        const photoSize = isMegaDense ? '44px' : isUltraDense ? '50px' : isDense ? '64px' : '85px';
+                        const isDense = pCount > 6;
+                        const isUltraDense = pCount > 12;
+                        const isMegaDense = pCount > 18;
+                        // Keep photo prominent (75px - 90px) instead of shrinking down to 44px
+                        const photoSize = isUltraDense ? '75px' : isDense ? '82px' : '90px';
 
                         return (
                           <>
                             <div style={{ 
-                              padding: isMegaDense ? '2px 6px 1px 6px' : isUltraDense ? '4px 8px 2px 8px' : isDense ? '6px 10px 4px 10px' : '12px 12px 6px 12px', 
+                              padding: isUltraDense ? '4px 8px 2px 8px' : isDense ? '6px 10px 3px 10px' : '10px 12px 6px 12px', 
                               display: 'flex', 
                               flexDirection: 'column', 
                               alignItems: 'center', 
@@ -457,7 +458,8 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                 zIndex: 1,
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                flexShrink: 0
                               }}>
                                 {candidate.photo ? (
                                   <img 
@@ -474,12 +476,12 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                             {/* Candidate Name, Chest Number & Team Badge */}
                             <div style={{ 
                               textAlign: 'center', 
-                              padding: isDense ? '0 6px 3px 6px' : '0 10px 6px 10px', 
+                              padding: isDense ? '0 6px 2px 6px' : '0 10px 5px 10px', 
                               position: 'relative', 
                               zIndex: 1 
                             }}>
                               <div style={{ 
-                                fontSize: isUltraDense ? '1.1rem' : isDense ? '1.25rem' : '1.4rem', 
+                                fontSize: isUltraDense ? '1.2rem' : isDense ? '1.3rem' : '1.45rem', 
                                 fontWeight: 900, 
                                 color: '#1e1b4b', 
                                 lineHeight: 1.05 
@@ -487,11 +489,11 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                 {candidate.chestNumber || '??'}
                               </div>
                               <div style={{ 
-                                fontSize: isDense ? '0.75rem' : '0.85rem', 
+                                fontSize: isDense ? '0.78rem' : '0.88rem', 
                                 fontWeight: 700, 
                                 color: '#374151', 
                                 textTransform: 'uppercase', 
-                                margin: '1px 0 3px 0',
+                                margin: '1px 0 2px 0',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis'
@@ -500,11 +502,11 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                               </div>
                               <div style={{ 
                                 display: 'inline-block', 
-                                padding: isDense ? '1px 7px' : '2px 10px', 
+                                padding: isDense ? '1.5px 8px' : '2px 10px', 
                                 backgroundColor: `${flagColor}15`, 
                                 color: flagColor,
                                 borderRadius: '10px',
-                                fontSize: isDense ? '0.62rem' : '0.7rem',
+                                fontSize: isDense ? '0.64rem' : '0.72rem',
                                 fontWeight: 800,
                                 border: `1px solid ${flagColor}35`,
                                 textTransform: 'uppercase'
@@ -535,7 +537,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                           </div>
                         </div>
 
-                        {/* Assigned Programs - Always show ALL programs with shrinking font */}
+                        {/* Assigned Programs - Always show ALL programs with smart 3-column fit */}
                         {(() => {
                           const pList = candidate.programs || [];
                           const pCount = pList.length;
@@ -547,23 +549,17 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                           let gridCols = '1fr 1fr';
                           let lineHeight = 1.1;
 
-                          if (pCount > 20) {
-                            baseFontSize = 0.32;
-                            padding = '1px 2px';
-                            gap = '1.5px 2px';
-                            gridCols = '1fr 1fr';
-                            lineHeight = 1.0;
-                          } else if (pCount > 16) {
-                            baseFontSize = 0.35;
-                            padding = '1px 2px';
+                          if (pCount > 18) {
+                            baseFontSize = 0.38;
+                            padding = '1.5px 2px';
                             gap = '2px 2px';
-                            gridCols = '1fr 1fr';
+                            gridCols = 'repeat(3, 1fr)';
                             lineHeight = 1.02;
                           } else if (pCount > 12) {
                             baseFontSize = 0.42;
-                            padding = '1px 3px';
-                            gap = '2px 2px';
-                            gridCols = '1fr 1fr';
+                            padding = '2px 2.5px';
+                            gap = '2px 3px';
+                            gridCols = 'repeat(3, 1fr)';
                             lineHeight = 1.04;
                           } else if (pCount > 8) {
                             baseFontSize = 0.48;
@@ -577,6 +573,12 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                             gap = '3px 3px';
                             gridCols = '1fr 1fr';
                             lineHeight = 1.1;
+                          } else {
+                            baseFontSize = 0.60;
+                            padding = '3px 6px';
+                            gap = '4px';
+                            gridCols = pCount <= 2 ? '1fr' : '1fr 1fr';
+                            lineHeight = 1.15;
                           }
 
                           return (
@@ -599,19 +601,19 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                   
                                   // Granular shrinking based on individual program name length
                                   let itemFont = baseFontSize;
-                                  if (pCount > 16) {
+                                  if (pCount > 12) {
                                     if (nameLen > 24) {
-                                      itemFont = Math.min(itemFont, 0.28);
+                                      itemFont = Math.min(itemFont, 0.32);
                                     } else if (nameLen > 16) {
-                                      itemFont = Math.min(itemFont, 0.31);
+                                      itemFont = Math.min(itemFont, 0.35);
                                     }
                                   } else {
                                     if (nameLen > 25) {
-                                      itemFont = Math.min(itemFont, 0.32);
+                                      itemFont = Math.min(itemFont, 0.34);
                                     } else if (nameLen > 18) {
-                                      itemFont = Math.min(itemFont, 0.36);
+                                      itemFont = Math.min(itemFont, 0.38);
                                     } else if (nameLen > 12) {
-                                      itemFont = Math.min(itemFont, 0.42);
+                                      itemFont = Math.min(itemFont, 0.44);
                                     }
                                   }
 
@@ -622,27 +624,27 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                         fontSize: `${itemFont}rem`, 
                                         backgroundColor: '#f9fafb', 
                                         padding: padding, 
-                                        borderRadius: '3px',
-                                        color: '#1f2937',
-                                        border: '1px solid #e5e7eb',
-                                        lineHeight: lineHeight,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        textAlign: 'center',
-                                        minHeight: pCount > 20 ? '13px' : pCount > 14 ? '15px' : '18px',
-                                        boxSizing: 'border-box'
+                                        borderRadius: '3px', 
+                                        color: '#1f2937', 
+                                        border: '1px solid #e5e7eb', 
+                                        lineHeight: lineHeight, 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        textAlign: 'center', 
+                                        minHeight: pCount > 18 ? '15px' : pCount > 12 ? '16px' : '18px', 
+                                        boxSizing: 'border-box' 
                                       }}
                                     >
                                       <div 
                                         style={{ 
                                           fontWeight: 700, 
                                           color: '#111827', 
-                                          wordBreak: 'break-word',
-                                          overflowWrap: 'anywhere',
-                                          hyphens: 'auto',
-                                          lineHeight: '1.05',
-                                          width: '100%'
+                                          wordBreak: 'break-word', 
+                                          overflowWrap: 'anywhere', 
+                                          hyphens: 'auto', 
+                                          lineHeight: '1.05', 
+                                          width: '100%' 
                                         }} 
                                         title={rawName}
                                       >
@@ -652,7 +654,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                   );
                                 })}
                                 {pCount === 0 && (
-                                  <div style={{ gridColumn: 'span 2', fontSize: '0.6rem', color: '#9ca3af', textAlign: 'center', padding: '6px' }}>
+                                  <div style={{ gridColumn: pCount > 12 ? 'span 3' : 'span 2', fontSize: '0.6rem', color: '#9ca3af', textAlign: 'center', padding: '6px' }}>
                                     No programs assigned
                                   </div>
                                 )}
@@ -716,8 +718,8 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
             border: none !important;
             margin: 0 !important;
             width: 100% !important;
-            min-height: 100vh !important;
-            height: 100vh !important;
+            min-height: calc(100vh - 12mm) !important;
+            height: auto !important;
             page-break-after: always !important;
             break-after: page !important;
             padding: 2mm !important;
@@ -728,6 +730,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
             border: 1px solid #9ca3af !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
