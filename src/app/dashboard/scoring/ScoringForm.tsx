@@ -148,7 +148,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
 
   // Calculate points config for the selected program
   const getPointsConfig = () => {
-    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
+    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
     if (selectedProgram?.type === "GENERAL") {
       const eventMatrix = selectedEvent?.generalPointMatrix;
       if (eventMatrix?.generalPoints) {
@@ -173,6 +173,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
 
     if (g === "A") total += config.gradeA || 0;
     else if (g === "B") total += config.gradeB || 0;
+    else if (g === "C") total += (config as any).gradeC || 0;
     return total;
   };
 
@@ -644,6 +645,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                               <option value="">-- No Grade --</option>
                               <option value="A">Grade A</option>
                               <option value="B">Grade B</option>
+                              <option value="C">Grade C</option>
                             </select>
                           </td>
                           <td style={{ padding: '8px 12px', textAlign: 'center' }}>
@@ -726,6 +728,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                 <option value="">-- No Grade --</option>
                 <option value="A">A Grade</option>
                 <option value="B">B Grade</option>
+                <option value="C">C Grade</option>
               </select>
             </div>
 

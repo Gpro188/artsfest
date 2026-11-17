@@ -4,8 +4,12 @@ import { useState } from "react";
 import { saveGeneralPointMatrix } from "./actions";
 
 export default function GeneralPointForm({ eventId, initialData }: { eventId: string, initialData: any }) {
-  const defaultPoints = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
-  const [general, setGeneral] = useState(initialData?.generalPoints ? JSON.parse(initialData.generalPoints) : defaultPoints);
+  const defaultPoints = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
+  const [general, setGeneral] = useState(
+    initialData?.generalPoints
+      ? { ...defaultPoints, ...JSON.parse(initialData.generalPoints) }
+      : defaultPoints
+  );
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null);
 
@@ -42,26 +46,30 @@ export default function GeneralPointForm({ eventId, initialData }: { eventId: st
       )}
       
       <div style={{ marginBottom: 'var(--spacing-lg)', padding: 'var(--spacing-md)', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--spacing-sm)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 'var(--spacing-sm)' }}>
           <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.8rem' }}>1st Rank</label>
-            <input type="number" className="form-input" value={general.rank1} onChange={(e) => setGeneral({...general, rank1: parseInt(e.target.value) || 0})} />
+            <input type="number" className="form-input" value={general.rank1 ?? 0} onChange={(e) => setGeneral({...general, rank1: parseInt(e.target.value) || 0})} />
           </div>
           <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.8rem' }}>2nd Rank</label>
-            <input type="number" className="form-input" value={general.rank2} onChange={(e) => setGeneral({...general, rank2: parseInt(e.target.value) || 0})} />
+            <input type="number" className="form-input" value={general.rank2 ?? 0} onChange={(e) => setGeneral({...general, rank2: parseInt(e.target.value) || 0})} />
           </div>
           <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.8rem' }}>3rd Rank</label>
-            <input type="number" className="form-input" value={general.rank3} onChange={(e) => setGeneral({...general, rank3: parseInt(e.target.value) || 0})} />
+            <input type="number" className="form-input" value={general.rank3 ?? 0} onChange={(e) => setGeneral({...general, rank3: parseInt(e.target.value) || 0})} />
           </div>
           <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.8rem' }}>A Grade</label>
-            <input type="number" className="form-input" value={general.gradeA} onChange={(e) => setGeneral({...general, gradeA: parseInt(e.target.value) || 0})} />
+            <input type="number" className="form-input" value={general.gradeA ?? 0} onChange={(e) => setGeneral({...general, gradeA: parseInt(e.target.value) || 0})} />
           </div>
           <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.8rem' }}>B Grade</label>
-            <input type="number" className="form-input" value={general.gradeB} onChange={(e) => setGeneral({...general, gradeB: parseInt(e.target.value) || 0})} />
+            <input type="number" className="form-input" value={general.gradeB ?? 0} onChange={(e) => setGeneral({...general, gradeB: parseInt(e.target.value) || 0})} />
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '0.8rem' }}>C Grade</label>
+            <input type="number" className="form-input" value={general.gradeC ?? 0} onChange={(e) => setGeneral({...general, gradeC: parseInt(e.target.value) || 0})} />
           </div>
         </div>
       </div>

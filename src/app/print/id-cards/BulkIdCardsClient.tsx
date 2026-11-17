@@ -60,7 +60,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
     }
   }, [filteredCandidates, cardsPerPage, separateByTeam, selectedTeamId]);
 
-  // Dimension presets in mm for screen preview
+  // Dimension presets in mm for screen preview and print
   const pageWidthMm = paperSize === "A3" 
     ? (orientation === "portrait" ? 297 : 420)
     : (orientation === "portrait" ? 210 : 297);
@@ -68,8 +68,50 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
     ? (orientation === "portrait" ? 420 : 297)
     : (orientation === "portrait" ? 297 : 210);
 
+  // Calculated rows based on cards per page and columns
+  const calculatedRows = Math.max(1, Math.ceil(cardsPerPage / columns));
+
+  // Density tier to ensure 8 cards (or multi-row layouts) scale down compactly
+  // to fit strictly on ONE single printed A4 page without spilling into 2 pages
+  const isMini = cardsPerPage >= 8 || calculatedRows >= 4 || columns >= 4;
+  const isCompact = !isMini && (cardsPerPage >= 6 || calculatedRows >= 3 || columns >= 3);
+
+  const pageMarginMm = isMini ? 4 : isCompact ? 5 : 6;
+  const pagePadMm = isMini ? 2 : isCompact ? 3 : 5;
+  const gridGapMm = isMini ? 2 : isCompact ? 3 : 5;
+
+  const printableWidthMm = pageWidthMm - (pageMarginMm * 2);
+  const printableHeightMm = pageHeightMm - (pageMarginMm * 2);
+
   const festName = settings?.festName || "Arts Fest";
   const festLogo = settings?.festLogo || null;
+
+  // Handle Preset selection
+  const handlePresetClick = (n: number) => {
+    setCardsPerPage(n);
+    if (n === 2) {
+      setColumns(orientation === "landscape" ? 2 : 1);
+    } else if (n === 4) {
+      setColumns(2);
+    } else if (n === 6) {
+      setColumns(orientation === "landscape" ? 3 : 2);
+    } else if (n === 8) {
+      // 8 cards fits perfectly as 4 columns x 2 rows (in landscape or portrait)
+      // or 2 columns x 4 rows in portrait
+      setColumns(4);
+    }
+  };
+
+  const handleOrientationChange = (newOrientation: "portrait" | "landscape") => {
+    setOrientation(newOrientation);
+    if (cardsPerPage === 8) {
+      setColumns(4);
+    } else if (cardsPerPage === 6) {
+      setColumns(newOrientation === "landscape" ? 3 : 2);
+    } else if (cardsPerPage === 2) {
+      setColumns(newOrientation === "landscape" ? 2 : 1);
+    }
+  };
 
   return (
     <div style={{ backgroundColor: '#e5e7eb', minHeight: '100vh', paddingBottom: '50px' }}>
@@ -197,7 +239,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
             <label style={{ fontWeight: 600, color: '#374151' }}>Orientation:</label>
             <select 
               value={orientation} 
-              onChange={e => setOrientation(e.target.value as "portrait" | "landscape")}
+              onChange={e => handleOrientationChange(e.target.value as "portrait" | "landscape")}
               style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb' }}
             >
               <option value="portrait">Portrait</option>
@@ -221,13 +263,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
               {[2, 4, 6, 8].map(n => (
                 <button
                   key={n}
-                  onClick={() => {
-                    setCardsPerPage(n);
-                    if (n === 2) setColumns(1);
-                    else if (n === 4) setColumns(2);
-                    else if (n === 6) setColumns(2);
-                    else if (n === 8) setColumns(4);
-                  }}
+                  onClick={() => handlePresetClick(n)}
                   style={{
                     padding: '4px 7px',
                     fontSize: '0.75rem',
@@ -256,6 +292,44 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
               onChange={e => setColumns(Math.max(1, parseInt(e.target.value) || 1))}
               style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid #d1d5db', width: '55px', textAlign: 'center', fontWeight: 700 }}
             />
+            {cardsPerPage === 8 && (
+              <div style={{ display: 'flex', gap: '3px' }}>
+                <button
+                  type="button"
+                  onClick={() => setColumns(4)}
+                  style={{
+                    padding: '3px 6px',
+                    fontSize: '0.72rem',
+                    borderRadius: '4px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: columns === 4 ? '#4f46e5' : '#f3f4f6',
+                    color: columns === 4 ? '#ffffff' : '#374151',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                  title="4 columns × 2 rows (fits 8 per A4)"
+                >
+                  4×2
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setColumns(2)}
+                  style={{
+                    padding: '3px 6px',
+                    fontSize: '0.72rem',
+                    borderRadius: '4px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: columns === 2 ? '#4f46e5' : '#f3f4f6',
+                    color: columns === 2 ? '#ffffff' : '#374151',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                  title="2 columns × 4 rows (fits 8 per A4)"
+                >
+                  2×4
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Checkboxes */}
@@ -312,21 +386,23 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                 <span>{paperSize} ({orientation}) • {page.cards.length} card{page.cards.length === 1 ? '' : 's'}</span>
               </div>
 
-              {/* The Printable Page */}
+              {/* The Printable Page - Strictly sized to exact sheet dimensions */}
               <div 
                 className="print-page" 
                 style={{ 
                   width: `${pageWidthMm}mm`, 
-                  minHeight: `${pageHeightMm}mm`,
+                  height: `${pageHeightMm}mm`,
+                  maxHeight: `${pageHeightMm}mm`,
                   backgroundColor: '#ffffff',
                   boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                   boxSizing: 'border-box',
-                  padding: '8mm',
+                  padding: `${pagePadMm}mm`,
                   display: 'grid',
                   gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                  gridAutoRows: '1fr',
-                  gap: '6mm',
-                  position: 'relative'
+                  gridTemplateRows: `repeat(${calculatedRows}, minmax(0, 1fr))`,
+                  gap: `${gridGapMm}mm`,
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
               >
                 {page.cards.map((candidate: any) => {
@@ -337,7 +413,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                       className="id-card-wrapper" 
                       style={{ 
                         backgroundColor: '#ffffff', 
-                        borderRadius: '12px', 
+                        borderRadius: isMini ? '6px' : isCompact ? '8px' : '12px', 
                         border: '1px solid #d1d5db',
                         display: 'flex',
                         flexDirection: 'column',
@@ -345,28 +421,32 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                         position: 'relative',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                         pageBreakInside: 'avoid',
-                        breakInside: 'avoid'
+                        breakInside: 'avoid',
+                        height: '100%',
+                        maxHeight: '100%',
+                        boxSizing: 'border-box'
                       }}
                     >
                       {/* Card Header with Fest Logo and Fest Name */}
                       <div style={{ 
                         backgroundColor: flagColor,
                         color: '#ffffff',
-                        padding: '8px 12px',
+                        padding: isMini ? '3px 6px' : isCompact ? '5px 8px' : '8px 12px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
+                        gap: isMini ? '4px' : '8px',
                         textAlign: 'center',
-                        position: 'relative'
+                        position: 'relative',
+                        flexShrink: 0
                       }}>
                         {showLogo && festLogo && (
                           <div style={{ 
-                            width: '28px', 
-                            height: '28px', 
-                            borderRadius: '4px', 
+                            width: isMini ? '18px' : isCompact ? '22px' : '28px', 
+                            height: isMini ? '18px' : isCompact ? '22px' : '28px', 
+                            borderRadius: '3px', 
                             backgroundColor: 'rgba(255,255,255,0.95)', 
-                            padding: '2px', 
+                            padding: '1.5px', 
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
@@ -382,11 +462,11 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <h2 style={{ 
                             margin: 0, 
-                            fontSize: '0.95rem', 
+                            fontSize: isMini ? '0.70rem' : isCompact ? '0.80rem' : '0.95rem', 
                             fontWeight: 800, 
                             lineHeight: 1.1, 
                             textTransform: 'uppercase', 
-                            letterSpacing: '0.5px',
+                            letterSpacing: '0.4px',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis'
@@ -394,12 +474,13 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                             {festName}
                           </h2>
                           <p style={{ 
-                            margin: '2px 0 0 0', 
-                            fontSize: '0.55rem', 
+                            margin: '1px 0 0 0', 
+                            fontSize: isMini ? '0.40rem' : isCompact ? '0.48rem' : '0.55rem', 
                             opacity: 0.9, 
                             textTransform: 'uppercase', 
-                            letterSpacing: '1px', 
-                            fontWeight: 600 
+                            letterSpacing: '0.8px', 
+                            fontWeight: 600,
+                            lineHeight: 1.0
                           }}>
                             Official Candidate Card
                           </p>
@@ -409,20 +490,26 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                       {/* Photo & Watermark Section */}
                       {(() => {
                         const pCount = (candidate.programs || []).length;
-                        const isDense = pCount > 6;
-                        const isUltraDense = pCount > 12;
-                        const isMegaDense = pCount > 18;
-                        // Keep photo prominent (75px - 90px) instead of shrinking down to 44px
-                        const photoSize = isUltraDense ? '75px' : isDense ? '82px' : '90px';
+                        
+                        // Adaptive photo size to fit strictly within 8-card grid
+                        let photoSize = '90px';
+                        if (isMini) {
+                          photoSize = pCount > 12 ? '42px' : pCount > 6 ? '46px' : '50px';
+                        } else if (isCompact) {
+                          photoSize = pCount > 12 ? '54px' : pCount > 6 ? '60px' : '65px';
+                        } else {
+                          photoSize = pCount > 12 ? '75px' : pCount > 6 ? '82px' : '90px';
+                        }
 
                         return (
                           <>
                             <div style={{ 
-                              padding: isUltraDense ? '4px 8px 2px 8px' : isDense ? '6px 10px 3px 10px' : '10px 12px 6px 12px', 
+                              padding: isMini ? '2px 4px 1px 4px' : isCompact ? '4px 6px 2px 6px' : '8px 10px 4px 10px', 
                               display: 'flex', 
                               flexDirection: 'column', 
                               alignItems: 'center', 
-                              position: 'relative' 
+                              position: 'relative',
+                              flexShrink: 0
                             }}>
                               
                               {/* Faint Team Name Watermark */}
@@ -435,7 +522,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                 textAlign: 'center', 
                                 zIndex: 0, 
                                 opacity: 0.05, 
-                                fontSize: isDense ? '1.8rem' : '2.5rem', 
+                                fontSize: isMini ? '1.1rem' : isCompact ? '1.5rem' : '2.2rem', 
                                 fontWeight: 900, 
                                 pointerEvents: 'none',
                                 textTransform: 'uppercase',
@@ -449,10 +536,10 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                               <div style={{ 
                                 width: photoSize, 
                                 height: photoSize, 
-                                borderRadius: isDense ? '8px' : '10px', 
+                                borderRadius: isMini ? '6px' : '8px', 
                                 backgroundColor: '#f3f4f6', 
-                                border: isDense ? '2px solid #ffffff' : '3px solid #ffffff',
-                                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                                border: isMini ? '1.5px solid #ffffff' : '2.5px solid #ffffff',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                                 overflow: 'hidden',
                                 position: 'relative',
                                 zIndex: 1,
@@ -468,7 +555,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                                   />
                                 ) : (
-                                  <span style={{ fontSize: isDense ? '1.6rem' : '2.5rem', color: '#9ca3af' }}>👤</span>
+                                  <span style={{ fontSize: isMini ? '1.1rem' : isCompact ? '1.5rem' : '2.2rem', color: '#9ca3af' }}>👤</span>
                                 )}
                               </div>
                             </div>
@@ -476,12 +563,13 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                             {/* Candidate Name, Chest Number & Team Badge */}
                             <div style={{ 
                               textAlign: 'center', 
-                              padding: isDense ? '0 6px 2px 6px' : '0 10px 5px 10px', 
+                              padding: isMini ? '0 4px 1px 4px' : isCompact ? '0 6px 2px 6px' : '0 10px 4px 10px', 
                               position: 'relative', 
-                              zIndex: 1 
+                              zIndex: 1,
+                              flexShrink: 0 
                             }}>
                               <div style={{ 
-                                fontSize: isUltraDense ? '1.2rem' : isDense ? '1.3rem' : '1.45rem', 
+                                fontSize: isMini ? '1.05rem' : isCompact ? '1.2rem' : '1.45rem', 
                                 fontWeight: 900, 
                                 color: '#1e1b4b', 
                                 lineHeight: 1.05 
@@ -489,11 +577,11 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                 {candidate.chestNumber || '??'}
                               </div>
                               <div style={{ 
-                                fontSize: isDense ? '0.78rem' : '0.88rem', 
+                                fontSize: isMini ? '0.68rem' : isCompact ? '0.78rem' : '0.88rem', 
                                 fontWeight: 700, 
                                 color: '#374151', 
                                 textTransform: 'uppercase', 
-                                margin: '1px 0 2px 0',
+                                margin: '0 0 1px 0',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis'
@@ -502,14 +590,15 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                               </div>
                               <div style={{ 
                                 display: 'inline-block', 
-                                padding: isDense ? '1.5px 8px' : '2px 10px', 
+                                padding: isMini ? '1px 5px' : isCompact ? '1.5px 7px' : '2px 10px', 
                                 backgroundColor: `${flagColor}15`, 
                                 color: flagColor,
-                                borderRadius: '10px',
-                                fontSize: isDense ? '0.64rem' : '0.72rem',
+                                borderRadius: '8px',
+                                fontSize: isMini ? '0.54rem' : isCompact ? '0.62rem' : '0.72rem', 
                                 fontWeight: 800,
                                 border: `1px solid ${flagColor}35`,
-                                textTransform: 'uppercase'
+                                textTransform: 'uppercase',
+                                lineHeight: 1.1
                               }}>
                                 {candidate.team?.name}
                               </div>
@@ -519,71 +608,118 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                       })()}
 
                       {/* Category and Event Meta */}
-                      <div style={{ padding: '0 8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ padding: isMini ? '0 4px' : isCompact ? '0 6px' : '0 8px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                         <div style={{ 
                           display: 'flex', 
                           borderTop: '1px solid #f3f4f6', 
-                          paddingTop: '3px', 
-                          marginBottom: '4px',
-                          fontSize: '0.62rem'
+                          paddingTop: '2px', 
+                          marginBottom: '2px',
+                          fontSize: isMini ? '0.50rem' : isCompact ? '0.56rem' : '0.62rem',
+                          flexShrink: 0
                         }}>
                           <div style={{ flex: 1 }}>
-                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.52rem' }}>Category</span>
+                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: isMini ? '0.40rem' : '0.50rem' }}>Category</span>
                             <span style={{ fontWeight: 700, color: '#1e1b4b' }}>{candidate.category?.name}</span>
                           </div>
                           <div style={{ flex: 1, textAlign: 'right' }}>
-                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: '0.52rem' }}>Fest</span>
+                            <span style={{ color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600, display: 'block', fontSize: isMini ? '0.40rem' : '0.50rem' }}>Fest</span>
                             <span style={{ fontWeight: 700, color: '#1e1b4b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{festName}</span>
                           </div>
                         </div>
 
-                        {/* Assigned Programs - Always show ALL programs with smart 3-column fit */}
+                        {/* Assigned Programs */}
                         {(() => {
                           const pList = candidate.programs || [];
                           const pCount = pList.length;
                           
-                          // Dynamic layout parameters
+                          // Dynamic layout parameters based on page density and program count
                           let baseFontSize = 0.58; // in rem
                           let padding = '2px 4px';
-                          let gap = '3px 4px';
+                          let gap = '2px 3px';
                           let gridCols = '1fr 1fr';
-                          let lineHeight = 1.1;
+                          let lineHeight = 1.05;
+                          let minHeight = '16px';
 
-                          if (pCount > 18) {
-                            baseFontSize = 0.38;
-                            padding = '1.5px 2px';
-                            gap = '2px 2px';
-                            gridCols = 'repeat(3, 1fr)';
-                            lineHeight = 1.02;
-                          } else if (pCount > 12) {
-                            baseFontSize = 0.42;
-                            padding = '2px 2.5px';
-                            gap = '2px 3px';
-                            gridCols = 'repeat(3, 1fr)';
-                            lineHeight = 1.04;
-                          } else if (pCount > 8) {
-                            baseFontSize = 0.48;
-                            padding = '2px 3px';
-                            gap = '2px 3px';
-                            gridCols = '1fr 1fr';
-                            lineHeight = 1.08;
-                          } else if (pCount > 4) {
-                            baseFontSize = 0.54;
-                            padding = '2px 4px';
-                            gap = '3px 3px';
-                            gridCols = '1fr 1fr';
-                            lineHeight = 1.1;
+                          if (isMini) {
+                            // High density for 8 cards per page
+                            padding = '1px 2px';
+                            gap = '1.5px 2px';
+                            minHeight = '12px';
+                            lineHeight = 1.0;
+                            if (columns >= 4) {
+                              gridCols = pCount > 8 ? 'repeat(2, 1fr)' : '1fr';
+                            } else {
+                              gridCols = pCount > 10 ? 'repeat(3, 1fr)' : pCount > 4 ? '1fr 1fr' : '1fr';
+                            }
+                            if (pCount > 12) {
+                              baseFontSize = 0.32;
+                            } else if (pCount > 6) {
+                              baseFontSize = 0.36;
+                            } else {
+                              baseFontSize = 0.40;
+                            }
+                          } else if (isCompact) {
+                            padding = '1.5px 3px';
+                            gap = '2px 2.5px';
+                            minHeight = '14px';
+                            if (pCount > 12) {
+                              baseFontSize = 0.40;
+                              gridCols = 'repeat(3, 1fr)';
+                            } else if (pCount > 6) {
+                              baseFontSize = 0.46;
+                              gridCols = '1fr 1fr';
+                            } else {
+                              baseFontSize = 0.52;
+                              gridCols = pCount <= 2 ? '1fr' : '1fr 1fr';
+                            }
                           } else {
-                            baseFontSize = 0.60;
-                            padding = '3px 6px';
-                            gap = '4px';
-                            gridCols = pCount <= 2 ? '1fr' : '1fr 1fr';
-                            lineHeight = 1.15;
+                            // Standard 1-4 cards
+                            if (pCount > 18) {
+                              baseFontSize = 0.38;
+                              padding = '1.5px 2px';
+                              gap = '2px 2px';
+                              gridCols = 'repeat(3, 1fr)';
+                              minHeight = '15px';
+                            } else if (pCount > 12) {
+                              baseFontSize = 0.42;
+                              padding = '2px 2.5px';
+                              gap = '2px 3px';
+                              gridCols = 'repeat(3, 1fr)';
+                              minHeight = '16px';
+                            } else if (pCount > 8) {
+                              baseFontSize = 0.48;
+                              padding = '2px 3px';
+                              gap = '2px 3px';
+                              gridCols = '1fr 1fr';
+                              minHeight = '18px';
+                            } else if (pCount > 4) {
+                              baseFontSize = 0.54;
+                              padding = '2px 4px';
+                              gap = '3px 3px';
+                              gridCols = '1fr 1fr';
+                              minHeight = '18px';
+                            } else {
+                              baseFontSize = 0.60;
+                              padding = '3px 6px';
+                              gap = '4px';
+                              gridCols = pCount <= 2 ? '1fr' : '1fr 1fr';
+                              minHeight = '20px';
+                            }
                           }
 
                           return (
-                            <>
-                              <div style={{ fontSize: '0.48rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                              <div style={{ 
+                                fontSize: isMini ? '0.40rem' : '0.48rem', 
+                                color: '#9ca3af', 
+                                textTransform: 'uppercase', 
+                                fontWeight: 700, 
+                                marginBottom: '2px', 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                flexShrink: 0 
+                              }}>
                                 <span>Assigned Programs</span>
                                 <span style={{ fontWeight: 800, color: '#4F46E5' }}>{pCount}</span>
                               </div>
@@ -592,8 +728,10 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                 gridTemplateColumns: gridCols, 
                                 gap: gap, 
                                 flex: 1,
+                                minHeight: 0,
                                 alignContent: 'start',
-                                paddingBottom: '3px'
+                                overflow: 'hidden',
+                                paddingBottom: '2px'
                               }}>
                                 {pList.map((p: any) => {
                                   const rawName = p.program?.name || '';
@@ -601,20 +739,10 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                   
                                   // Granular shrinking based on individual program name length
                                   let itemFont = baseFontSize;
-                                  if (pCount > 12) {
-                                    if (nameLen > 24) {
-                                      itemFont = Math.min(itemFont, 0.32);
-                                    } else if (nameLen > 16) {
-                                      itemFont = Math.min(itemFont, 0.35);
-                                    }
-                                  } else {
-                                    if (nameLen > 25) {
-                                      itemFont = Math.min(itemFont, 0.34);
-                                    } else if (nameLen > 18) {
-                                      itemFont = Math.min(itemFont, 0.38);
-                                    } else if (nameLen > 12) {
-                                      itemFont = Math.min(itemFont, 0.44);
-                                    }
+                                  if (nameLen > 24) {
+                                    itemFont = Math.min(itemFont, baseFontSize * 0.85);
+                                  } else if (nameLen > 16) {
+                                    itemFont = Math.min(itemFont, baseFontSize * 0.92);
                                   }
 
                                   return (
@@ -632,7 +760,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                         alignItems: 'center', 
                                         justifyContent: 'center', 
                                         textAlign: 'center', 
-                                        minHeight: pCount > 18 ? '15px' : pCount > 12 ? '16px' : '18px', 
+                                        minHeight: minHeight, 
                                         boxSizing: 'border-box' 
                                       }}
                                     >
@@ -643,7 +771,7 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                           wordBreak: 'break-word', 
                                           overflowWrap: 'anywhere', 
                                           hyphens: 'auto', 
-                                          lineHeight: '1.05', 
+                                          lineHeight: '1.02', 
                                           width: '100%' 
                                         }} 
                                         title={rawName}
@@ -654,31 +782,32 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
                                   );
                                 })}
                                 {pCount === 0 && (
-                                  <div style={{ gridColumn: pCount > 12 ? 'span 3' : 'span 2', fontSize: '0.6rem', color: '#9ca3af', textAlign: 'center', padding: '6px' }}>
+                                  <div style={{ gridColumn: 'span 2', fontSize: isMini ? '0.45rem' : '0.6rem', color: '#9ca3af', textAlign: 'center', padding: '4px' }}>
                                     No programs assigned
                                   </div>
                                 )}
                               </div>
-                            </>
+                            </div>
                           );
                         })()}
                       </div>
 
                       {/* Footer Signature */}
                       <div style={{ 
-                        padding: '6px 12px', 
+                        padding: isMini ? '2px 6px' : isCompact ? '3px 8px' : '6px 12px', 
                         backgroundColor: '#f9fafb', 
                         borderTop: '1px solid #f3f4f6',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-end',
-                        marginTop: 'auto'
+                        marginTop: 'auto',
+                        flexShrink: 0
                       }}>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ width: '45px', height: '12px', borderBottom: '1px solid #9ca3af' }}></div>
-                          <div style={{ fontSize: '0.45rem', color: '#9ca3af', fontWeight: 600, marginTop: '1px' }}>OFFICIAL</div>
+                          <div style={{ width: isMini ? '28px' : isCompact ? '36px' : '45px', height: isMini ? '8px' : '12px', borderBottom: '1px solid #9ca3af' }}></div>
+                          <div style={{ fontSize: isMini ? '0.36rem' : '0.45rem', color: '#9ca3af', fontWeight: 600, marginTop: '1px' }}>OFFICIAL</div>
                         </div>
-                        <div style={{ textAlign: 'right', fontSize: '0.5rem', color: '#9ca3af' }}>
+                        <div style={{ textAlign: 'right', fontSize: isMini ? '0.40rem' : '0.50rem', color: '#9ca3af' }}>
                           {new Date().toLocaleDateString()}
                         </div>
                       </div>
@@ -693,44 +822,64 @@ export default function BulkIdCardsClient({ candidates, settings, teams = [], in
         )}
       </div>
 
-      {/* Print CSS Rules */}
+      {/* Print CSS Rules - Guaranteed 1-page fit per sheet */}
       <style dangerouslySetInnerHTML={{ __html: `
         @page {
           size: ${paperSize} ${orientation};
-          margin: 6mm;
+          margin: ${pageMarginMm}mm;
         }
         @media print {
-          .no-print { 
-            display: none !important; 
-          }
-          body { 
+          html, body { 
             background: #ffffff !important; 
             margin: 0 !important; 
             padding: 0 !important; 
+            width: 100% !important;
+            height: 100% !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .no-print { 
+            display: none !important; 
           }
           .print-container {
             padding: 0 !important;
+            margin: 0 !important;
             gap: 0 !important;
             display: block !important;
+            width: 100% !important;
           }
           .print-page {
             box-shadow: none !important; 
             border: none !important;
             margin: 0 !important;
-            width: 100% !important;
-            min-height: calc(100vh - 12mm) !important;
-            height: auto !important;
+            width: ${printableWidthMm}mm !important;
+            max-width: 100% !important;
+            height: ${printableHeightMm}mm !important;
+            max-height: ${printableHeightMm}mm !important;
+            min-height: ${printableHeightMm}mm !important;
             page-break-after: always !important;
             break-after: page !important;
-            padding: 2mm !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            padding: ${pagePadMm}mm !important;
             box-sizing: border-box !important;
+            overflow: hidden !important;
+            display: grid !important;
+            grid-template-columns: repeat(${columns}, 1fr) !important;
+            grid-template-rows: repeat(${calculatedRows}, minmax(0, 1fr)) !important;
+            gap: ${gridGapMm}mm !important;
           }
           .id-card-wrapper {
             box-shadow: none !important;
             border: 1px solid #9ca3af !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
-            overflow: visible !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }

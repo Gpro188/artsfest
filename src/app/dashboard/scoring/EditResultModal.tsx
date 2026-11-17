@@ -72,6 +72,7 @@ export default function EditResultModal({ result, onClose }: { result: any, onCl
                 <option value="">-- No Grade --</option>
                 <option value="A">Grade A</option>
                 <option value="B">Grade B</option>
+                <option value="C">Grade C</option>
               </select>
             </div>
           </div>

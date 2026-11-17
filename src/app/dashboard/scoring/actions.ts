@@ -18,6 +18,7 @@ function invalidatePublicResults() {
 function calculateGrade(marks: number) {
   if (marks >= 80) return "A";
   if (marks >= 60) return "B";
+  if (marks >= 40) return "C";
   return null;
 }
 
@@ -41,7 +42,7 @@ async function recalculateProgramResults(programId: string, manualUpdateId?: str
   const program = results[0].program;
   const programType = program.type;
   
-  let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
+  let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
 
   if (programType === "GENERAL") {
     let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
@@ -97,6 +98,7 @@ async function recalculateProgramResults(programId: string, manualUpdateId?: str
 
     if (grade === "A") points += pointsConfig.gradeA || 0;
     else if (grade === "B") points += pointsConfig.gradeB || 0;
+    else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
 
     await prisma.result.update({
       where: { id: res.id },
@@ -150,7 +152,7 @@ export async function submitMarks(data: {
     let grade = data.manualGrade || null;
 
     if (data.manualRank || data.manualGrade) {
-       let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
+       let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
        if (program.type === "GENERAL") {
          let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
          if (!generalPointsStr) {
@@ -174,6 +176,7 @@ export async function submitMarks(data: {
 
        if (grade === "A") points += pointsConfig.gradeA || 0;
        else if (grade === "B") points += pointsConfig.gradeB || 0;
+       else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
     }
 
     if (candidateId) {
@@ -248,7 +251,7 @@ export async function submitBulkProgramResults(data: {
 
     if (!program) return { success: false, error: "Program not found" };
 
-    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
+    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
     if (program.type === "GENERAL") {
       let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
       if (!generalPointsStr) {
@@ -280,6 +283,7 @@ export async function submitBulkProgramResults(data: {
 
       if (entry.grade === "A") points += pointsConfig.gradeA || 0;
       else if (entry.grade === "B") points += pointsConfig.gradeB || 0;
+      else if (entry.grade === "C") points += (pointsConfig as any).gradeC || 0;
 
       const marks = entry.marks !== undefined ? entry.marks : points;
 
@@ -459,7 +463,7 @@ export async function updateResultDetails(data: {
     if (!existing) return { success: false, error: "Result not found" };
 
     const program = existing.program;
-    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3 };
+    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
 
     if (program.type === "GENERAL") {
       if (program.event?.generalPointMatrix?.generalPoints) {
@@ -484,6 +488,7 @@ export async function updateResultDetails(data: {
 
     if (grade === "A") points += pointsConfig.gradeA || 0;
     else if (grade === "B") points += pointsConfig.gradeB || 0;
+    else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
 
     await prisma.result.update({
       where: { id: data.id },
