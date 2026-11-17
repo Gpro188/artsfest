@@ -18,18 +18,62 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   const globalSetting = await getSettings(event.id);
   const homepage = await getHomepageSettings(event.id);
   const festName = homepage?.heroTitle || globalSetting.festName || event.name;
-  const title = `Live Results | ${festName}`;
+  const title = `Live Results & Leaderboard | ${festName}`;
+  const description = `Live leaderboard, standings, point table, and candidate results for ${festName}.`;
   
-  let keywords = [festName, "dpro", "artsfest results", "live leaderboard", "festival standings"];
-  if (decodedDomain === 'bilhikma.online') {
-    keywords.push("jamia jalaliyya arts fest", "jalaliyya artsfest", "bilhikma artfest", "bil hikma artsfest", "jasia artsfest", "bil hikma jasia", "bil hikma artsfets");
+  const siteUrl = `https://${decodedDomain}/results`;
+  const keywords = [
+    festName,
+    `${festName} results`,
+    `${festName} live points`,
+    `${festName} standings`,
+    "live leaderboard",
+    "festival standings",
+    "points table",
+    decodedDomain
+  ];
+
+  if (decodedDomain.includes('kalaam')) {
+    keywords.push("kalaam results", "kalaam live score", "kalaam point table", "kalaam arts fest results");
+  } else if (decodedDomain.includes('vuswool')) {
+    keywords.push("vuswool results", "vuswool live score", "vuswool point table", "vuswool arts fest results", "thahqeeq results");
+  } else if (decodedDomain.includes('bilhikma')) {
+    keywords.push("bilhikma results", "bil hikma point table", "jamia jalaliyya results");
   }
+
+  const ogImage = homepage?.heroBgUrl || globalSetting.festLogo || "/logo.png";
 
   return {
     title,
-    description: `Live leaderboard and standings for ${festName}`,
+    description,
+    metadataBase: new URL(`https://${decodedDomain}`),
+    alternates: {
+      canonical: siteUrl,
+    },
     icons: globalSetting.festLogo ? { icon: globalSetting.festLogo } : undefined,
     keywords,
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: siteUrl,
+      siteName: festName,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: `${festName} Live Results` }] : [],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ogImage ? [ogImage] : [],
+    },
   };
 }
 
