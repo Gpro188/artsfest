@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-// Fallback configuration from environment or project defaults so uploads always succeed on Vercel
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "06eb852c186a79f6b46092785852f1b6";
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || "447606767b4703f1de9331c53d25bbd3";
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || "9cbd9d07148c482eee5e33b6cca0a01e483f7cce2cd8de69ee0c5e696547e770";
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "artsfest-images";
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://pub-412ce4aca9c34fafb6b1941e10907e1e.r2.dev";
+// Robust configuration from environment with valid fallbacks
+// Trims whitespace and strips empty strings or enclosing quotes
+const getCleanEnv = (key: string, fallback: string) => {
+  const val = process.env[key];
+  if (!val) return fallback;
+  const cleaned = val.trim().replace(/^["']|["']$/g, "");
+  return cleaned || fallback;
+};
+
+const R2_ACCOUNT_ID = getCleanEnv("R2_ACCOUNT_ID", "06eb852c186a79f6b46092785852f1b6");
+const R2_ACCESS_KEY_ID = getCleanEnv("R2_ACCESS_KEY_ID", "447606767b4703f1de9331c53d25bbd3");
+const R2_SECRET_ACCESS_KEY = getCleanEnv("R2_SECRET_ACCESS_KEY", "9cbd9d07148c482eee5e33b6cca0a01e483f7cce2cd8de69ee0c5e696547e770");
+const R2_BUCKET_NAME = getCleanEnv("R2_BUCKET_NAME", "artsfest-images");
+const R2_PUBLIC_URL = getCleanEnv("R2_PUBLIC_URL", "https://pub-412ce4aca9c34fafb6b1941e10907e1e.r2.dev");
 
 export async function POST(req: NextRequest) {
   try {
