@@ -282,6 +282,7 @@ model TeamPenalty {
   id             String     @id @default(uuid())
   eventId        String
   teamId         String
+  targetType     String     @default("TEAM") // "TEAM" | "INDIVIDUAL"
   programId      String?
   candidateId    String?
   reason         String     // "IMPERSONATION" | "CHEATING" | "BEYOND_LIMIT" | "ABSENT" | "OTHERS"

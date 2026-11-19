@@ -45,8 +45,6 @@ const getCachedPublicEventData = unstable_cache(
               grade: true,
               status: true,
               penaltyMarks: true,
-              penaltyReason: true,
-              penaltyDescription: true,
               candidate: {
                 select: {
                   id: true,
@@ -76,7 +74,7 @@ const getCachedPublicEventData = unstable_cache(
         where: { program: { eventId: { in: eventIds } }, isPublished: true },
         select: {
           id: true, points: true, candidateId: true, teamId: true, rank: true, grade: true, marks: true,
-          status: true, penaltyMarks: true, penaltyReason: true, penaltyDescription: true,
+          status: true, penaltyMarks: true,
           program: { select: { id: true, name: true, type: true } },
           candidate: { select: { id: true, name: true, chestNumber: true, photo: true, teamId: true, team: { select: { id: true, name: true, flagColor: true } }, category: { select: { id: true, name: true } } } },
           team: { select: { id: true, name: true, flagColor: true } }
@@ -95,15 +93,15 @@ const getCachedPublicEventData = unstable_cache(
       prisma.candidate.count({ where: { team: { eventId: { in: eventIds } } } }),
       prisma.programAssignment.groupBy({ by: ['candidateId'], where: { program: { eventId: { in: eventIds } } } }),
 
-      // 6. Team Penalties
+      // 6. Team & Candidate Penalties (Private details omitted from public cache)
       prisma.teamPenalty.findMany({
         where: { eventId: { in: eventIds } },
         select: {
           id: true,
           teamId: true,
-          pointsDeducted: true,
-          reason: true,
-          description: true
+          targetType: true,
+          candidateId: true,
+          pointsDeducted: true
         }
       })
     ]);
@@ -167,9 +165,10 @@ const getCachedPublicEventData = unstable_cache(
       }
     });
 
-    // Deduct Team Penalties from Championship Leaderboard
+    // Deduct Team Penalties from Championship Leaderboard (only targetType === "TEAM" or legacy)
     allTeamPenalties.forEach(pen => {
-      if (pen.teamId && teamScores[pen.teamId]) {
+      const isTeamTarget = pen.targetType === "TEAM" || !pen.candidateId;
+      if (isTeamTarget && pen.teamId && teamScores[pen.teamId]) {
         teamScores[pen.teamId].penaltyPoints += pen.pointsDeducted;
         teamScores[pen.teamId].points = Math.max(0, teamScores[pen.teamId].points - pen.pointsDeducted);
       }
@@ -226,6 +225,15 @@ const getCachedPublicEventData = unstable_cache(
         points: res.points
       });
     });
+
+    // Deduct Individual Total Penalties from Candidate Total Standings
+    allTeamPenalties.forEach(pen => {
+      const isIndividualTarget = pen.targetType === "INDIVIDUAL" || !!pen.candidateId;
+      if (isIndividualTarget && pen.candidateId && candidateScores[pen.candidateId]) {
+        candidateScores[pen.candidateId].points = Math.max(0, candidateScores[pen.candidateId].points - pen.pointsDeducted);
+      }
+    });
+
     const topStars = Object.values(candidateScores).sort((a, b) => b.points - a.points).slice(0, 5);
 
     // --- Category Top 5 Stars ---

@@ -63,10 +63,7 @@ export default async function PrintResultsPage({ params }: { params: Promise<{ p
               <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontSize: '0.85rem' }}>
                 {res.status === "ABSENT" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>ABSENT</span>}
                 {res.status === "DISQUALIFIED" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>DISQUALIFIED</span>}
-                {res.status === "PENALIZED" && res.penaltyMarks > 0 && (
-                  <span style={{ color: '#d97706', fontWeight: 'bold' }}>-{res.penaltyMarks} ({res.penaltyReason || "Penalty"})</span>
-                )}
-                {res.status !== "ABSENT" && res.status !== "DISQUALIFIED" && (!res.penaltyMarks || res.penaltyMarks === 0) && "-"}
+                {res.status !== "ABSENT" && res.status !== "DISQUALIFIED" && "-"}
               </td>
             </tr>
           ))}

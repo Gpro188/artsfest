@@ -204,22 +204,7 @@ export default function ResultList({ results, role }: { results: any[], role: st
                                 ❌ Absent
                               </span>
                             )}
-                            {result.status === "DISQUALIFIED" && (
-                              <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#dc262625', color: '#dc2626', fontWeight: 800 }}>
-                                🚫 Disqualified ({result.penaltyReason || "Rules"})
-                              </span>
-                            )}
-                            {result.penaltyMarks > 0 && result.status !== "ABSENT" && result.status !== "DISQUALIFIED" && (
-                              <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f59e0b20', color: '#f59e0b', fontWeight: 800 }}>
-                                ⚠️ -{result.penaltyMarks} {result.penaltyReason || ""} ({result.penaltyTarget === "TEAM_TOTAL" ? "Team Total" : "Ind Mark"})
-                              </span>
-                            )}
                           </div>
-                          {result.penaltyDescription && (
-                            <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '1px' }}>
-                              Note: {result.penaltyDescription}
-                            </div>
-                          )}
                           {isGroupOrGeneral && teamInfo?.leaderName && !result.candidate && (
                             <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Leader: {teamInfo.leaderName}</div>
                           )}

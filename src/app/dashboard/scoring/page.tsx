@@ -3,11 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getFestivalEventIds } from "@/lib/eventScope";
-import ScoringForm from "./ScoringForm";
-import ResultList from "./ResultList";
-import TeamScorePreview from "./TeamScorePreview";
+import ScoringHubSessions from "./ScoringHubSessions";
 import ResultsExportPrintBar from "./ResultsExportPrintBar";
-import PendingProgramsList from "./PendingProgramsList";
 import EventSwitcher from "@/app/components/EventSwitcher";
 
 export default async function ScoringPage(props: {
@@ -72,7 +69,18 @@ export default async function ScoringPage(props: {
   // Fetch all related festival event IDs (root event + any sub-events)
   const festEventIds = await getFestivalEventIds(activeEventId);
 
-  const [dbEvent, festGeneralPointMatrix, allFestCategories, allFestTeams, programsInScope, results, allPrograms, allResultsForScore, teamPenalties] = await Promise.all([
+  const [
+    dbEvent,
+    festGeneralPointMatrix,
+    allFestCategories,
+    allFestTeams,
+    programsInScope,
+    results,
+    allPrograms,
+    allResultsForScore,
+    teamPenalties,
+    allFestCandidates
+  ] = await Promise.all([
     prisma.event.findUnique({
       where: { id: activeEventId },
       select: {
@@ -207,11 +215,44 @@ export default async function ScoringPage(props: {
       where: { eventId: { in: festEventIds } },
       select: {
         id: true,
+        eventId: true,
         teamId: true,
+        targetType: true,
+        candidateId: true,
         pointsDeducted: true,
         reason: true,
-        description: true
-      }
+        description: true,
+        createdAt: true,
+        team: {
+          select: {
+            name: true,
+            flagColor: true
+          }
+        },
+        candidate: {
+          select: {
+            name: true,
+            chestNumber: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.candidate.findMany({
+      where: { team: { eventId: { in: festEventIds } } },
+      select: {
+        id: true,
+        name: true,
+        chestNumber: true,
+        teamId: true,
+        team: {
+          select: {
+            name: true,
+            flagColor: true
+          }
+        }
+      },
+      orderBy: { chestNumber: 'asc' }
     })
   ]);
 
@@ -253,9 +294,10 @@ export default async function ScoringPage(props: {
     }
   });
 
-  // Deduct team penalties from live and draft standings
+  // Deduct team penalties from live and draft standings (only if targetType is TEAM or legacy)
   teamPenalties.forEach(pen => {
-    if (pen.teamId && teamScoresMap[pen.teamId]) {
+    const isTeamTarget = pen.targetType === "TEAM" || !pen.candidateId;
+    if (isTeamTarget && pen.teamId && teamScoresMap[pen.teamId]) {
       teamScoresMap[pen.teamId].totalPoints = Math.max(0, teamScoresMap[pen.teamId].totalPoints - pen.pointsDeducted);
       teamScoresMap[pen.teamId].publishedPoints = Math.max(0, teamScoresMap[pen.teamId].publishedPoints - pen.pointsDeducted);
     }
@@ -275,7 +317,7 @@ export default async function ScoringPage(props: {
         <div>
           <h1 style={{ margin: '0 0 var(--spacing-xs) 0' }}>Live Scoring & Results Hub</h1>
           <p className="page-description" style={{ marginBottom: 0 }}>
-            Enter marks, assign ranks and grades, calculate points, and publish results for live standings.
+            Enter marks, assign ranks and grades, calculate points, and manage total penalty marks for live standings.
           </p>
         </div>
       </div>
@@ -299,41 +341,17 @@ export default async function ScoringPage(props: {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '2.8fr 1.2fr', gap: 'var(--spacing-lg)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
-            {/* Primary Entry Area */}
-            <div data-tour="scoring-form" className="glass-panel" style={{ padding: 'var(--spacing-xl)', border: '1px solid var(--primary)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: 'var(--primary)' }}></div>
-              <h2 style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                 Rapid Result Entry
-              </h2>
-              <ScoringForm events={[activeEvent]} />
-            </div>
-
-            {/* Results Management Section */}
-            <div data-tour="scoring-results" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-              <h3 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--secondary)' }}>Results Management Hub</h3>
-              <ResultList results={results as any} role={session.user.role} />
-            </div>
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
-            <div data-tour="scoring-teams">
-              <TeamScorePreview scores={teamScores} />
-            </div>
-            
-            <div data-tour="scoring-pending" className="glass-panel" style={{ padding: 'var(--spacing-lg)' }}>
-              <h3 style={{ marginBottom: 'var(--spacing-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                Pending Entries
-                <span style={{ fontSize: '0.8rem', backgroundColor: 'var(--error)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{pendingPrograms.length}</span>
-              </h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-md)' }}>
-                Programs with assignments but no results recorded for <strong>{activeEvent.name}</strong>.
-              </p>
-              <PendingProgramsList programs={pendingPrograms} />
-            </div>
-          </div>
-        </div>
+        <ScoringHubSessions
+          activeEvent={activeEvent}
+          eventId={activeEventId}
+          results={results}
+          teamScores={teamScores}
+          pendingPrograms={pendingPrograms}
+          role={session.user.role}
+          candidates={allFestCandidates}
+          teamPenalties={teamPenalties}
+          committeeRulesJson={activeEvent.penaltyRules}
+        />
       )}
     </div>
   );

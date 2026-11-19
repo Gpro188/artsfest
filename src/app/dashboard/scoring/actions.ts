@@ -209,32 +209,6 @@ export async function submitMarks(data: {
        else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
     }
 
-    // Handle Team Grand Total Penalty sync
-    if (targetTeamId) {
-      await prisma.teamPenalty.deleteMany({
-        where: {
-          programId: data.programId,
-          teamId: targetTeamId,
-          ...(candidateId ? { candidateId } : {})
-        }
-      });
-
-      if ((penaltyTarget === "TEAM_TOTAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
-        await prisma.teamPenalty.create({
-          data: {
-            eventId: program.eventId,
-            teamId: targetTeamId,
-            programId: data.programId,
-            candidateId: candidateId || undefined,
-            reason: penaltyReason || "OTHERS",
-            pointsDeducted: penaltyMarks,
-            description: penaltyDescription || undefined,
-            issuedBy: "Admin"
-          }
-        });
-      }
-    }
-
     if (candidateId) {
       await prisma.result.upsert({
         where: { candidateId_programId: { candidateId, programId: data.programId } },
@@ -401,42 +375,6 @@ export async function submitBulkProgramResults(data: {
           }
         });
         if (cand) candidateId = cand.id;
-      }
-
-      // Resolve teamId for team penalties
-      let targetTeamId = entry.teamId || null;
-      if (!targetTeamId && candidateId) {
-        const cand = await prisma.candidate.findUnique({
-          where: { id: candidateId },
-          select: { teamId: true }
-        });
-        targetTeamId = cand?.teamId || null;
-      }
-
-      // Handle Team Grand Total Penalty sync
-      if (targetTeamId) {
-        await prisma.teamPenalty.deleteMany({
-          where: {
-            programId: data.programId,
-            teamId: targetTeamId,
-            ...(candidateId ? { candidateId } : {})
-          }
-        });
-
-        if ((penaltyTarget === "TEAM_TOTAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
-          await prisma.teamPenalty.create({
-            data: {
-              eventId: program.eventId,
-              teamId: targetTeamId,
-              programId: data.programId,
-              candidateId: candidateId || undefined,
-              reason: penaltyReason || "OTHERS",
-              pointsDeducted: penaltyMarks,
-              description: penaltyDescription || undefined,
-              issuedBy: "Admin"
-            }
-          });
-        }
       }
 
       if (candidateId) {
@@ -685,33 +623,6 @@ export async function updateResultDetails(data: {
       finalMarks = Math.max(0, finalMarks - penaltyMarks);
     }
 
-    // Sync TeamPenalty
-    const targetTeamId = existing.teamId || existing.candidate?.teamId || null;
-    if (targetTeamId) {
-      await prisma.teamPenalty.deleteMany({
-        where: {
-          programId: existing.programId,
-          teamId: targetTeamId,
-          ...(existing.candidateId ? { candidateId: existing.candidateId } : {})
-        }
-      });
-
-      if ((penaltyTarget === "TEAM_TOTAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
-        await prisma.teamPenalty.create({
-          data: {
-            eventId: program.eventId,
-            teamId: targetTeamId,
-            programId: existing.programId,
-            candidateId: existing.candidateId || undefined,
-            reason: penaltyReason || "OTHERS",
-            pointsDeducted: penaltyMarks,
-            description: penaltyDescription || undefined,
-            issuedBy: "Admin"
-          }
-        });
-      }
-    }
-
     await prisma.result.update({
       where: { id: data.id },
       data: {
@@ -738,5 +649,92 @@ export async function updateResultDetails(data: {
   } catch (error) {
     console.error("Failed to update result details:", error);
     return { success: false, error: "Failed to update result details" };
+  }
+}
+
+// ----------------------------------------------------
+// DEDICATED TOTAL PENALTY MARK MANAGEMENT (-MARK SESSION)
+// Affects solely Team Grand Total or Individual Total
+// ----------------------------------------------------
+
+export async function applyTotalPenalty(data: {
+  id?: string;
+  eventId: string;
+  targetType: "TEAM" | "INDIVIDUAL";
+  teamId: string;
+  candidateId?: string | null;
+  reason: string;
+  pointsDeducted: number;
+  description?: string | null;
+  issuedBy?: string;
+}) {
+  try {
+    if (!data.eventId || !data.teamId || !data.pointsDeducted || data.pointsDeducted <= 0) {
+      return { success: false, error: "Event, Team, and a valid penalty deduction mark are required." };
+    }
+
+    if (data.targetType === "INDIVIDUAL" && !data.candidateId) {
+      return { success: false, error: "Candidate is required for an Individual total penalty." };
+    }
+
+    if (data.id) {
+      // Edit existing penalty
+      await prisma.teamPenalty.update({
+        where: { id: data.id },
+        data: {
+          targetType: data.targetType,
+          teamId: data.teamId,
+          candidateId: data.candidateId || null,
+          reason: data.reason,
+          pointsDeducted: data.pointsDeducted,
+          description: data.description || null,
+          issuedBy: data.issuedBy || "Admin"
+        }
+      });
+    } else {
+      // Create new penalty
+      await prisma.teamPenalty.create({
+        data: {
+          eventId: data.eventId,
+          targetType: data.targetType,
+          teamId: data.teamId,
+          candidateId: data.candidateId || null,
+          reason: data.reason,
+          pointsDeducted: data.pointsDeducted,
+          description: data.description || null,
+          issuedBy: data.issuedBy || "Admin"
+        }
+      });
+    }
+
+    revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to apply total penalty:", error);
+    return { success: false, error: "Failed to apply penalty" };
+  }
+}
+
+export async function deleteTotalPenalty(id: string) {
+  try {
+    await prisma.teamPenalty.delete({
+      where: { id }
+    });
+
+    revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete penalty:", error);
+    return { success: false, error: "Failed to delete penalty" };
   }
 }
