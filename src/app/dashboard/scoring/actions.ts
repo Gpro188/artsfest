@@ -617,9 +617,9 @@ export async function updateResultDetails(data: {
   isPublished?: boolean;
   status?: string;
   penaltyMarks?: number;
-  penaltyReason?: string;
+  penaltyReason?: string | null;
   penaltyTarget?: string;
-  penaltyDescription?: string;
+  penaltyDescription?: string | null;
 }) {
   try {
     const existing = await prisma.result.findUnique({
@@ -656,9 +656,13 @@ export async function updateResultDetails(data: {
     const isAbsentOrDisqualified = data.status === "ABSENT" || data.status === "DISQUALIFIED";
     const status = data.status !== undefined ? data.status : existing.status;
     const penaltyMarks = data.penaltyMarks !== undefined ? data.penaltyMarks : existing.penaltyMarks;
-    const penaltyReason = data.penaltyReason !== undefined ? data.penaltyReason : existing.penaltyReason;
+    const penaltyReason = data.penaltyReason !== undefined 
+      ? (data.penaltyReason ? data.penaltyReason : null) 
+      : existing.penaltyReason;
     const penaltyTarget = data.penaltyTarget !== undefined ? data.penaltyTarget : existing.penaltyTarget;
-    const penaltyDescription = data.penaltyDescription !== undefined ? data.penaltyDescription : existing.penaltyDescription;
+    const penaltyDescription = data.penaltyDescription !== undefined 
+      ? (data.penaltyDescription ? data.penaltyDescription : null) 
+      : existing.penaltyDescription;
 
     const rank = isAbsentOrDisqualified ? null : (data.rank !== undefined ? data.rank : existing.rank);
     const grade = isAbsentOrDisqualified ? null : (data.grade !== undefined ? data.grade : existing.grade);

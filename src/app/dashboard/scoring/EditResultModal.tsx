@@ -69,9 +69,9 @@ export default function EditResultModal({ result, onClose }: { result: any, onCl
       isPublished,
       status,
       penaltyMarks: penaltyMarks ? parseFloat(penaltyMarks) : 0,
-      penaltyReason: penaltyReason || undefined,
-      penaltyTarget,
-      penaltyDescription: penaltyDescription || undefined
+      penaltyReason: penaltyReason ? penaltyReason : null,
+      penaltyTarget: penaltyTarget || "INDIVIDUAL",
+      penaltyDescription: penaltyDescription ? penaltyDescription : null
     });
 
     if (res.success) {
