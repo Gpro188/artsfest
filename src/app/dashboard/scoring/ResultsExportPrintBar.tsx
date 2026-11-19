@@ -62,6 +62,9 @@ export default function ResultsExportPrintBar({
       "Participant / Candidate": r.candidate?.name || r.team?.name || "Participant",
       "Team": r.candidate?.team?.name || r.team?.name || "-",
       "Points": r.points || 0,
+      "Disciplinary Status": r.status || "COMPLETED",
+      "-Mark Penalty": r.penaltyMarks || 0,
+      "Penalty Reason": r.penaltyReason || "-",
       "Status": r.isPublished ? "Published" : "Draft"
     }));
 

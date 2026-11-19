@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import PointMatrixForm from "./PointMatrixForm";
 import CategoryManager from "./CategoryManager";
 import GeneralPointForm from "./GeneralPointForm";
+import PenaltyRulesForm from "./PenaltyRulesForm";
 import Link from "next/link";
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +23,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         include: { pointMatrix: true }
       },
       generalPointMatrix: true,
+      globalSetting: {
+        select: { penaltyRules: true }
+      },
       _count: {
         select: { programs: true, teams: true }
       }
@@ -59,6 +63,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           
           <div data-tour="event-point-matrix">
             <PointMatrixForm eventId={event.id} categories={event.categories} />
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: 'var(--spacing-xl) 0' }} />
+          
+          <div data-tour="event-penalty-rules">
+            <PenaltyRulesForm eventId={event.id} initialRulesJson={event.globalSetting?.penaltyRules} />
           </div>
         </div>
       </div>

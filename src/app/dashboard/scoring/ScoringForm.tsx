@@ -1,8 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { submitMarks, submitBulkProgramResults } from "./actions";
-import { Users, User, CheckCircle2, Sparkles, Trophy, Award } from "lucide-react";
+import { Users, User, CheckCircle2, Sparkles, Trophy, Award, ShieldAlert, AlertTriangle } from "lucide-react";
+import { parsePenaltyRules, PenaltySituation, PenaltyTarget } from "@/lib/penaltyRules";
+
+export type BulkEntryRow = {
+  rank: string;
+  grade: string;
+  marks: string;
+  status?: string;
+  penaltyReason?: string;
+  penaltyTarget?: PenaltyTarget;
+  penaltyMarks?: string;
+  penaltyDescription?: string;
+};
 
 export default function ScoringForm({ events }: { events: any[] }) {
   const [eventId, setEventId] = useState(events[0]?.id || "");
@@ -16,9 +28,15 @@ export default function ScoringForm({ events }: { events: any[] }) {
   const [marks, setMarks] = useState("");
   const [rank, setRank] = useState<string>(""); 
   const [grade, setGrade] = useState<string>(""); 
+  const [singleStatus, setSingleStatus] = useState<string>("COMPLETED");
+  const [singlePenaltyReason, setSinglePenaltyReason] = useState<string>("");
+  const [singlePenaltyTarget, setSinglePenaltyTarget] = useState<PenaltyTarget>("INDIVIDUAL");
+  const [singlePenaltyMarks, setSinglePenaltyMarks] = useState<string>("");
+  const [singlePenaltyDescription, setSinglePenaltyDescription] = useState<string>("");
 
-  // Bulk Entry State: Record of participantId -> { rank, grade, marks }
-  const [bulkEntries, setBulkEntries] = useState<Record<string, { rank: string, grade: string, marks: string }>>({});
+  // Bulk Entry State: Record of participantId -> BulkEntryRow
+  const [bulkEntries, setBulkEntries] = useState<Record<string, BulkEntryRow>>({});
+  const [expandedPenaltyId, setExpandedPenaltyId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null);
@@ -36,6 +54,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
   }, [events, eventId]);
 
   const selectedEvent = events.find(e => e.id === eventId);
+  const committeeRules = parsePenaltyRules(selectedEvent?.penaltyRules || selectedEvent?.globalSetting?.penaltyRules);
   const allPrograms = selectedEvent?.programs || [];
   
   // Filter programs based on Type first
@@ -199,6 +218,79 @@ export default function ScoringForm({ events }: { events: any[] }) {
     });
   };
 
+  const onSingleSituationChange = (situation: PenaltySituation | "") => {
+    setSinglePenaltyReason(situation);
+    if (!situation) {
+      setSingleStatus("COMPLETED");
+      setSinglePenaltyMarks("");
+      setSinglePenaltyTarget("INDIVIDUAL");
+      setSinglePenaltyDescription("");
+      return;
+    }
+    const config = committeeRules[situation];
+    const isDisqualify = config.disqualify || situation === "ABSENT";
+    setSingleStatus(situation === "ABSENT" ? "ABSENT" : (isDisqualify ? "DISQUALIFIED" : "PENALIZED"));
+    if (isDisqualify) {
+      setRank("");
+      setGrade("");
+      setMarks("0");
+    }
+    setSinglePenaltyMarks(config.defaultDeduction > 0 ? config.defaultDeduction.toString() : "");
+    setSinglePenaltyTarget(config.defaultTarget);
+  };
+
+  const onBulkSituationChange = (id: string, situation: PenaltySituation | "") => {
+    setBulkEntries(prev => {
+      const current = prev[id] || { rank: "", grade: "", marks: "" };
+      if (!situation) {
+        return {
+          ...prev,
+          [id]: {
+            ...current,
+            status: "COMPLETED",
+            penaltyReason: "",
+            penaltyMarks: "",
+            penaltyTarget: "INDIVIDUAL",
+            penaltyDescription: ""
+          }
+        };
+      }
+      const config = committeeRules[situation];
+      const isDisqualify = config.disqualify || situation === "ABSENT";
+      const status = situation === "ABSENT" ? "ABSENT" : (isDisqualify ? "DISQUALIFIED" : "PENALIZED");
+      return {
+        ...prev,
+        [id]: {
+          ...current,
+          rank: isDisqualify ? "" : current.rank,
+          grade: isDisqualify ? "" : current.grade,
+          marks: isDisqualify ? "0" : current.marks,
+          status,
+          penaltyReason: situation,
+          penaltyMarks: config.defaultDeduction > 0 ? config.defaultDeduction.toString() : "",
+          penaltyTarget: config.defaultTarget,
+          penaltyDescription: current.penaltyDescription || ""
+        }
+      };
+    });
+  };
+
+  const onBulkPenaltyFieldChange = (id: string, field: 'status' | 'penaltyTarget' | 'penaltyMarks' | 'penaltyDescription', value: any) => {
+    setBulkEntries(prev => {
+      const current = prev[id] || { rank: "", grade: "", marks: "" };
+      const updated = { ...current, [field]: value };
+      if (field === 'status' && (value === 'ABSENT' || value === 'DISQUALIFIED')) {
+        updated.rank = "";
+        updated.grade = "";
+        updated.marks = "0";
+      }
+      return {
+        ...prev,
+        [id]: updated
+      };
+    });
+  };
+
   const handleSingleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -225,7 +317,12 @@ export default function ScoringForm({ events }: { events: any[] }) {
       teamId: !isIndividual ? selectedParticipant?.teamId : undefined,
       marks: parseFloat(marks) || 0,
       manualRank: rank ? parseInt(rank) : null,
-      manualGrade: grade || null
+      manualGrade: grade || null,
+      status: singleStatus,
+      penaltyMarks: singlePenaltyMarks ? parseFloat(singlePenaltyMarks) : 0,
+      penaltyReason: singlePenaltyReason || undefined,
+      penaltyTarget: singlePenaltyTarget,
+      penaltyDescription: singlePenaltyDescription || undefined
     });
     
     if (result.success) {
@@ -234,6 +331,11 @@ export default function ScoringForm({ events }: { events: any[] }) {
       setMarks("");
       setRank("");
       setGrade("");
+      setSingleStatus("COMPLETED");
+      setSinglePenaltyReason("");
+      setSinglePenaltyTarget("INDIVIDUAL");
+      setSinglePenaltyMarks("");
+      setSinglePenaltyDescription("");
     } else {
       setStatus({ type: 'error', message: result.error || "Failed to submit result" });
     }
@@ -252,7 +354,15 @@ export default function ScoringForm({ events }: { events: any[] }) {
     }
 
     const entriesToSave = Object.entries(bulkEntries)
-      .filter(([_, data]) => data.rank || data.grade || (parseFloat(data.marks) > 0))
+      .filter(([_, data]) => 
+        data.rank || 
+        data.grade || 
+        (parseFloat(data.marks) > 0) || 
+        data.status === "ABSENT" || 
+        data.status === "DISQUALIFIED" || 
+        (data.penaltyMarks && parseFloat(data.penaltyMarks) > 0) ||
+        data.penaltyReason
+      )
       .map(([id, data]) => {
         const p = participants.find((part: any) => part.id === id);
         return {
@@ -260,12 +370,17 @@ export default function ScoringForm({ events }: { events: any[] }) {
           teamId: !isIndividual ? p?.teamId : undefined,
           rank: data.rank ? parseInt(data.rank) : null,
           grade: data.grade || null,
-          marks: parseFloat(data.marks) || 0
+          marks: parseFloat(data.marks) || 0,
+          status: data.status || (data.penaltyMarks && parseFloat(data.penaltyMarks) > 0 ? "PENALIZED" : "COMPLETED"),
+          penaltyMarks: data.penaltyMarks ? parseFloat(data.penaltyMarks) : 0,
+          penaltyReason: data.penaltyReason || undefined,
+          penaltyTarget: data.penaltyTarget || "INDIVIDUAL",
+          penaltyDescription: data.penaltyDescription || undefined
         };
       });
 
     if (entriesToSave.length === 0) {
-      setStatus({ type: 'error', message: 'No places or grades entered yet. Please assign at least one place/grade.' });
+      setStatus({ type: 'error', message: 'No places, grades, or disciplinary actions entered yet.' });
       setLoading(false);
       return;
     }
@@ -547,127 +662,316 @@ export default function ScoringForm({ events }: { events: any[] }) {
                       <th style={{ padding: '10px 12px', width: '150px' }}>Place (Rank)</th>
                       <th style={{ padding: '10px 12px', width: '130px' }}>Grade</th>
                       <th style={{ padding: '10px 12px', width: '110px', textAlign: 'center' }}>Total Points</th>
+                      <th style={{ padding: '10px 12px', width: '180px', textAlign: 'center' }}>-Mark / Discipline</th>
                     </tr>
                   </thead>
                   <tbody>
                     {participants.map((p: any, idx: number) => {
                       const entry = bulkEntries[p.id] || { rank: "", grade: "", marks: "" };
                       const isWinner = entry.rank === "1" || entry.rank === "2" || entry.rank === "3";
+                      const isExpanded = expandedPenaltyId === p.id;
+                      const hasPenalty = !!(entry.penaltyReason || entry.status === "ABSENT" || entry.status === "DISQUALIFIED" || (entry.penaltyMarks && parseFloat(entry.penaltyMarks) > 0));
 
                       return (
-                        <tr 
-                          key={p.id} 
-                          style={{ 
-                            borderBottom: '1px solid var(--border-color)',
-                            backgroundColor: isWinner ? 'rgba(16, 185, 129, 0.05)' : idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'
-                          }}
-                        >
-                          <td style={{ padding: '10px 12px', fontWeight: 800, color: 'var(--primary)' }}>
-                            {p.chestNumber || (isIndividual ? `T-${idx + 1}` : `Team-${idx + 1}`)}
-                          </td>
-                          <td style={{ padding: '10px 12px' }}>
-                            {isIndividual ? (
-                              <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
-                            ) : (
-                              <div>
+                        <React.Fragment key={p.id}>
+                          <tr 
+                            style={{ 
+                              borderBottom: isExpanded ? 'none' : '1px solid var(--border-color)',
+                              backgroundColor: isExpanded
+                                ? 'rgba(239, 68, 68, 0.05)'
+                                : isWinner 
+                                  ? 'rgba(16, 185, 129, 0.05)' 
+                                  : idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'
+                            }}
+                          >
+                            <td style={{ padding: '10px 12px', fontWeight: 800, color: 'var(--primary)' }}>
+                              {p.chestNumber || (isIndividual ? `T-${idx + 1}` : `Team-${idx + 1}`)}
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>
+                              {isIndividual ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                                    🏛️ {p.teamName || p.name}
-                                  </span>
-                                  {p.squadLabel && (
-                                    <span style={{ 
-                                      fontSize: '0.7rem', 
-                                      fontWeight: 700, 
-                                      padding: '1px 6px', 
-                                      borderRadius: '4px',
-                                      backgroundColor: p.flagColor ? `${p.flagColor}25` : 'rgba(99, 102, 241, 0.15)',
-                                      color: p.flagColor || 'var(--primary)'
-                                    }}>
-                                      {p.squadLabel}
+                                  <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</span>
+                                  {entry.status === "ABSENT" && (
+                                    <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#ef444420', color: '#ef4444', fontWeight: 800 }}>
+                                      ❌ ABSENT
+                                    </span>
+                                  )}
+                                  {entry.status === "DISQUALIFIED" && (
+                                    <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#dc262625', color: '#dc2626', fontWeight: 800 }}>
+                                      🚫 DISQUALIFIED
+                                    </span>
+                                  )}
+                                  {entry.penaltyMarks && parseFloat(entry.penaltyMarks) > 0 && entry.status !== "ABSENT" && entry.status !== "DISQUALIFIED" && (
+                                    <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f59e0b20', color: '#f59e0b', fontWeight: 800 }}>
+                                      ⚠️ -{entry.penaltyMarks} ({entry.penaltyTarget === "TEAM_TOTAL" ? "TEAM" : "IND"})
                                     </span>
                                   )}
                                 </div>
-                                {p.squadMembers ? (
-                                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.3' }}>
-                                    <strong style={{ color: 'var(--text-primary)' }}>Enrolled ({p.memberCount || 0}):</strong> {p.squadMembers}
+                              ) : (
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                                      🏛️ {p.teamName || p.name}
+                                    </span>
+                                    {p.squadLabel && (
+                                      <span style={{ 
+                                        fontSize: '0.7rem', 
+                                        fontWeight: 700, 
+                                        padding: '1px 6px', 
+                                        borderRadius: '4px',
+                                        backgroundColor: p.flagColor ? `${p.flagColor}25` : 'rgba(99, 102, 241, 0.15)',
+                                        color: p.flagColor || 'var(--primary)'
+                                      }}>
+                                        {p.squadLabel}
+                                      </span>
+                                    )}
+                                    {entry.status === "ABSENT" && (
+                                      <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#ef444420', color: '#ef4444', fontWeight: 800 }}>
+                                        ❌ ABSENT
+                                      </span>
+                                    )}
+                                    {entry.status === "DISQUALIFIED" && (
+                                      <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#dc262625', color: '#dc2626', fontWeight: 800 }}>
+                                        🚫 DISQUALIFIED
+                                      </span>
+                                    )}
+                                    {entry.penaltyMarks && parseFloat(entry.penaltyMarks) > 0 && entry.status !== "ABSENT" && entry.status !== "DISQUALIFIED" && (
+                                      <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f59e0b20', color: '#f59e0b', fontWeight: 800 }}>
+                                        ⚠️ -{entry.penaltyMarks} ({entry.penaltyTarget === "TEAM_TOTAL" ? "TEAM" : "IND"})
+                                      </span>
+                                    )}
                                   </div>
-                                ) : (
-                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                                    Institution entry (results scored to team score)
+                                  {p.squadMembers ? (
+                                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.3' }}>
+                                      <strong style={{ color: 'var(--text-primary)' }}>Enrolled ({p.memberCount || 0}):</strong> {p.squadMembers}
+                                    </div>
+                                  ) : (
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                      Institution entry (results scored to team score)
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span style={{
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                backgroundColor: p.flagColor ? `${p.flagColor}20` : 'rgba(255,255,255,0.06)',
+                                color: p.flagColor || 'var(--text-secondary)'
+                              }}>
+                                {isIndividual ? (p.teamName || 'Independent') : (p.squadLabel || 'Team Entry')}
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <select
+                                value={entry.rank}
+                                onChange={(e) => handleBulkChange(p.id, 'rank', e.target.value)}
+                                disabled={entry.status === "ABSENT" || entry.status === "DISQUALIFIED"}
+                                className="form-input"
+                                style={{ 
+                                  margin: 0, 
+                                  padding: '6px 8px', 
+                                  fontSize: '0.85rem',
+                                  fontWeight: entry.rank ? 800 : 500,
+                                  color: entry.rank === "1" ? '#10b981' : entry.rank === "2" ? '#f97316' : entry.rank === "3" ? '#ef4444' : 'inherit'
+                                }}
+                              >
+                                <option value="">-- No Rank --</option>
+                                <option value="1">🥇 1st Place</option>
+                                <option value="2">🥈 2nd Place</option>
+                                <option value="3">🥉 3rd Place</option>
+                              </select>
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <select
+                                value={entry.grade}
+                                onChange={(e) => handleBulkChange(p.id, 'grade', e.target.value)}
+                                disabled={entry.status === "ABSENT" || entry.status === "DISQUALIFIED"}
+                                className="form-input"
+                                style={{ 
+                                  margin: 0, 
+                                  padding: '6px 8px', 
+                                  fontSize: '0.85rem',
+                                  fontWeight: entry.grade ? 800 : 500
+                                }}
+                              >
+                                <option value="">-- No Grade --</option>
+                                <option value="A">Grade A</option>
+                                <option value="B">Grade B</option>
+                                <option value="C">Grade C</option>
+                              </select>
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={entry.marks}
+                                onChange={(e) => handleBulkChange(p.id, 'marks', e.target.value)}
+                                disabled={entry.status === "ABSENT" || entry.status === "DISQUALIFIED"}
+                                placeholder="0"
+                                className="form-input"
+                                style={{
+                                  margin: 0,
+                                  padding: '6px 8px',
+                                  width: '70px',
+                                  textAlign: 'center',
+                                  fontWeight: 800,
+                                  fontSize: '0.9rem',
+                                  display: 'inline-block'
+                                }}
+                              />
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedPenaltyId(isExpanded ? null : p.id)}
+                                style={{
+                                  padding: '4px 10px',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 700,
+                                  borderRadius: '6px',
+                                  border: hasPenalty
+                                    ? (entry.status === "ABSENT" || entry.status === "DISQUALIFIED" ? '1px solid #dc2626' : '1px solid #f59e0b')
+                                    : '1px dashed var(--border-color)',
+                                  backgroundColor: entry.status === "ABSENT" 
+                                    ? '#ef444420' 
+                                    : entry.status === "DISQUALIFIED" 
+                                      ? '#dc262625' 
+                                      : (entry.penaltyMarks && parseFloat(entry.penaltyMarks) > 0)
+                                        ? '#f59e0b20'
+                                        : 'rgba(255, 255, 255, 0.05)',
+                                  color: entry.status === "ABSENT" 
+                                    ? '#ef4444' 
+                                    : entry.status === "DISQUALIFIED" 
+                                      ? '#dc2626' 
+                                      : (entry.penaltyMarks && parseFloat(entry.penaltyMarks) > 0)
+                                        ? '#f59e0b'
+                                        : 'var(--text-secondary)',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px'
+                                }}
+                              >
+                                {entry.status === "ABSENT" && "❌ Absent"}
+                                {entry.status === "DISQUALIFIED" && "🚫 Disqualified"}
+                                {entry.status !== "ABSENT" && entry.status !== "DISQUALIFIED" && entry.penaltyMarks && parseFloat(entry.penaltyMarks) > 0 && `⚠️ -${entry.penaltyMarks} ${entry.penaltyReason || ""}`}
+                                {!hasPenalty && "⚖️ -Mark"}
+                                <span style={{ fontSize: '0.65rem' }}>{isExpanded ? "▲" : "▼"}</span>
+                              </button>
+                            </td>
+                          </tr>
+
+                          {/* EXPANDABLE PENALTY SUB-PANEL */}
+                          {isExpanded && (
+                            <tr style={{ backgroundColor: 'rgba(239, 68, 68, 0.04)', borderBottom: '2px solid rgba(239, 68, 68, 0.2)' }}>
+                              <td colSpan={7} style={{ padding: '12px 16px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--danger, #ef4444)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <ShieldAlert size={15} />
+                                    Disciplinary & Negative Mark (-Mark) Action for {isIndividual ? p.name : p.teamName}
                                   </div>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <span style={{
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              backgroundColor: p.flagColor ? `${p.flagColor}20` : 'rgba(255,255,255,0.06)',
-                              color: p.flagColor || 'var(--text-secondary)'
-                            }}>
-                              {isIndividual ? (p.teamName || 'Independent') : (p.squadLabel || 'Team Entry')}
-                            </span>
-                          </td>
-                          <td style={{ padding: '8px 12px' }}>
-                            <select
-                              value={entry.rank}
-                              onChange={(e) => handleBulkChange(p.id, 'rank', e.target.value)}
-                              className="form-input"
-                              style={{ 
-                                margin: 0, 
-                                padding: '6px 8px', 
-                                fontSize: '0.85rem',
-                                fontWeight: entry.rank ? 800 : 500,
-                                color: entry.rank === "1" ? '#10b981' : entry.rank === "2" ? '#f97316' : entry.rank === "3" ? '#ef4444' : 'inherit'
-                              }}
-                            >
-                              <option value="">-- No Rank --</option>
-                              <option value="1">🥇 1st Place</option>
-                              <option value="2">🥈 2nd Place</option>
-                              <option value="3">🥉 3rd Place</option>
-                            </select>
-                          </td>
-                          <td style={{ padding: '8px 12px' }}>
-                            <select
-                              value={entry.grade}
-                              onChange={(e) => handleBulkChange(p.id, 'grade', e.target.value)}
-                              className="form-input"
-                              style={{ 
-                                margin: 0, 
-                                padding: '6px 8px', 
-                                fontSize: '0.85rem',
-                                fontWeight: entry.grade ? 800 : 500
-                              }}
-                            >
-                              <option value="">-- No Grade --</option>
-                              <option value="A">Grade A</option>
-                              <option value="B">Grade B</option>
-                              <option value="C">Grade C</option>
-                            </select>
-                          </td>
-                          <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                            <input
-                              type="number"
-                              step="0.1"
-                              value={entry.marks}
-                              onChange={(e) => handleBulkChange(p.id, 'marks', e.target.value)}
-                              placeholder="0"
-                              className="form-input"
-                              style={{
-                                margin: 0,
-                                padding: '6px 8px',
-                                width: '70px',
-                                textAlign: 'center',
-                                fontWeight: 800,
-                                fontSize: '0.9rem',
-                                display: 'inline-block'
-                              }}
-                            />
-                          </td>
-                        </tr>
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedPenaltyId(null)}
+                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem' }}
+                                  >
+                                    ✕ Close
+                                  </button>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.3fr 1fr 1.1fr 1.6fr', gap: '10px', alignItems: 'flex-end' }}>
+                                  {/* 1. Situation */}
+                                  <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800 }}>1. Situation Type</label>
+                                    <select
+                                      className="form-input"
+                                      value={entry.penaltyReason || ""}
+                                      onChange={(e) => onBulkSituationChange(p.id, e.target.value as any)}
+                                      style={{ padding: '6px 8px', fontSize: '0.82rem', fontWeight: entry.penaltyReason ? 700 : 400 }}
+                                    >
+                                      <option value="">-- No Penalty (Normal) --</option>
+                                      <option value="ABSENT">❌ Absent (No Show)</option>
+                                      <option value="BEYOND_LIMIT">⏱️ Beyond the Limit (Time/Props)</option>
+                                      <option value="IMPERSONATION">🎭 Impersonation (Fraud)</option>
+                                      <option value="CHEATING">🚫 Cheating (Malpractice)</option>
+                                      <option value="OTHERS">📝 Others (Custom)</option>
+                                    </select>
+                                  </div>
+
+                                  {/* 2. Target */}
+                                  <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800 }}>2. Deduction Scope</label>
+                                    <select
+                                      className="form-input"
+                                      value={entry.penaltyTarget || "INDIVIDUAL"}
+                                      onChange={(e) => onBulkPenaltyFieldChange(p.id, 'penaltyTarget', e.target.value)}
+                                      disabled={!entry.penaltyReason}
+                                      style={{ padding: '6px 8px', fontSize: '0.82rem' }}
+                                    >
+                                      <option value="INDIVIDUAL">🎯 Individual Program Score</option>
+                                      <option value="TEAM_TOTAL">🏛️ Team Grand Total Mark</option>
+                                      <option value="BOTH">⚡ Both (Program + Team)</option>
+                                    </select>
+                                  </div>
+
+                                  {/* 3. -Mark (Deduction) */}
+                                  <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800 }}>
+                                      3. -Mark (Deduction)
+                                    </label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <span style={{ fontWeight: 800, color: 'var(--danger, #ef4444)' }}>-</span>
+                                      <input
+                                        type="number"
+                                        step="0.5"
+                                        min="0"
+                                        className="form-input"
+                                        value={entry.penaltyMarks || ""}
+                                        onChange={(e) => onBulkPenaltyFieldChange(p.id, 'penaltyMarks', e.target.value)}
+                                        placeholder="0"
+                                        disabled={!entry.penaltyReason}
+                                        style={{ padding: '6px 8px', fontSize: '0.85rem', fontWeight: 800, textAlign: 'center' }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* 4. Status */}
+                                  <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800 }}>4. Status</label>
+                                    <select
+                                      className="form-input"
+                                      value={entry.status || "COMPLETED"}
+                                      onChange={(e) => onBulkPenaltyFieldChange(p.id, 'status', e.target.value)}
+                                      style={{ padding: '6px 8px', fontSize: '0.82rem', fontWeight: 700 }}
+                                    >
+                                      <option value="COMPLETED">Completed</option>
+                                      <option value="PENALIZED">Penalized (-Mark)</option>
+                                      <option value="DISQUALIFIED">Disqualified (Void)</option>
+                                      <option value="ABSENT">Absent</option>
+                                    </select>
+                                  </div>
+
+                                  {/* 5. Remarks */}
+                                  <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800 }}>5. Reason / Incident Notes</label>
+                                    <input
+                                      type="text"
+                                      className="form-input"
+                                      value={entry.penaltyDescription || ""}
+                                      onChange={(e) => onBulkPenaltyFieldChange(p.id, 'penaltyDescription', e.target.value)}
+                                      placeholder="e.g. Exceeded time limit by 45s"
+                                      style={{ padding: '6px 8px', fontSize: '0.82rem' }}
+                                    />
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>
@@ -691,7 +995,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
 
       {/* MODE 2: SINGLE PARTICIPANT RESULT ENTRY */}
       {entryMode === "single" && (
-        <form onSubmit={handleSingleSubmit}>
+        <form onSubmit={handleSingleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: '1fr 1fr 1.2fr 1.5fr', 
@@ -708,6 +1012,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                 className="form-input" 
                 value={rank} 
                 onChange={(e) => updateSingleMarks(e.target.value, grade)}
+                disabled={singleStatus === "ABSENT" || singleStatus === "DISQUALIFIED"}
                 style={{ padding: '10px', height: '45px', backgroundColor: '#fff', color: '#1f2937', border: '2px solid #e5e7eb' }}
               >
                 <option value="">-- No Rank --</option>
@@ -723,6 +1028,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                 className="form-input" 
                 value={grade} 
                 onChange={(e) => updateSingleMarks(rank, e.target.value)}
+                disabled={singleStatus === "ABSENT" || singleStatus === "DISQUALIFIED"}
                 style={{ padding: '10px', height: '45px', backgroundColor: '#fff', color: '#1f2937', border: '2px solid #e5e7eb' }}
               >
                 <option value="">-- No Grade --</option>
@@ -740,8 +1046,9 @@ export default function ScoringForm({ events }: { events: any[] }) {
                 className="form-input" 
                 value={marks}
                 onChange={(e) => setMarks(e.target.value)}
+                disabled={singleStatus === "ABSENT" || singleStatus === "DISQUALIFIED"}
                 placeholder="0.00"
-                required
+                required={singleStatus !== "ABSENT" && singleStatus !== "DISQUALIFIED"}
                 style={{ 
                   padding: '10px', 
                   height: '45px', 
@@ -763,6 +1070,121 @@ export default function ScoringForm({ events }: { events: any[] }) {
             >
               {loading ? "Recording..." : "🚀 Submit Result"}
             </button>
+          </div>
+
+          {/* DISCIPLINARY & NEGATIVE MARK (-MARK) OPTIONS */}
+          <div style={{
+            padding: '14px 16px',
+            borderRadius: '12px',
+            border: singlePenaltyReason ? '1px solid #f59e0b' : '1px solid var(--border-color)',
+            backgroundColor: singlePenaltyReason ? 'rgba(245, 158, 11, 0.05)' : 'rgba(255,255,255,0.02)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '0.9rem', color: singlePenaltyReason ? '#f59e0b' : 'var(--text-secondary)' }}>
+                <ShieldAlert size={18} />
+                <span>Disciplinary & Negative Mark (-Mark) Options</span>
+              </div>
+              {singlePenaltyReason && (
+                <button 
+                  type="button" 
+                  onClick={() => onSingleSituationChange("")} 
+                  style={{ fontSize: '0.75rem', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  ✕ Clear Penalty
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.3fr 1fr 1.1fr 1.6fr', gap: '12px', alignItems: 'flex-end' }}>
+              {/* 1. Situation */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 800 }}>1. Situation Type</label>
+                <select
+                  className="form-input"
+                  value={singlePenaltyReason}
+                  onChange={(e) => onSingleSituationChange(e.target.value as any)}
+                  style={{ padding: '8px', fontSize: '0.85rem', fontWeight: singlePenaltyReason ? 700 : 400 }}
+                >
+                  <option value="">-- No Penalty (Normal) --</option>
+                  <option value="ABSENT">❌ Absent (No Show)</option>
+                  <option value="BEYOND_LIMIT">⏱️ Beyond the Limit</option>
+                  <option value="IMPERSONATION">🎭 Impersonation</option>
+                  <option value="CHEATING">🚫 Cheating</option>
+                  <option value="OTHERS">📝 Others (Custom)</option>
+                </select>
+              </div>
+
+              {/* 2. Target */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 800 }}>2. Deduction Scope</label>
+                <select
+                  className="form-input"
+                  value={singlePenaltyTarget}
+                  onChange={(e) => setSinglePenaltyTarget(e.target.value as any)}
+                  disabled={!singlePenaltyReason}
+                  style={{ padding: '8px', fontSize: '0.85rem' }}
+                >
+                  <option value="INDIVIDUAL">🎯 Individual Program Score</option>
+                  <option value="TEAM_TOTAL">🏛️ Team Grand Total Mark</option>
+                  <option value="BOTH">⚡ Both (Program + Team)</option>
+                </select>
+              </div>
+
+              {/* 3. -Mark */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 800 }}>3. -Mark (Deduction)</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontWeight: 800, color: 'var(--danger, #ef4444)' }}>-</span>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    className="form-input"
+                    value={singlePenaltyMarks}
+                    onChange={(e) => setSinglePenaltyMarks(e.target.value)}
+                    placeholder="0"
+                    disabled={!singlePenaltyReason}
+                    style={{ padding: '8px', fontSize: '0.9rem', fontWeight: 800, textAlign: 'center' }}
+                  />
+                </div>
+              </div>
+
+              {/* 4. Status */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 800 }}>4. Status</label>
+                <select
+                  className="form-input"
+                  value={singleStatus}
+                  onChange={(e) => {
+                    setSingleStatus(e.target.value);
+                    if (e.target.value === "ABSENT" || e.target.value === "DISQUALIFIED") {
+                      setRank("");
+                      setGrade("");
+                      setMarks("0");
+                    }
+                  }}
+                  style={{ padding: '8px', fontSize: '0.85rem', fontWeight: 700 }}
+                >
+                  <option value="COMPLETED">Completed</option>
+                  <option value="PENALIZED">Penalized (-Mark)</option>
+                  <option value="DISQUALIFIED">Disqualified (Void)</option>
+                  <option value="ABSENT">Absent</option>
+                </select>
+              </div>
+
+              {/* 5. Remarks */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.7rem', fontWeight: 800 }}>5. Reason / Incident Note</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={singlePenaltyDescription}
+                  onChange={(e) => setSinglePenaltyDescription(e.target.value)}
+                  placeholder="e.g. Exceeded time by 45s"
+                  style={{ padding: '8px', fontSize: '0.85rem' }}
+                />
+              </div>
+            </div>
           </div>
         </form>
       )}

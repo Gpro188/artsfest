@@ -115,7 +115,12 @@ export async function submitMarks(data: {
   teamId?: string,
   marks: number,
   manualRank?: number | null,
-  manualGrade?: string | null
+  manualGrade?: string | null,
+  status?: string,
+  penaltyMarks?: number,
+  penaltyReason?: string,
+  penaltyTarget?: string,
+  penaltyDescription?: string
 }) {
   try {
     const program = await prisma.program.findUnique({
@@ -146,12 +151,37 @@ export async function submitMarks(data: {
       return { success: false, error: "Candidate or Team must be specified" };
     }
 
-    // If manual mode, we calculate points immediately
-    let points = 0;
-    let rank = data.manualRank || null;
-    let grade = data.manualGrade || null;
+    // Resolve targetTeamId for team penalties
+    let targetTeamId = teamId;
+    if (!targetTeamId && candidateId) {
+      const cand = await prisma.candidate.findUnique({
+        where: { id: candidateId },
+        select: { teamId: true }
+      });
+      targetTeamId = cand?.teamId || null;
+    }
 
-    if (data.manualRank || data.manualGrade) {
+    const isAbsentOrDisqualified = data.status === "ABSENT" || data.status === "DISQUALIFIED";
+    const status = data.status || (data.penaltyMarks && data.penaltyMarks > 0 ? "PENALIZED" : "COMPLETED");
+    const penaltyMarks = data.penaltyMarks || 0;
+    const penaltyReason = data.penaltyReason || null;
+    const penaltyTarget = data.penaltyTarget || "INDIVIDUAL";
+    const penaltyDescription = data.penaltyDescription || null;
+
+    // Calculate net individual score
+    let finalMarks = data.marks || 0;
+    if (isAbsentOrDisqualified) {
+      finalMarks = 0;
+    } else if ((penaltyTarget === "INDIVIDUAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
+      finalMarks = Math.max(0, finalMarks - penaltyMarks);
+    }
+
+    // Calculate points based on rank / grade
+    let points = 0;
+    let rank = isAbsentOrDisqualified ? null : (data.manualRank || null);
+    let grade = isAbsentOrDisqualified ? null : (data.manualGrade || null);
+
+    if (!isAbsentOrDisqualified && (data.manualRank || data.manualGrade)) {
        let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
        if (program.type === "GENERAL") {
          let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
@@ -179,22 +209,58 @@ export async function submitMarks(data: {
        else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
     }
 
+    // Handle Team Grand Total Penalty sync
+    if (targetTeamId) {
+      await prisma.teamPenalty.deleteMany({
+        where: {
+          programId: data.programId,
+          teamId: targetTeamId,
+          ...(candidateId ? { candidateId } : {})
+        }
+      });
+
+      if ((penaltyTarget === "TEAM_TOTAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
+        await prisma.teamPenalty.create({
+          data: {
+            eventId: program.eventId,
+            teamId: targetTeamId,
+            programId: data.programId,
+            candidateId: candidateId || undefined,
+            reason: penaltyReason || "OTHERS",
+            pointsDeducted: penaltyMarks,
+            description: penaltyDescription || undefined,
+            issuedBy: "Admin"
+          }
+        });
+      }
+    }
+
     if (candidateId) {
       await prisma.result.upsert({
         where: { candidateId_programId: { candidateId, programId: data.programId } },
         update: { 
-          marks: data.marks, 
-          rank: data.manualRank !== undefined ? data.manualRank : undefined, 
-          grade: data.manualGrade !== undefined ? data.manualGrade : undefined,
-          points: (data.manualRank || data.manualGrade) ? points : undefined
+          marks: finalMarks, 
+          rank: isAbsentOrDisqualified ? null : (data.manualRank !== undefined ? data.manualRank : undefined), 
+          grade: isAbsentOrDisqualified ? null : (data.manualGrade !== undefined ? data.manualGrade : undefined),
+          points: isAbsentOrDisqualified ? 0 : ((data.manualRank || data.manualGrade) ? points : undefined),
+          status,
+          penaltyMarks,
+          penaltyReason,
+          penaltyTarget,
+          penaltyDescription
         },
         create: {
           candidateId,
           programId: data.programId,
-          marks: data.marks,
-          rank: data.manualRank || null,
-          grade: data.manualGrade || null,
+          marks: finalMarks,
+          rank: rank,
+          grade: grade,
           points: points,
+          status,
+          penaltyMarks,
+          penaltyReason,
+          penaltyTarget,
+          penaltyDescription,
           isPublished: false
         }
       });
@@ -202,18 +268,28 @@ export async function submitMarks(data: {
       await prisma.result.upsert({
         where: { teamId_programId: { teamId, programId: data.programId } },
         update: { 
-          marks: data.marks, 
-          rank: data.manualRank !== undefined ? data.manualRank : undefined, 
-          grade: data.manualGrade !== undefined ? data.manualGrade : undefined,
-          points: (data.manualRank || data.manualGrade) ? points : undefined
+          marks: finalMarks, 
+          rank: isAbsentOrDisqualified ? null : (data.manualRank !== undefined ? data.manualRank : undefined), 
+          grade: isAbsentOrDisqualified ? null : (data.manualGrade !== undefined ? data.manualGrade : undefined),
+          points: isAbsentOrDisqualified ? 0 : ((data.manualRank || data.manualGrade) ? points : undefined),
+          status,
+          penaltyMarks,
+          penaltyReason,
+          penaltyTarget,
+          penaltyDescription
         },
         create: {
           teamId,
           programId: data.programId,
-          marks: data.marks,
-          rank: data.manualRank || null,
-          grade: data.manualGrade || null,
+          marks: finalMarks,
+          rank: rank,
+          grade: grade,
           points: points,
+          status,
+          penaltyMarks,
+          penaltyReason,
+          penaltyTarget,
+          penaltyDescription,
           isPublished: false
         }
       });
@@ -221,6 +297,10 @@ export async function submitMarks(data: {
 
     revalidatePath("/dashboard/scoring");
     revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/fest", "layout");
+    revalidatePath("/domain", "layout");
+    invalidatePublicResults();
     return { success: true };
   } catch (error) {
     console.error("Submission failed:", error);
@@ -238,6 +318,11 @@ export async function submitBulkProgramResults(data: {
     rank?: number | null;
     grade?: string | null;
     marks?: number;
+    status?: string;
+    penaltyMarks?: number;
+    penaltyReason?: string;
+    penaltyTarget?: string;
+    penaltyDescription?: string;
   }>;
 }) {
   try {
@@ -272,70 +357,143 @@ export async function submitBulkProgramResults(data: {
     }
 
     for (const entry of data.entries) {
-      if (!entry.rank && !entry.grade && (entry.marks === undefined || entry.marks === 0)) {
+      const hasPenalty = !!(entry.penaltyMarks && entry.penaltyMarks > 0) || entry.status === "ABSENT" || entry.status === "DISQUALIFIED" || !!entry.penaltyReason;
+      if (!entry.rank && !entry.grade && (entry.marks === undefined || entry.marks === 0) && !hasPenalty) {
         continue;
       }
 
+      const isAbsentOrDisqualified = entry.status === "ABSENT" || entry.status === "DISQUALIFIED";
+      const status = entry.status || (entry.penaltyMarks && entry.penaltyMarks > 0 ? "PENALIZED" : "COMPLETED");
+      const penaltyMarks = entry.penaltyMarks || 0;
+      const penaltyReason = entry.penaltyReason || null;
+      const penaltyTarget = entry.penaltyTarget || "INDIVIDUAL";
+      const penaltyDescription = entry.penaltyDescription || null;
+
       let points = 0;
-      if (entry.rank === 1) points += pointsConfig.rank1 || 0;
-      else if (entry.rank === 2) points += pointsConfig.rank2 || 0;
-      else if (entry.rank === 3) points += pointsConfig.rank3 || 0;
+      const rank = isAbsentOrDisqualified ? null : (entry.rank || null);
+      const grade = isAbsentOrDisqualified ? null : (entry.grade || null);
 
-      if (entry.grade === "A") points += pointsConfig.gradeA || 0;
-      else if (entry.grade === "B") points += pointsConfig.gradeB || 0;
-      else if (entry.grade === "C") points += (pointsConfig as any).gradeC || 0;
+      if (!isAbsentOrDisqualified) {
+        if (rank === 1) points += pointsConfig.rank1 || 0;
+        else if (rank === 2) points += pointsConfig.rank2 || 0;
+        else if (rank === 3) points += pointsConfig.rank3 || 0;
 
-      const marks = entry.marks !== undefined ? entry.marks : points;
+        if (grade === "A") points += pointsConfig.gradeA || 0;
+        else if (grade === "B") points += pointsConfig.gradeB || 0;
+        else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
+      }
 
-      if (entry.candidateId || entry.chestNumber) {
-        let candidateId = entry.candidateId;
-        if (!candidateId && entry.chestNumber) {
-          const festEventIds = await getFestivalEventIds(program.eventId);
-          const cand = await prisma.candidate.findFirst({
-            where: {
-              chestNumber: entry.chestNumber,
-              ...(festEventIds.length > 0 ? { team: { eventId: { in: festEventIds } } } : {})
-            }
-          });
-          if (cand) candidateId = cand.id;
-        }
+      let rawMarks = entry.marks !== undefined ? entry.marks : points;
+      let finalMarks = rawMarks;
+      if (isAbsentOrDisqualified) {
+        finalMarks = 0;
+      } else if ((penaltyTarget === "INDIVIDUAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
+        finalMarks = Math.max(0, rawMarks - penaltyMarks);
+      }
 
-        if (candidateId) {
-          await prisma.result.upsert({
-            where: { candidateId_programId: { candidateId, programId: data.programId } },
-            update: {
-              marks,
-              rank: entry.rank || null,
-              grade: entry.grade || null,
-              points
-            },
-            create: {
-              candidateId,
+      let candidateId = entry.candidateId;
+      if (!candidateId && entry.chestNumber) {
+        const festEventIds = await getFestivalEventIds(program.eventId);
+        const cand = await prisma.candidate.findFirst({
+          where: {
+            chestNumber: entry.chestNumber,
+            ...(festEventIds.length > 0 ? { team: { eventId: { in: festEventIds } } } : {})
+          }
+        });
+        if (cand) candidateId = cand.id;
+      }
+
+      // Resolve teamId for team penalties
+      let targetTeamId = entry.teamId || null;
+      if (!targetTeamId && candidateId) {
+        const cand = await prisma.candidate.findUnique({
+          where: { id: candidateId },
+          select: { teamId: true }
+        });
+        targetTeamId = cand?.teamId || null;
+      }
+
+      // Handle Team Grand Total Penalty sync
+      if (targetTeamId) {
+        await prisma.teamPenalty.deleteMany({
+          where: {
+            programId: data.programId,
+            teamId: targetTeamId,
+            ...(candidateId ? { candidateId } : {})
+          }
+        });
+
+        if ((penaltyTarget === "TEAM_TOTAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
+          await prisma.teamPenalty.create({
+            data: {
+              eventId: program.eventId,
+              teamId: targetTeamId,
               programId: data.programId,
-              marks,
-              rank: entry.rank || null,
-              grade: entry.grade || null,
-              points,
-              isPublished: false
+              candidateId: candidateId || undefined,
+              reason: penaltyReason || "OTHERS",
+              pointsDeducted: penaltyMarks,
+              description: penaltyDescription || undefined,
+              issuedBy: "Admin"
             }
           });
         }
+      }
+
+      if (candidateId) {
+        await prisma.result.upsert({
+          where: { candidateId_programId: { candidateId, programId: data.programId } },
+          update: {
+            marks: finalMarks,
+            rank,
+            grade,
+            points,
+            status,
+            penaltyMarks,
+            penaltyReason,
+            penaltyTarget,
+            penaltyDescription
+          },
+          create: {
+            candidateId,
+            programId: data.programId,
+            marks: finalMarks,
+            rank,
+            grade,
+            points,
+            status,
+            penaltyMarks,
+            penaltyReason,
+            penaltyTarget,
+            penaltyDescription,
+            isPublished: false
+          }
+        });
       } else if (entry.teamId) {
         await prisma.result.upsert({
           where: { teamId_programId: { teamId: entry.teamId, programId: data.programId } },
           update: {
-            marks,
-            rank: entry.rank || null,
-            grade: entry.grade || null,
-            points
+            marks: finalMarks,
+            rank,
+            grade,
+            points,
+            status,
+            penaltyMarks,
+            penaltyReason,
+            penaltyTarget,
+            penaltyDescription
           },
           create: {
             teamId: entry.teamId,
             programId: data.programId,
-            marks,
-            rank: entry.rank || null,
-            grade: entry.grade || null,
+            marks: finalMarks,
+            rank,
+            grade,
             points,
+            status,
+            penaltyMarks,
+            penaltyReason,
+            penaltyTarget,
+            penaltyDescription,
             isPublished: false
           }
         });
@@ -410,6 +568,17 @@ export async function deleteResult(id: string) {
   try {
     const result = await prisma.result.findUnique({ where: { id }, include: { program: true } });
     if (!result) return { success: false, error: "Result not found" };
+
+    // Clean up any team penalties linked with this result
+    if (result.teamId || result.candidateId) {
+      await prisma.teamPenalty.deleteMany({
+        where: {
+          programId: result.programId,
+          ...(result.candidateId ? { candidateId: result.candidateId } : { teamId: result.teamId || "" })
+        }
+      });
+    }
+
     await prisma.result.delete({ where: { id } });
     await recalculateProgramResults(result.programId);
     revalidatePath("/dashboard/scoring");
@@ -446,11 +615,17 @@ export async function updateResultDetails(data: {
   rank?: number | null;
   grade?: string | null;
   isPublished?: boolean;
+  status?: string;
+  penaltyMarks?: number;
+  penaltyReason?: string;
+  penaltyTarget?: string;
+  penaltyDescription?: string;
 }) {
   try {
     const existing = await prisma.result.findUnique({
       where: { id: data.id },
       include: {
+        candidate: true,
         program: {
           include: {
             category: { include: { pointMatrix: true } },
@@ -478,25 +653,73 @@ export async function updateResultDetails(data: {
       }
     }
 
-    const rank = data.rank !== undefined ? data.rank : existing.rank;
-    const grade = data.grade !== undefined ? data.grade : existing.grade;
+    const isAbsentOrDisqualified = data.status === "ABSENT" || data.status === "DISQUALIFIED";
+    const status = data.status !== undefined ? data.status : existing.status;
+    const penaltyMarks = data.penaltyMarks !== undefined ? data.penaltyMarks : existing.penaltyMarks;
+    const penaltyReason = data.penaltyReason !== undefined ? data.penaltyReason : existing.penaltyReason;
+    const penaltyTarget = data.penaltyTarget !== undefined ? data.penaltyTarget : existing.penaltyTarget;
+    const penaltyDescription = data.penaltyDescription !== undefined ? data.penaltyDescription : existing.penaltyDescription;
+
+    const rank = isAbsentOrDisqualified ? null : (data.rank !== undefined ? data.rank : existing.rank);
+    const grade = isAbsentOrDisqualified ? null : (data.grade !== undefined ? data.grade : existing.grade);
 
     let points = 0;
-    if (rank === 1) points += pointsConfig.rank1 || 0;
-    else if (rank === 2) points += pointsConfig.rank2 || 0;
-    else if (rank === 3) points += pointsConfig.rank3 || 0;
+    if (!isAbsentOrDisqualified) {
+      if (rank === 1) points += pointsConfig.rank1 || 0;
+      else if (rank === 2) points += pointsConfig.rank2 || 0;
+      else if (rank === 3) points += pointsConfig.rank3 || 0;
 
-    if (grade === "A") points += pointsConfig.gradeA || 0;
-    else if (grade === "B") points += pointsConfig.gradeB || 0;
-    else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
+      if (grade === "A") points += pointsConfig.gradeA || 0;
+      else if (grade === "B") points += pointsConfig.gradeB || 0;
+      else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
+    }
+
+    let finalMarks = data.marks;
+    if (isAbsentOrDisqualified) {
+      finalMarks = 0;
+    } else if ((penaltyTarget === "INDIVIDUAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
+      finalMarks = Math.max(0, finalMarks - penaltyMarks);
+    }
+
+    // Sync TeamPenalty
+    const targetTeamId = existing.teamId || existing.candidate?.teamId || null;
+    if (targetTeamId) {
+      await prisma.teamPenalty.deleteMany({
+        where: {
+          programId: existing.programId,
+          teamId: targetTeamId,
+          ...(existing.candidateId ? { candidateId: existing.candidateId } : {})
+        }
+      });
+
+      if ((penaltyTarget === "TEAM_TOTAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
+        await prisma.teamPenalty.create({
+          data: {
+            eventId: program.eventId,
+            teamId: targetTeamId,
+            programId: existing.programId,
+            candidateId: existing.candidateId || undefined,
+            reason: penaltyReason || "OTHERS",
+            pointsDeducted: penaltyMarks,
+            description: penaltyDescription || undefined,
+            issuedBy: "Admin"
+          }
+        });
+      }
+    }
 
     await prisma.result.update({
       where: { id: data.id },
       data: {
-        marks: data.marks,
+        marks: finalMarks,
         rank: rank || null,
         grade: grade || null,
         points,
+        status,
+        penaltyMarks,
+        penaltyReason,
+        penaltyTarget,
+        penaltyDescription,
         ...(data.isPublished !== undefined ? { isPublished: data.isPublished } : {})
       }
     });

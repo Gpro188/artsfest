@@ -21,7 +21,8 @@ const getCachedPublicEventData = unstable_cache(
       totalPrograms,
       publishedProgramsCount,
       totalCandidates,
-      candidatesWithAssignments
+      candidatesWithAssignments,
+      allTeamPenalties
     ] = await Promise.all([
       // 1. Get Latest Published Programs (with full result winners list)
       prisma.program.findMany({
@@ -42,6 +43,10 @@ const getCachedPublicEventData = unstable_cache(
               points: true,
               rank: true,
               grade: true,
+              status: true,
+              penaltyMarks: true,
+              penaltyReason: true,
+              penaltyDescription: true,
               candidate: {
                 select: {
                   id: true,
@@ -71,6 +76,7 @@ const getCachedPublicEventData = unstable_cache(
         where: { program: { eventId: { in: eventIds } }, isPublished: true },
         select: {
           id: true, points: true, candidateId: true, teamId: true, rank: true, grade: true, marks: true,
+          status: true, penaltyMarks: true, penaltyReason: true, penaltyDescription: true,
           program: { select: { id: true, name: true, type: true } },
           candidate: { select: { id: true, name: true, chestNumber: true, photo: true, teamId: true, team: { select: { id: true, name: true, flagColor: true } }, category: { select: { id: true, name: true } } } },
           team: { select: { id: true, name: true, flagColor: true } }
@@ -87,7 +93,19 @@ const getCachedPublicEventData = unstable_cache(
       prisma.program.count({ where: { eventId: { in: eventIds } } }),
       prisma.program.count({ where: { eventId: { in: eventIds }, results: { some: { isPublished: true } } } }),
       prisma.candidate.count({ where: { team: { eventId: { in: eventIds } } } }),
-      prisma.programAssignment.groupBy({ by: ['candidateId'], where: { program: { eventId: { in: eventIds } } } })
+      prisma.programAssignment.groupBy({ by: ['candidateId'], where: { program: { eventId: { in: eventIds } } } }),
+
+      // 6. Team Penalties
+      prisma.teamPenalty.findMany({
+        where: { eventId: { in: eventIds } },
+        select: {
+          id: true,
+          teamId: true,
+          pointsDeducted: true,
+          reason: true,
+          description: true
+        }
+      })
     ]);
 
     // Deduplicate categories by normalized name
@@ -102,7 +120,7 @@ const getCachedPublicEventData = unstable_cache(
     }
 
     // --- Team Leaderboard ---
-    const teamScores: Record<string, { id: string, name: string, points: number, flagColor: string | null, leaderName: string | null, leaderPhoto: string | null }> = {};
+    const teamScores: Record<string, { id: string, name: string, points: number, penaltyPoints: number, flagColor: string | null, leaderName: string | null, leaderPhoto: string | null }> = {};
     
     // Initialize all teams in scores to handle teams with 0 points
     teams.forEach(t => {
@@ -110,6 +128,7 @@ const getCachedPublicEventData = unstable_cache(
         id: t.id,
         name: t.name,
         points: 0,
+        penaltyPoints: 0,
         flagColor: t.flagColor,
         leaderName: t.leaderName,
         leaderPhoto: t.leaderPhoto
@@ -140,12 +159,22 @@ const getCachedPublicEventData = unstable_cache(
            id: teamId,
            name: teamName,
            points: res.points,
+           penaltyPoints: 0,
            flagColor: teamFlag,
            leaderName: matchingTeam?.leaderName || null,
            leaderPhoto: matchingTeam?.leaderPhoto || null
          };
       }
     });
+
+    // Deduct Team Penalties from Championship Leaderboard
+    allTeamPenalties.forEach(pen => {
+      if (pen.teamId && teamScores[pen.teamId]) {
+        teamScores[pen.teamId].penaltyPoints += pen.pointsDeducted;
+        teamScores[pen.teamId].points = Math.max(0, teamScores[pen.teamId].points - pen.pointsDeducted);
+      }
+    });
+
     const leaderboard = Object.values(teamScores).sort((a, b) => b.points - a.points);
 
     // --- Individual Top 5 Stars (Overall) - STRICTLY INDIVIDUAL PROGRAMS ONLY ---

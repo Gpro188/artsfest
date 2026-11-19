@@ -195,8 +195,31 @@ export default function ResultList({ results, role }: { results: any[], role: st
                         </div>
 
                         <div style={{ flex: 1 }}>
-                          <span style={{ fontWeight: 600 }}>{participantName}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginLeft: '8px' }}>({participantChest})</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 600 }}>{participantName}</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>({participantChest})</span>
+                            
+                            {result.status === "ABSENT" && (
+                              <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#ef444420', color: '#ef4444', fontWeight: 800 }}>
+                                ❌ Absent
+                              </span>
+                            )}
+                            {result.status === "DISQUALIFIED" && (
+                              <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#dc262625', color: '#dc2626', fontWeight: 800 }}>
+                                🚫 Disqualified ({result.penaltyReason || "Rules"})
+                              </span>
+                            )}
+                            {result.penaltyMarks > 0 && result.status !== "ABSENT" && result.status !== "DISQUALIFIED" && (
+                              <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f59e0b20', color: '#f59e0b', fontWeight: 800 }}>
+                                ⚠️ -{result.penaltyMarks} {result.penaltyReason || ""} ({result.penaltyTarget === "TEAM_TOTAL" ? "Team Total" : "Ind Mark"})
+                              </span>
+                            )}
+                          </div>
+                          {result.penaltyDescription && (
+                            <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '1px' }}>
+                              Note: {result.penaltyDescription}
+                            </div>
+                          )}
                           {isGroupOrGeneral && teamInfo?.leaderName && !result.candidate && (
                             <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Leader: {teamInfo.leaderName}</div>
                           )}

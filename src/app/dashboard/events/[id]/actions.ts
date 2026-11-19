@@ -85,3 +85,34 @@ export async function saveGeneralPointMatrix(eventId: string, points: string) {
     return { success: false, error: "Failed to save general points" };
   }
 }
+
+export async function savePenaltyRules(eventId: string, penaltyRulesJson: string) {
+  try {
+    const festIds = await getFestivalEventIds(eventId);
+    const targetIds = festIds.length > 0 ? festIds : [eventId];
+
+    await Promise.all(
+      targetIds.map(fId =>
+        prisma.globalSetting.upsert({
+          where: { eventId: fId },
+          update: { penaltyRules: penaltyRulesJson },
+          create: {
+            id: `event-${fId}`,
+            eventId: fId,
+            festName: "Arts Fest",
+            festMoto: "Celebrating Creativity",
+            penaltyRules: penaltyRulesJson
+          }
+        })
+      )
+    );
+
+    revalidatePath(`/dashboard/events/${eventId}`);
+    revalidatePath("/dashboard/scoring");
+    revalidatePath("/dashboard/settings");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to save penalty rules:", error);
+    return { success: false, error: "Failed to save penalty rules" };
+  }
+}

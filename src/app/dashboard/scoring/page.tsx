@@ -72,12 +72,17 @@ export default async function ScoringPage(props: {
   // Fetch all related festival event IDs (root event + any sub-events)
   const festEventIds = await getFestivalEventIds(activeEventId);
 
-  const [dbEvent, festGeneralPointMatrix, allFestCategories, allFestTeams, programsInScope, results, allPrograms, allResultsForScore] = await Promise.all([
+  const [dbEvent, festGeneralPointMatrix, allFestCategories, allFestTeams, programsInScope, results, allPrograms, allResultsForScore, teamPenalties] = await Promise.all([
     prisma.event.findUnique({
       where: { id: activeEventId },
       select: {
         id: true,
         name: true,
+        globalSetting: {
+          select: {
+            penaltyRules: true
+          }
+        },
         generalPointMatrix: {
           select: {
             id: true,
@@ -163,6 +168,11 @@ export default async function ScoringPage(props: {
         points: true,
         rank: true,
         grade: true,
+        status: true,
+        penaltyMarks: true,
+        penaltyReason: true,
+        penaltyTarget: true,
+        penaltyDescription: true,
         isPublished: true,
         candidateId: true,
         teamId: true,
@@ -192,6 +202,16 @@ export default async function ScoringPage(props: {
         teamId: true,
         candidate: { select: { teamId: true } }
       }
+    }),
+    prisma.teamPenalty.findMany({
+      where: { eventId: { in: festEventIds } },
+      select: {
+        id: true,
+        teamId: true,
+        pointsDeducted: true,
+        reason: true,
+        description: true
+      }
     })
   ]);
 
@@ -209,6 +229,7 @@ export default async function ScoringPage(props: {
   // Construct unified activeEvent with all programs and teams across the festival
   const activeEvent = {
     ...dbEvent,
+    penaltyRules: dbEvent.globalSetting?.penaltyRules || null,
     generalPointMatrix: dbEvent.generalPointMatrix || festGeneralPointMatrix,
     teams: allFestTeams,
     programs: programsInScope
@@ -229,6 +250,14 @@ export default async function ScoringPage(props: {
       if (result.isPublished) {
         teamScoresMap[teamId].publishedPoints += result.points;
       }
+    }
+  });
+
+  // Deduct team penalties from live and draft standings
+  teamPenalties.forEach(pen => {
+    if (pen.teamId && teamScoresMap[pen.teamId]) {
+      teamScoresMap[pen.teamId].totalPoints = Math.max(0, teamScoresMap[pen.teamId].totalPoints - pen.pointsDeducted);
+      teamScoresMap[pen.teamId].publishedPoints = Math.max(0, teamScoresMap[pen.teamId].publishedPoints - pen.pointsDeducted);
     }
   });
 

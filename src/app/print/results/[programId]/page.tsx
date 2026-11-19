@@ -49,6 +49,7 @@ export default async function PrintResultsPage({ params }: { params: Promise<{ p
             <th style={{ border: '1px solid black', padding: '12px' }}>Candidate Name</th>
             <th style={{ border: '1px solid black', padding: '12px' }}>Chest #</th>
             <th style={{ border: '1px solid black', padding: '12px' }}>Team</th>
+            <th style={{ border: '1px solid black', padding: '12px', width: '140px' }}>Remarks</th>
           </tr>
         </thead>
         <tbody>
@@ -59,11 +60,19 @@ export default async function PrintResultsPage({ params }: { params: Promise<{ p
               <td style={{ border: '1px solid black', padding: '10px', fontWeight: 'bold' }}>{res.candidate?.name || res.team?.name || '-'}</td>
               <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center' }}>{res.candidate?.chestNumber || '-'}</td>
               <td style={{ border: '1px solid black', padding: '10px' }}>{res.candidate?.team.name || res.team?.name || '-'}</td>
+              <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontSize: '0.85rem' }}>
+                {res.status === "ABSENT" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>ABSENT</span>}
+                {res.status === "DISQUALIFIED" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>DISQUALIFIED</span>}
+                {res.status === "PENALIZED" && res.penaltyMarks > 0 && (
+                  <span style={{ color: '#d97706', fontWeight: 'bold' }}>-{res.penaltyMarks} ({res.penaltyReason || "Penalty"})</span>
+                )}
+                {res.status !== "ABSENT" && res.status !== "DISQUALIFIED" && (!res.penaltyMarks || res.penaltyMarks === 0) && "-"}
+              </td>
             </tr>
           ))}
           {program.results.length === 0 && (
             <tr>
-              <td colSpan={5} style={{ border: '1px solid black', padding: '30px', textAlign: 'center', color: '#666' }}>
+              <td colSpan={6} style={{ border: '1px solid black', padding: '30px', textAlign: 'center', color: '#666' }}>
                 No results have been officially published for this program.
               </td>
             </tr>

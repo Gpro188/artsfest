@@ -46,6 +46,7 @@ model Event {
   assignmentEnd      DateTime?
   homepageSetting    HomepageSetting?
   contactMessages    ContactMessage[]
+  teamPenalties      TeamPenalty[]
 }
 
 model Category {
@@ -77,6 +78,7 @@ model Team {
   leaderPhoto String?
   candidates  Candidate[]
   results     Result[]
+  penalties   TeamPenalty[]
   manager     User?       @relation("TeamManager", fields: [managerId], references: [id], onDelete: SetNull)
   event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
@@ -112,6 +114,7 @@ model Candidate {
   category    Category            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   programs    ProgramAssignment[]
   results     Result[]
+  penalties   TeamPenalty[]
 
   @@index([chestNumber])
   @@index([categoryId])
@@ -139,6 +142,7 @@ model Program {
   category      Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   assignments   ProgramAssignment[]
   results       Result[]
+  penalties     TeamPenalty[]
 
   @@index([eventId])
   @@index([categoryId])
@@ -159,17 +163,22 @@ model ProgramAssignment {
 }
 
 model Result {
-  id          String    @id @default(uuid())
-  candidateId String?
-  teamId      String?
-  programId   String
-  marks       Float
-  rank        Int?
-  grade       String?
-  points      Float
-  isPublished Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                 String    @id @default(uuid())
+  candidateId        String?
+  teamId             String?
+  programId          String
+  marks              Float
+  rank               Int?
+  grade              String?
+  points             Float
+  isPublished        Boolean   @default(false)
+  status             String    @default("COMPLETED") // "COMPLETED" | "ABSENT" | "DISQUALIFIED" | "PENALIZED"
+  penaltyMarks       Float     @default(0)
+  penaltyReason      String?   // "ABSENT" | "BEYOND_LIMIT" | "IMPERSONATION" | "CHEATING" | "OTHERS"
+  penaltyTarget      String?   @default("INDIVIDUAL") // "INDIVIDUAL" | "TEAM_TOTAL" | "BOTH"
+  penaltyDescription String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
   program     Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
   candidate   Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   team        Team?      @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -253,6 +262,8 @@ model GlobalSetting {
   posterShowChestNumber         Boolean   @default(true)  // (286)
   posterShowTeam                Boolean   @default(true)  // Team / College name
 
+  penaltyRules                  String?   // JSON configuration for committee custom penalty rules
+
   eventId                       String?   @unique
   event                         Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
@@ -265,6 +276,28 @@ model PageVisit {
   event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
+}
+
+model TeamPenalty {
+  id             String     @id @default(uuid())
+  eventId        String
+  teamId         String
+  programId      String?
+  candidateId    String?
+  reason         String     // "IMPERSONATION" | "CHEATING" | "BEYOND_LIMIT" | "ABSENT" | "OTHERS"
+  pointsDeducted Float
+  description    String?
+  issuedBy       String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  event          Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  team           Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  program        Program?   @relation(fields: [programId], references: [id], onDelete: SetNull)
+  candidate      Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@index([teamId])
 }
 
 model HomepageSetting {
