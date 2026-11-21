@@ -287,6 +287,18 @@ export async function getProgramResults(programId: string) {
         category: true,
         event: true,
         mediaTemplate: true,
+        assignments: {
+          include: {
+            candidate: {
+              select: {
+                id: true,
+                name: true,
+                chestNumber: true,
+                teamId: true
+              }
+            }
+          }
+        },
         results: {
           where: { isPublished: true },
           include: {

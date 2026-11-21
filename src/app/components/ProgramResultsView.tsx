@@ -44,8 +44,12 @@ export default function ProgramResultsView({
   // Top 3 Podium Items
   const isGroupOrGeneral = program.type === "GROUP" || program.type === "GENERAL";
   const winnerPodiumItems: PodiumItem[] = winners.map((w: any) => {
+    const squadSuffix = isGroupOrGeneral && ((program.teamsAllowed ?? 1) > 1 || (w.slotNumber && w.slotNumber > 1))
+      ? ` (Squad ${String.fromCharCode(64 + (w.slotNumber || 1))})`
+      : "";
+
     const primaryName = isGroupOrGeneral
-      ? (w.candidate?.team?.name || w.team?.name || w.candidate?.name || "Team")
+      ? `${w.candidate?.team?.name || w.team?.name || w.candidate?.name || "Team"}${squadSuffix}`
       : (w.candidate?.name || w.team?.name || "Participant");
 
     const subName = isGroupOrGeneral
@@ -429,8 +433,11 @@ export default function ProgramResultsView({
                     boxSizing: "border-box"
                   }}>
                     {winners.map((winner: any, idx: number) => {
+                      const squadSuffix = isGroupOrGeneral && ((program.teamsAllowed ?? 1) > 1 || (winner.slotNumber && winner.slotNumber > 1))
+                        ? ` (Squad ${String.fromCharCode(64 + (winner.slotNumber || 1))})`
+                        : "";
                       const name = isGroupOrGeneral
-                        ? (winner.candidate?.team?.name || winner.team?.name || winner.candidate?.name || "Team")
+                        ? `${winner.candidate?.team?.name || winner.team?.name || winner.candidate?.name || "Team"}${squadSuffix}`
                         : (winner.candidate?.name || winner.team?.name || "Participant");
                       const team = isGroupOrGeneral
                         ? (winner.candidate?.name && winner.candidate?.name !== name ? `Rep: ${winner.candidate.name}` : "")
@@ -871,7 +878,11 @@ export default function ProgramResultsView({
                         <div className="participant-info-block">
                           <span className="participant-name font-display">
                             {isGroupOrGeneral
-                              ? (res.candidate?.team?.name || res.team?.name || res.candidate?.name)
+                              ? `${res.candidate?.team?.name || res.team?.name || res.candidate?.name || "Team"}${
+                                  ((program.teamsAllowed ?? 1) > 1 || (res.slotNumber && res.slotNumber > 1))
+                                    ? ` (Squad ${String.fromCharCode(64 + (res.slotNumber || 1))})`
+                                    : ""
+                                }`
                               : (res.candidate?.name || res.team?.name)}
                           </span>
                           <span className="participant-team-name font-body" style={{ color: teamColor }}>
@@ -1134,7 +1145,12 @@ export default function ProgramResultsView({
                   boxSizing: "border-box"
                 }}>
                   {winners.map((winner: any, idx: number) => {
-                    const name = winner.candidate?.name || winner.team?.name || "Participant";
+                    const squadSuffix = isGroupOrGeneral && ((program.teamsAllowed ?? 1) > 1 || (winner.slotNumber && winner.slotNumber > 1))
+                      ? ` (Squad ${String.fromCharCode(64 + (winner.slotNumber || 1))})`
+                      : "";
+                    const name = isGroupOrGeneral
+                      ? `${winner.candidate?.team?.name || winner.team?.name || winner.candidate?.name || "Team"}${squadSuffix}`
+                      : (winner.candidate?.name || winner.team?.name || "Participant");
                     const team = winner.candidate?.team?.name || winner.team?.name || "";
                     const chest = winner.candidate?.chestNumber;
                     const grade = winner.grade;

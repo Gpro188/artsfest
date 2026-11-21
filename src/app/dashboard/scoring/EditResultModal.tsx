@@ -41,7 +41,7 @@ export default function EditResultModal({ result, onClose }: { result: any, onCl
           <span>✏️</span> Edit Result
         </h3>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
-          Update results for <strong>{result.candidate?.name || result.team?.name || 'Unknown'}</strong> in <strong>{result.program.name}</strong>.
+          Update results for <strong>{result.candidate?.name || (result.team ? `${result.team.name}${result.slotNumber ? ` (Squad ${String.fromCharCode(64 + result.slotNumber)})` : ''}` : 'Unknown')}</strong> in <strong>{result.program.name}</strong>.
         </p>
 
         <form onSubmit={handleSubmit}>

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { submitMarks, submitBulkProgramResults } from "./actions";
 import { Sparkles, Trophy, Award, CheckCircle2 } from "lucide-react";
+import { getProgramPointConfig, calculatePoints, PointConfig } from "@/lib/pointCalculation";
 
 export type BulkEntryRow = {
   rank: string;
@@ -89,7 +90,12 @@ export default function ScoringForm({ events }: { events: any[] }) {
   const selectedProgram = programs.find((p: any) => p.id === programId);
   const isIndividual = selectedProgram?.type === "INDIVIDUAL";
 
-  // Compute participants list with Squad support
+  // Dynamic point matrix for the active program based on Fest Committee configuration
+  const activePointsConfig: PointConfig = useMemo(() => {
+    return getProgramPointConfig(selectedProgram, selectedEvent?.generalPointMatrix);
+  }, [selectedProgram, selectedEvent]);
+
+  // Compute participants list with Squad support (Squad A, Squad B, etc.)
   const participants = isIndividual 
     ? (selectedProgram?.assignments?.map((a: any) => ({
         id: a.candidate.id,
@@ -103,6 +109,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
     : (() => {
         // Group assignments by (teamId, slotNumber)
         const teamSlotMap = new Map<string, { team: any, slotNumber: number, candidates: any[] }>();
+        const teamSquadCounts = new Map<string, number>();
         
         (selectedProgram?.assignments || []).forEach((a: any) => {
           const tId = a.candidate?.teamId || a.candidate?.team?.id;
@@ -116,6 +123,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
               slotNumber: slot,
               candidates: []
             });
+            teamSquadCounts.set(tId, (teamSquadCounts.get(tId) || 0) + 1);
           }
           if (a.candidate) {
             teamSlotMap.get(key)!.candidates.push(a.candidate);
@@ -127,7 +135,14 @@ export default function ScoringForm({ events }: { events: any[] }) {
         teamSlotMap.forEach((data, key) => {
           const candidateNames = data.candidates.map(c => c.name).join(", ");
           const chestNumbers = data.candidates.map(c => c.chestNumber).filter(Boolean).join(", ");
+          const totalSquadsForTeam = teamSquadCounts.get(data.team?.id) || 1;
+          const squadLetter = String.fromCharCode(64 + data.slotNumber);
           
+          // Clear naming: Squad A, Squad B when multiple squads exist or allowed
+          const squadLabel = (totalSquadsForTeam > 1 || (selectedProgram?.teamsAllowed || 1) > 1)
+            ? `Squad ${squadLetter}`
+            : `Team Entry`;
+
           resultEntries.push({
             id: key,
             teamId: data.team?.id,
@@ -135,29 +150,48 @@ export default function ScoringForm({ events }: { events: any[] }) {
             name: data.team?.name,
             teamName: data.team?.name,
             flagColor: data.team?.flagColor,
-            squadLabel: data.slotNumber > 1 ? `Squad ${data.slotNumber}` : `Team Entry`,
+            squadLabel,
+            squadLetter,
             memberCount: data.candidates.length,
             squadMembers: candidateNames,
-            chestNumber: chestNumbers ? `#${chestNumbers}` : (data.slotNumber > 1 ? `Squad #${data.slotNumber}` : `Team`)
+            chestNumber: chestNumbers ? `#${chestNumbers}` : `Squad ${squadLetter}`
           });
         });
 
         return resultEntries;
       })();
 
-  // Quick points calculator helper for display
-  const getPointsForRankGrade = (r: string, g: string): number => {
-    let pts = 0;
-    if (r === "1") pts += 5;
-    else if (r === "2") pts += 3;
-    else if (r === "3") pts += 1;
+  // Pre-populate bulkEntries with already recorded results when program is selected
+  useEffect(() => {
+    if (!programId || !selectedProgram) {
+      setBulkEntries({});
+      return;
+    }
 
-    if (g === "A") pts += 5;
-    else if (g === "B") pts += 3;
-    else if (g === "C") pts += 1;
-
-    return pts;
-  };
+    const existingEntries: Record<string, BulkEntryRow> = {};
+    if (selectedProgram.results && Array.isArray(selectedProgram.results)) {
+      selectedProgram.results.forEach((res: any) => {
+        if (isIndividual && res.candidateId) {
+          existingEntries[res.candidateId] = {
+            rank: res.rank ? String(res.rank) : "",
+            grade: res.grade || "",
+            marks: res.marks !== undefined && res.marks !== null ? String(res.marks) : (res.points ? String(res.points) : ""),
+            status: res.status || "COMPLETED"
+          };
+        } else if (!isIndividual && res.teamId) {
+          const slot = res.slotNumber || 1;
+          const key = `${res.teamId}_${slot}`;
+          existingEntries[key] = {
+            rank: res.rank ? String(res.rank) : "",
+            grade: res.grade || "",
+            marks: res.marks !== undefined && res.marks !== null ? String(res.marks) : (res.points ? String(res.points) : ""),
+            status: res.status || "COMPLETED"
+          };
+        }
+      });
+    }
+    setBulkEntries(existingEntries);
+  }, [programId, selectedProgram, isIndividual]);
 
   const handleBulkChange = (participantId: string, field: 'rank' | 'grade' | 'marks' | 'status', value: string) => {
     setBulkEntries(prev => {
@@ -169,7 +203,8 @@ export default function ScoringForm({ events }: { events: any[] }) {
         updated.grade = "";
         updated.marks = "0";
       } else if (field === 'rank' || field === 'grade') {
-        const calculatedPoints = getPointsForRankGrade(updated.rank, updated.grade);
+        // Calculate points based on the exact Fest Committee Point Scheme for this program
+        const calculatedPoints = calculatePoints(updated.rank, updated.grade, activePointsConfig);
         if (calculatedPoints > 0) {
           updated.marks = calculatedPoints.toString();
         }
@@ -181,7 +216,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
   const updateSingleMarks = (newRank: string, newGrade: string) => {
     setRank(newRank);
     setGrade(newGrade);
-    const calculatedPoints = getPointsForRankGrade(newRank, newGrade);
+    const calculatedPoints = calculatePoints(newRank, newGrade, activePointsConfig);
     if (calculatedPoints > 0) {
       setMarks(calculatedPoints.toString());
     }
@@ -212,6 +247,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
       programId,
       candidateId: isIndividual ? participantId : undefined,
       teamId: !isIndividual ? selectedParticipant?.teamId : undefined,
+      slotNumber: !isIndividual ? (selectedParticipant?.slotNumber || 1) : undefined,
       marks: isAbsent ? 0 : (parseFloat(marks) || 0),
       manualRank: isAbsent ? null : (rank ? parseInt(rank) : null),
       manualGrade: isAbsent ? null : (grade || null),
@@ -255,6 +291,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
         return {
           candidateId: isIndividual ? id : undefined,
           teamId: !isIndividual ? p?.teamId : undefined,
+          slotNumber: !isIndividual ? (p?.slotNumber || 1) : undefined,
           rank: isAbsent ? null : (data.rank ? parseInt(data.rank) : null),
           grade: isAbsent ? null : (data.grade || null),
           marks: isAbsent ? 0 : (parseFloat(data.marks) || 0),
@@ -311,8 +348,8 @@ export default function ScoringForm({ events }: { events: any[] }) {
           </h3>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {entryMode === "bulk" 
-              ? "Select a program to display all enrolled students together and enter 1st, 2nd, 3rd & grades on one single screen."
-              : "Select a single candidate and record marks individually."}
+              ? "Select a program to display all enrolled students or team squads together and enter places & grades simultaneously."
+              : "Select a single candidate or squad and record marks individually."}
           </p>
         </div>
 
@@ -429,7 +466,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
         {entryMode === "single" && (
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase' }}>
-              {isIndividual ? "4. Participant" : "4. Institution / Squad"}
+              {isIndividual ? "4. Participant" : "4. Team / Squad"}
             </label>
             <select 
               className="form-input" 
@@ -444,7 +481,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                 <option key={p.id} value={p.id}>
                   {isIndividual 
                     ? `${p.chestNumber ? `[#${p.chestNumber}] ` : ''}${p.name} (${p.teamName || 'Independent'})`
-                    : `🏛️ ${p.teamName || p.name} - [${p.chestNumber || p.squadLabel || 'Entry'}] ${p.memberCount ? `(${p.memberCount} members)` : ''}`
+                    : `🏛️ ${p.teamName || p.name} • [${p.squadLabel}] ${p.memberCount ? `(${p.memberCount} members)` : ''}`
                   }
                 </option>
               ))}
@@ -461,15 +498,15 @@ export default function ScoringForm({ events }: { events: any[] }) {
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📋</div>
               <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>Select a Program Above</strong>
               <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                All enrolled students for the selected program will appear here so you can assign 1st, 2nd, 3rd places and grades simultaneously.
+                All enrolled students and team squads for the selected program will appear here so you can assign places and grades simultaneously.
               </p>
             </div>
           ) : participants.length === 0 ? (
             <div className="glass-panel" style={{ padding: '35px 20px', textAlign: 'center', borderRadius: '12px' }}>
               <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⚠️</div>
-              <strong style={{ fontSize: '1rem', color: 'var(--warning)' }}>No Students Enrolled in this Program</strong>
+              <strong style={{ fontSize: '1rem', color: 'var(--warning)' }}>No Students or Squads Enrolled in this Program</strong>
               <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Please assign candidates to this program in <strong>Program Assignments</strong> before recording results.
+                Please assign candidates or squads to this program in <strong>Program Assignments</strong> before recording results.
               </p>
             </div>
           ) : (
@@ -479,9 +516,36 @@ export default function ScoringForm({ events }: { events: any[] }) {
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: 'var(--primary)', fontWeight: 800 }}>
                     {selectedProgram?.name}
                   </h4>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Total Enrolled: {participants.length} {isIndividual ? 'Candidates' : 'Squads/Teams'}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Total Enrolled: {participants.length} {isIndividual ? 'Candidates' : 'Squads/Teams'}
+                    </span>
+
+                    {/* Active Fest Committee Scoring Scheme Indicator */}
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                      border: '1px solid rgba(99, 102, 241, 0.25)',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-secondary)',
+                      flexWrap: 'wrap'
+                    }}>
+                      <strong style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Trophy size={13} /> {selectedProgram.type === "GENERAL" ? "General Point Scheme:" : (selectedProgram.type === "GROUP" ? "Group Point Scheme:" : "Individual Scheme:")}
+                      </strong>
+                      <span>🥇 1st: <strong style={{ color: 'var(--text-primary)' }}>{activePointsConfig.rank1}</strong> pts</span>
+                      <span>🥈 2nd: <strong style={{ color: 'var(--text-primary)' }}>{activePointsConfig.rank2}</strong> pts</span>
+                      <span>🥉 3rd: <strong style={{ color: 'var(--text-primary)' }}>{activePointsConfig.rank3}</strong> pts</span>
+                      <span>•</span>
+                      <span>A: <strong style={{ color: 'var(--text-primary)' }}>{activePointsConfig.gradeA}</strong> pts</span>
+                      <span>B: <strong style={{ color: 'var(--text-primary)' }}>{activePointsConfig.gradeB}</strong> pts</span>
+                      {activePointsConfig.gradeC > 0 && <span>C: <strong style={{ color: 'var(--text-primary)' }}>{activePointsConfig.gradeC}</strong> pts</span>}
+                    </div>
+                  </div>
                 </div>
 
                 <button 
@@ -503,7 +567,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                 </button>
               </div>
 
-              {/* Table of Enrolled Candidates */}
+              {/* Table of Enrolled Candidates or Squads */}
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                   <thead>
@@ -515,7 +579,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                         {isIndividual ? 'Participant Name' : 'Team / Institution & Participants'}
                       </th>
                       <th style={{ padding: '10px 12px', width: '130px' }}>
-                        {isIndividual ? 'Team' : 'Entry Scope'}
+                        {isIndividual ? 'Team' : 'Squad Scope'}
                       </th>
                       <th style={{ padding: '10px 12px', width: '160px' }}>Place (Rank)</th>
                       <th style={{ padding: '10px 12px', width: '140px' }}>Grade</th>
@@ -542,7 +606,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
                           }}
                         >
                           <td style={{ padding: '10px 12px', fontWeight: 800, color: 'var(--primary)' }}>
-                            {p.chestNumber || (isIndividual ? `T-${idx + 1}` : `Team-${idx + 1}`)}
+                            {p.chestNumber || (isIndividual ? `T-${idx + 1}` : `Squad-${p.squadLetter || (idx + 1)}`)}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
                             {isIndividual ? (
@@ -563,11 +627,12 @@ export default function ScoringForm({ events }: { events: any[] }) {
                                   {p.squadLabel && (
                                     <span style={{ 
                                       fontSize: '0.7rem', 
-                                      fontWeight: 700, 
-                                      padding: '1px 6px', 
+                                      fontWeight: 800, 
+                                      padding: '2px 8px', 
                                       borderRadius: '4px',
                                       backgroundColor: p.flagColor ? `${p.flagColor}25` : 'rgba(99, 102, 241, 0.15)',
-                                      color: p.flagColor || 'var(--primary)'
+                                      color: p.flagColor || 'var(--primary)',
+                                      border: `1px solid ${p.flagColor || 'var(--primary)'}40`
                                     }}>
                                       {p.squadLabel}
                                     </span>
@@ -704,6 +769,31 @@ export default function ScoringForm({ events }: { events: any[] }) {
       {/* MODE 2: SINGLE PARTICIPANT RESULT ENTRY */}
       {entryMode === "single" && (
         <form onSubmit={handleSingleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+          {selectedProgram && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              fontSize: '0.8rem',
+              color: 'var(--text-secondary)',
+              alignSelf: 'flex-start'
+            }}>
+              <strong style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Trophy size={13} /> {selectedProgram.type === "GENERAL" ? "General Point Scheme:" : (selectedProgram.type === "GROUP" ? "Group Point Scheme:" : "Individual Scheme:")}
+              </strong>
+              <span>🥇 1st: {activePointsConfig.rank1} pts</span>
+              <span>🥈 2nd: {activePointsConfig.rank2} pts</span>
+              <span>🥉 3rd: {activePointsConfig.rank3} pts</span>
+              <span>•</span>
+              <span>A: {activePointsConfig.gradeA} pts</span>
+              <span>B: {activePointsConfig.gradeB} pts</span>
+            </div>
+          )}
+
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: '1fr 1fr 1.2fr 1.2fr 1.5fr', 

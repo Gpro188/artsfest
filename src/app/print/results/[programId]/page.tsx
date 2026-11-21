@@ -10,6 +10,13 @@ export default async function PrintResultsPage({ params }: { params: Promise<{ p
     include: {
       category: true,
       event: true,
+      assignments: {
+        include: {
+          candidate: {
+            include: { team: true }
+          }
+        }
+      },
       results: {
         where: { isPublished: true },
         orderBy: { marks: 'desc' },
@@ -53,20 +60,44 @@ export default async function PrintResultsPage({ params }: { params: Promise<{ p
           </tr>
         </thead>
         <tbody>
-          {program.results.map(res => (
-            <tr key={res.id} style={{ fontSize: '1.1rem' }}>
-              <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>{res.rank || '-'}</td>
-              <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>{res.grade || '-'}</td>
-              <td style={{ border: '1px solid black', padding: '10px', fontWeight: 'bold' }}>{res.candidate?.name || res.team?.name || '-'}</td>
-              <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center' }}>{res.candidate?.chestNumber || '-'}</td>
-              <td style={{ border: '1px solid black', padding: '10px' }}>{res.candidate?.team.name || res.team?.name || '-'}</td>
-              <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontSize: '0.85rem' }}>
-                {res.status === "ABSENT" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>ABSENT</span>}
-                {res.status === "DISQUALIFIED" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>DISQUALIFIED</span>}
-                {res.status !== "ABSENT" && res.status !== "DISQUALIFIED" && "-"}
-              </td>
-            </tr>
-          ))}
+          {program.results.map(res => {
+            const isGroup = program.type === "GROUP" || program.type === "GENERAL";
+            const squadSlot = res.slotNumber || 1;
+            const squadLetter = String.fromCharCode(64 + squadSlot);
+            const squadName = isGroup && (program.teamsAllowed ?? 1) > 1 ? ` (Squad ${squadLetter})` : '';
+
+            // Find candidates enrolled in this squad
+            const squadAssignments = isGroup && res.teamId
+              ? (program.assignments || []).filter(a => a.candidate.teamId === res.teamId && (a.slotNumber || 1) === squadSlot)
+              : [];
+            const squadMembers = squadAssignments.map(a => a.candidate);
+            const chestNumbers = res.candidate?.chestNumber 
+              || (squadMembers.length > 0 ? squadMembers.map(m => m.chestNumber ? `#${m.chestNumber}` : null).filter(Boolean).join(', ') : '-');
+            const displayName = res.candidate?.name 
+              || (res.team ? `${res.team.name}${squadName}` : '-');
+
+            return (
+              <tr key={res.id} style={{ fontSize: '1.1rem' }}>
+                <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>{res.rank || '-'}</td>
+                <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontWeight: 'bold' }}>{res.grade || '-'}</td>
+                <td style={{ border: '1px solid black', padding: '10px', fontWeight: 'bold' }}>
+                  <div>{displayName}</div>
+                  {squadMembers.length > 0 && (
+                    <div style={{ fontSize: '0.85rem', color: '#444', fontWeight: 'normal', marginTop: '4px' }}>
+                      Enrolled: {squadMembers.map(m => m.name).join(', ')}
+                    </div>
+                  )}
+                </td>
+                <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center' }}>{chestNumbers || '-'}</td>
+                <td style={{ border: '1px solid black', padding: '10px' }}>{res.candidate?.team.name || res.team?.name || '-'}</td>
+                <td style={{ border: '1px solid black', padding: '10px', textAlign: 'center', fontSize: '0.85rem' }}>
+                  {res.status === "ABSENT" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>ABSENT</span>}
+                  {res.status === "DISQUALIFIED" && <span style={{ color: '#dc2626', fontWeight: 'bold' }}>DISQUALIFIED</span>}
+                  {res.status !== "ABSENT" && res.status !== "DISQUALIFIED" && "-"}
+                </td>
+              </tr>
+            );
+          })}
           {program.results.length === 0 && (
             <tr>
               <td colSpan={6} style={{ border: '1px solid black', padding: '30px', textAlign: 'center', color: '#666' }}>

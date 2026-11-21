@@ -130,6 +130,20 @@ export default async function ScoringPage(props: {
         name: true,
         type: true,
         categoryId: true,
+        teamsAllowed: true,
+        membersPerSquad: true,
+        event: {
+          select: {
+            id: true,
+            name: true,
+            generalPointMatrix: {
+              select: {
+                id: true,
+                generalPoints: true
+              }
+            }
+          }
+        },
         category: {
           select: {
             id: true,
@@ -142,6 +156,19 @@ export default async function ScoringPage(props: {
                 generalPoints: true
               }
             }
+          }
+        },
+        results: {
+          select: {
+            id: true,
+            candidateId: true,
+            teamId: true,
+            slotNumber: true,
+            marks: true,
+            rank: true,
+            grade: true,
+            points: true,
+            status: true
           }
         },
         assignments: {
@@ -184,11 +211,33 @@ export default async function ScoringPage(props: {
         isPublished: true,
         candidateId: true,
         teamId: true,
+        slotNumber: true,
         programId: true,
         createdAt: true,
         candidate: { select: { name: true, chestNumber: true, categoryId: true, team: { select: { name: true, flagColor: true } }, category: { select: { name: true } } } },
         team: { select: { name: true, flagColor: true } },
-        program: { select: { id: true, name: true, type: true, categoryId: true, category: { select: { name: true } } } }
+        program: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            categoryId: true,
+            category: { select: { name: true } },
+            assignments: {
+              select: {
+                slotNumber: true,
+                candidate: {
+                  select: {
+                    id: true,
+                    name: true,
+                    chestNumber: true,
+                    teamId: true
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     }),

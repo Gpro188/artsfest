@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 import { getFestivalEventIds } from "@/lib/eventScope";
+import { getProgramPointConfig, calculatePoints } from "@/lib/pointCalculation";
 
 // Invalidate public caches
 function invalidatePublicResults() {
@@ -40,33 +41,15 @@ async function recalculateProgramResults(programId: string, manualUpdateId?: str
   if (results.length === 0) return;
 
   const program = results[0].program;
-  const programType = program.type;
   
-  let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
-
-  if (programType === "GENERAL") {
-    let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
-    if (!generalPointsStr) {
-      const festIds = await getFestivalEventIds(program.eventId);
-      const pm = await prisma.pointMatrix.findFirst({
-        where: { eventId: { in: festIds }, generalPoints: { not: null } }
-      });
-      generalPointsStr = pm?.generalPoints;
-    }
-    if (generalPointsStr) {
-      try {
-        pointsConfig = JSON.parse(generalPointsStr);
-      } catch (e) {}
-    }
-  } else {
-    const categoryMatrix = program.category?.pointMatrix;
-    if (categoryMatrix) {
-      let pointsConfigStr = programType === "INDIVIDUAL" ? categoryMatrix.individualPoints : categoryMatrix.groupPoints;
-      try {
-        if (pointsConfigStr) pointsConfig = JSON.parse(pointsConfigStr);
-      } catch (e) {}
-    }
+  let festGeneralPointMatrix = program.event?.generalPointMatrix;
+  if (!festGeneralPointMatrix) {
+    const festIds = await getFestivalEventIds(program.eventId);
+    festGeneralPointMatrix = await prisma.pointMatrix.findFirst({
+      where: { eventId: { in: festIds }, generalPoints: { not: null } }
+    });
   }
+  const pointsConfig = getProgramPointConfig(program, festGeneralPointMatrix);
 
   // Assign ranks, handle ties
   let currentRank = 1;
@@ -75,10 +58,6 @@ async function recalculateProgramResults(programId: string, manualUpdateId?: str
 
   for (let i = 0; i < results.length; i++) {
     const res = results[i];
-    
-    // If this result was manually updated, we might want to preserve its rank/grade
-    // BUT usually points must match the rank. 
-    // For now, auto-recalculate everything based on marks UNLESS we are in "Manual Entry" mode.
     
     if (res.marks < currentMarks) {
       currentRank += sameRankCount;
@@ -90,15 +69,7 @@ async function recalculateProgramResults(programId: string, manualUpdateId?: str
 
     const rank = currentRank <= 3 ? currentRank : null;
     const grade = calculateGrade(res.marks);
-    
-    let points = 0;
-    if (rank === 1) points += pointsConfig.rank1 || 0;
-    else if (rank === 2) points += pointsConfig.rank2 || 0;
-    else if (rank === 3) points += pointsConfig.rank3 || 0;
-
-    if (grade === "A") points += pointsConfig.gradeA || 0;
-    else if (grade === "B") points += pointsConfig.gradeB || 0;
-    else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
+    const points = calculatePoints(rank, grade, pointsConfig);
 
     await prisma.result.update({
       where: { id: res.id },
@@ -113,6 +84,7 @@ export async function submitMarks(data: {
   candidateId?: string,
   chestNumber?: string, 
   teamId?: string,
+  slotNumber?: number | null,
   marks: number,
   manualRank?: number | null,
   manualGrade?: string | null,
@@ -176,38 +148,19 @@ export async function submitMarks(data: {
       finalMarks = Math.max(0, finalMarks - penaltyMarks);
     }
 
-    // Calculate points based on rank / grade
-    let points = 0;
+    // Calculate points based on rank / grade with Fest Committee Point Matrix
+    let festGeneralPointMatrix = program.event?.generalPointMatrix;
+    if (!festGeneralPointMatrix) {
+      const festIds = await getFestivalEventIds(program.eventId);
+      festGeneralPointMatrix = await prisma.pointMatrix.findFirst({
+        where: { eventId: { in: festIds }, generalPoints: { not: null } }
+      });
+    }
+    const pointsConfig = getProgramPointConfig(program, festGeneralPointMatrix);
+
     let rank = isAbsentOrDisqualified ? null : (data.manualRank || null);
     let grade = isAbsentOrDisqualified ? null : (data.manualGrade || null);
-
-    if (!isAbsentOrDisqualified && (data.manualRank || data.manualGrade)) {
-       let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
-       if (program.type === "GENERAL") {
-         let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
-         if (!generalPointsStr) {
-           const festIds = await getFestivalEventIds(program.eventId);
-           const pm = await prisma.pointMatrix.findFirst({
-             where: { eventId: { in: festIds }, generalPoints: { not: null } }
-           });
-           generalPointsStr = pm?.generalPoints;
-         }
-         if (generalPointsStr) {
-           try { pointsConfig = JSON.parse(generalPointsStr); } catch (e) {}
-         }
-       } else if (program.category?.pointMatrix) {
-         const str = program.type === "INDIVIDUAL" ? program.category.pointMatrix.individualPoints : program.category.pointMatrix.groupPoints;
-         if (str) pointsConfig = JSON.parse(str);
-       }
-
-       if (rank === 1) points += pointsConfig.rank1 || 0;
-       else if (rank === 2) points += pointsConfig.rank2 || 0;
-       else if (rank === 3) points += pointsConfig.rank3 || 0;
-
-       if (grade === "A") points += pointsConfig.gradeA || 0;
-       else if (grade === "B") points += pointsConfig.gradeB || 0;
-       else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
-    }
+    let points = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
 
     if (candidateId) {
       await prisma.result.upsert({
@@ -239,8 +192,15 @@ export async function submitMarks(data: {
         }
       });
     } else if (teamId) {
+      const slotNumber = data.slotNumber || 1;
       await prisma.result.upsert({
-        where: { teamId_programId: { teamId, programId: data.programId } },
+        where: {
+          teamId_programId_slotNumber: {
+            teamId,
+            programId: data.programId,
+            slotNumber
+          }
+        },
         update: { 
           marks: finalMarks, 
           rank: isAbsentOrDisqualified ? null : (data.manualRank !== undefined ? data.manualRank : undefined), 
@@ -255,6 +215,7 @@ export async function submitMarks(data: {
         create: {
           teamId,
           programId: data.programId,
+          slotNumber,
           marks: finalMarks,
           rank: rank,
           grade: grade,
@@ -289,6 +250,7 @@ export async function submitBulkProgramResults(data: {
     candidateId?: string;
     chestNumber?: string;
     teamId?: string;
+    slotNumber?: number | null;
     rank?: number | null;
     grade?: string | null;
     marks?: number;
@@ -310,25 +272,14 @@ export async function submitBulkProgramResults(data: {
 
     if (!program) return { success: false, error: "Program not found" };
 
-    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
-    if (program.type === "GENERAL") {
-      let generalPointsStr = program.event?.generalPointMatrix?.generalPoints;
-      if (!generalPointsStr) {
-        const festIds = await getFestivalEventIds(program.eventId);
-        const pm = await prisma.pointMatrix.findFirst({
-          where: { eventId: { in: festIds }, generalPoints: { not: null } }
-        });
-        generalPointsStr = pm?.generalPoints;
-      }
-      if (generalPointsStr) {
-        try { pointsConfig = JSON.parse(generalPointsStr); } catch (e) {}
-      }
-    } else if (program.category?.pointMatrix) {
-      const str = program.type === "INDIVIDUAL" ? program.category.pointMatrix.individualPoints : program.category.pointMatrix.groupPoints;
-      if (str) {
-        try { pointsConfig = JSON.parse(str); } catch (e) {}
-      }
+    let festGeneralPointMatrix = program.event?.generalPointMatrix;
+    if (!festGeneralPointMatrix) {
+      const festIds = await getFestivalEventIds(program.eventId);
+      festGeneralPointMatrix = await prisma.pointMatrix.findFirst({
+        where: { eventId: { in: festIds }, generalPoints: { not: null } }
+      });
     }
+    const pointsConfig = getProgramPointConfig(program, festGeneralPointMatrix);
 
     for (const entry of data.entries) {
       const hasPenalty = !!(entry.penaltyMarks && entry.penaltyMarks > 0) || entry.status === "ABSENT" || entry.status === "DISQUALIFIED" || !!entry.penaltyReason;
@@ -343,21 +294,11 @@ export async function submitBulkProgramResults(data: {
       const penaltyTarget = entry.penaltyTarget || "INDIVIDUAL";
       const penaltyDescription = entry.penaltyDescription || null;
 
-      let points = 0;
       const rank = isAbsentOrDisqualified ? null : (entry.rank || null);
       const grade = isAbsentOrDisqualified ? null : (entry.grade || null);
+      const points = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
 
-      if (!isAbsentOrDisqualified) {
-        if (rank === 1) points += pointsConfig.rank1 || 0;
-        else if (rank === 2) points += pointsConfig.rank2 || 0;
-        else if (rank === 3) points += pointsConfig.rank3 || 0;
-
-        if (grade === "A") points += pointsConfig.gradeA || 0;
-        else if (grade === "B") points += pointsConfig.gradeB || 0;
-        else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
-      }
-
-      let rawMarks = entry.marks !== undefined ? entry.marks : points;
+      let rawMarks = (entry.marks !== undefined && entry.marks > 0) ? entry.marks : points;
       let finalMarks = rawMarks;
       if (isAbsentOrDisqualified) {
         finalMarks = 0;
@@ -407,8 +348,15 @@ export async function submitBulkProgramResults(data: {
           }
         });
       } else if (entry.teamId) {
+        const slotNumber = entry.slotNumber || 1;
         await prisma.result.upsert({
-          where: { teamId_programId: { teamId: entry.teamId, programId: data.programId } },
+          where: {
+            teamId_programId_slotNumber: {
+              teamId: entry.teamId,
+              programId: data.programId,
+              slotNumber
+            }
+          },
           update: {
             marks: finalMarks,
             rank,
@@ -423,6 +371,7 @@ export async function submitBulkProgramResults(data: {
           create: {
             teamId: entry.teamId,
             programId: data.programId,
+            slotNumber,
             marks: finalMarks,
             rank,
             grade,
@@ -576,20 +525,14 @@ export async function updateResultDetails(data: {
     if (!existing) return { success: false, error: "Result not found" };
 
     const program = existing.program;
-    let pointsConfig = { rank1: 5, rank2: 3, rank3: 1, gradeA: 5, gradeB: 3, gradeC: 1 };
-
-    if (program.type === "GENERAL") {
-      if (program.event?.generalPointMatrix?.generalPoints) {
-        try { pointsConfig = JSON.parse(program.event.generalPointMatrix.generalPoints); } catch (e) {}
-      }
-    } else if (program.category?.pointMatrix) {
-      const str = program.type === "INDIVIDUAL" 
-        ? program.category.pointMatrix.individualPoints 
-        : program.category.pointMatrix.groupPoints;
-      if (str) {
-        try { pointsConfig = JSON.parse(str); } catch (e) {}
-      }
+    let festGeneralPointMatrix = program.event?.generalPointMatrix;
+    if (!festGeneralPointMatrix) {
+      const festIds = await getFestivalEventIds(program.eventId);
+      festGeneralPointMatrix = await prisma.pointMatrix.findFirst({
+        where: { eventId: { in: festIds }, generalPoints: { not: null } }
+      });
     }
+    const pointsConfig = getProgramPointConfig(program, festGeneralPointMatrix);
 
     const isAbsentOrDisqualified = data.status === "ABSENT" || data.status === "DISQUALIFIED";
     const status = data.status !== undefined ? data.status : existing.status;
@@ -604,17 +547,7 @@ export async function updateResultDetails(data: {
 
     const rank = isAbsentOrDisqualified ? null : (data.rank !== undefined ? data.rank : existing.rank);
     const grade = isAbsentOrDisqualified ? null : (data.grade !== undefined ? data.grade : existing.grade);
-
-    let points = 0;
-    if (!isAbsentOrDisqualified) {
-      if (rank === 1) points += pointsConfig.rank1 || 0;
-      else if (rank === 2) points += pointsConfig.rank2 || 0;
-      else if (rank === 3) points += pointsConfig.rank3 || 0;
-
-      if (grade === "A") points += pointsConfig.gradeA || 0;
-      else if (grade === "B") points += pointsConfig.gradeB || 0;
-      else if (grade === "C") points += (pointsConfig as any).gradeC || 0;
-    }
+    const points = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
 
     let finalMarks = data.marks;
     if (isAbsentOrDisqualified) {

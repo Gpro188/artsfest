@@ -167,6 +167,7 @@ model Result {
   candidateId        String?
   teamId             String?
   programId          String
+  slotNumber         Int?      @default(1)
   marks              Float
   rank               Int?
   grade              String?
@@ -184,7 +185,7 @@ model Result {
   team        Team?      @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([candidateId, programId])
-  @@unique([teamId, programId])
+  @@unique([teamId, programId, slotNumber])
   @@index([programId])
   @@index([isPublished])
 }

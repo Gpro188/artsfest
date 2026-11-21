@@ -159,8 +159,20 @@ export default function ResultList({ results, role }: { results: any[], role: st
               <div style={{ padding: 'var(--spacing-sm)' }}>
                 {group.results.sort((a,b) => (a.rank || 99) - (b.rank || 99)).map((result) => {
                   const isGroupOrGeneral = group.program.type !== "INDIVIDUAL";
+                  const squadSlot = result.slotNumber || 1;
+                  const squadLetter = String.fromCharCode(64 + squadSlot);
+
+                  // Extract squad candidates from assignments if available
+                  const squadAssignments = group.program.assignments?.filter((a: any) => 
+                    a.candidate?.teamId === result.teamId && (a.slotNumber || 1) === squadSlot
+                  ) || [];
+                  const squadMemberNames = squadAssignments.map((a: any) => a.candidate?.name).filter(Boolean);
+                  const squadChestList = squadAssignments.map((a: any) => a.candidate?.chestNumber).filter(Boolean);
+
                   const participantName = result.candidate ? result.candidate.name : (result.team ? result.team.name : 'Unknown');
-                  const participantChest = result.candidate ? result.candidate.chestNumber : (result.team ? result.team.prefixCode : '-');
+                  const participantChest = result.candidate 
+                    ? result.candidate.chestNumber 
+                    : (squadChestList.length > 0 ? `#${squadChestList.join(', ')}` : (result.team ? result.team.prefixCode : '-'));
                   const teamInfo = result.candidate ? result.candidate.team : result.team;
                   const showPhoto = result.candidate?.photo || result.team?.leaderPhoto;
 
@@ -197,6 +209,19 @@ export default function ResultList({ results, role }: { results: any[], role: st
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                             <span style={{ fontWeight: 600 }}>{participantName}</span>
+                            {isGroupOrGeneral && result.team && (
+                              <span style={{ 
+                                fontSize: '0.7rem', 
+                                padding: '1px 6px', 
+                                borderRadius: '4px', 
+                                backgroundColor: teamInfo?.flagColor ? `${teamInfo.flagColor}25` : 'rgba(99, 102, 241, 0.15)', 
+                                color: teamInfo?.flagColor || 'var(--primary)', 
+                                fontWeight: 800,
+                                border: `1px solid ${teamInfo?.flagColor || 'var(--primary)'}40`
+                              }}>
+                                Squad {squadLetter}
+                              </span>
+                            )}
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>({participantChest})</span>
                             
                             {result.status === "ABSENT" && (
@@ -205,7 +230,12 @@ export default function ResultList({ results, role }: { results: any[], role: st
                               </span>
                             )}
                           </div>
-                          {isGroupOrGeneral && teamInfo?.leaderName && !result.candidate && (
+                          {isGroupOrGeneral && squadMemberNames.length > 0 && (
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              <strong style={{ color: 'var(--text-muted)' }}>Enrolled:</strong> {squadMemberNames.join(', ')}
+                            </div>
+                          )}
+                          {isGroupOrGeneral && teamInfo?.leaderName && !result.candidate && squadMemberNames.length === 0 && (
                             <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Leader: {teamInfo.leaderName}</div>
                           )}
                         </div>
@@ -216,8 +246,11 @@ export default function ResultList({ results, role }: { results: any[], role: st
                       </div>
 
                       <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-                         <div style={{ fontWeight: 'bold', width: '35px', textAlign: 'right' }} title="Marks / Score">{result.marks}</div>
+                         <div style={{ fontWeight: 'bold', width: '45px', textAlign: 'right' }} title="Marks / Score">{result.marks}</div>
                          <div style={{ width: '20px', textAlign: 'center', color: 'var(--success)', fontWeight: 'bold' }} title="Grade">{result.grade || '-'}</div>
+                         <div style={{ width: '50px', textAlign: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.8rem' }} title="Points Awarded">
+                           {result.points} pts
+                         </div>
                          
                          {/* Publish status toggle button */}
                          {role === "ADMIN" ? (
