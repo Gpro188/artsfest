@@ -24,6 +24,10 @@ export default function Header() {
           
           {/* Desktop Nav */}
           <div className="desktop-nav" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+            <a href="/#active-fests" style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+              Active Fests
+            </a>
             <Link href="/demo" style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>Explore Demo Fest</Link>
             <Link href="/login" style={{ color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.9rem', textDecoration: 'none' }}>Client Login</Link>
             <Link href="/super-admin" className="btn-outline" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', fontWeight: 600, borderRadius: '8px', textDecoration: 'none' }}>Admin Panel</Link>
@@ -42,7 +46,14 @@ export default function Header() {
         {/* Mobile Expanded Menu */}
         {isOpen && (
           <div className="mobile-menu" style={{ paddingTop: '1.5rem', paddingBottom: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <Link href="/demo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #38bdf8', borderRadius: '12px', color: '#38bdf8', textDecoration: 'none', fontWeight: 600, backgroundColor: 'rgba(56, 189, 248, 0.05)' }}>
+            <a href="/#active-fests" onClick={() => setIsOpen(false)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #22c55e', borderRadius: '12px', color: '#22c55e', textDecoration: 'none', fontWeight: 600, backgroundColor: 'rgba(34, 197, 94, 0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+                Active Fests
+              </div>
+              <ChevronRight size={18} />
+            </a>
+            <Link href="/demo" onClick={() => setIsOpen(false)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #38bdf8', borderRadius: '12px', color: '#38bdf8', textDecoration: 'none', fontWeight: 600, backgroundColor: 'rgba(56, 189, 248, 0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={18} /> Explore Demo Fest</div>
               <ChevronRight size={18} />
             </Link>

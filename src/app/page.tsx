@@ -2,26 +2,62 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import VisitTracker from "./components/VisitTracker";
 import Header from "./components/Header";
+import ActiveFestsSection, { FestItem } from "./components/ActiveFestsSection";
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  let events: any[] = [];
+  let events: FestItem[] = [];
   let dbError = null;
+
   try {
-    let rawEvents = await prisma.event.findMany({
+    const rawEvents = await prisma.event.findMany({
       where: { parentId: null },
       select: {
         id: true,
         name: true,
+        customDomain: true,
+        startDate: true,
+        endDate: true,
         createdAt: true,
+        globalSetting: {
+          select: {
+            festName: true,
+            festMoto: true,
+            festLogo: true,
+            posterBgUrl: true,
+            posterLogoUrl: true,
+            posterPrimaryColor: true,
+            posterSecondaryColor: true,
+          }
+        },
+        homepageSetting: {
+          select: {
+            heroTitle: true,
+            heroSubtitle: true,
+            heroBgUrl: true,
+            primaryColor: true,
+            secondaryColor: true,
+            pinnedButtonLogoUrl: true,
+            aboutTitle: true,
+            aboutText: true,
+          }
+        },
         _count: {
           select: { teams: true, programs: true, categories: true }
         },
         subEvents: {
           select: {
+            id: true,
+            name: true,
             _count: {
               select: { teams: true, programs: true, categories: true }
+            },
+            globalSetting: {
+              select: {
+                festLogo: true,
+                posterBgUrl: true
+              }
             }
           }
         }
@@ -34,21 +70,75 @@ export default async function HomePage() {
       let totalPrograms = event._count.programs;
       let totalCategories = event._count.categories;
       
+      const subEventsSummary = [];
       if (event.subEvents && event.subEvents.length > 0) {
         for (const sub of event.subEvents) {
           totalTeams += sub._count.teams;
           totalPrograms += sub._count.programs;
           totalCategories += sub._count.categories;
+
+          subEventsSummary.push({
+            id: sub.id,
+            name: sub.name,
+            teams: sub._count.teams,
+            programs: sub._count.programs,
+            categories: sub._count.categories,
+          });
         }
       }
-      
+
+      // Resolve Banner Image (homepage hero -> global poster -> subevent poster -> empty)
+      const bannerUrl = 
+        event.homepageSetting?.heroBgUrl?.trim() || 
+        event.globalSetting?.posterBgUrl?.trim() || 
+        event.subEvents?.find(s => s.globalSetting?.posterBgUrl?.trim())?.globalSetting?.posterBgUrl?.trim() || 
+        "";
+
+      // Resolve Logo Image (global logo -> homepage pinned -> poster logo -> subevent logo -> empty)
+      const logoUrl = 
+        event.globalSetting?.festLogo?.trim() || 
+        event.homepageSetting?.pinnedButtonLogoUrl?.trim() || 
+        event.globalSetting?.posterLogoUrl?.trim() || 
+        event.subEvents?.find(s => s.globalSetting?.festLogo?.trim())?.globalSetting?.festLogo?.trim() || 
+        "";
+
+      // Resolve Display Name & Motto
+      const displayName = 
+        event.homepageSetting?.heroTitle?.trim() || 
+        event.globalSetting?.festName?.trim() || 
+        event.name;
+
+      const motto = 
+        event.homepageSetting?.heroSubtitle?.trim() || 
+        event.globalSetting?.festMoto?.trim() || 
+        "";
+
+      const primaryColor = 
+        event.homepageSetting?.primaryColor?.trim() || 
+        event.globalSetting?.posterPrimaryColor?.trim() || 
+        "#2563eb";
+
+      const secondaryColor = 
+        event.homepageSetting?.secondaryColor?.trim() || 
+        event.globalSetting?.posterSecondaryColor?.trim() || 
+        "#38bdf8";
+
       return {
-        ...event,
-        _count: {
-          teams: totalTeams,
-          programs: totalPrograms,
-          categories: totalCategories
-        }
+        id: event.id,
+        name: event.name,
+        displayName,
+        motto,
+        bannerUrl,
+        logoUrl,
+        primaryColor,
+        secondaryColor,
+        customDomain: event.customDomain,
+        startDate: event.startDate ? event.startDate.toISOString() : null,
+        endDate: event.endDate ? event.endDate.toISOString() : null,
+        totalTeams,
+        totalPrograms,
+        totalCategories,
+        subEvents: subEventsSummary
       };
     });
   } catch (error: any) {
@@ -98,10 +188,8 @@ export default async function HomePage() {
         @keyframes float-medium { 0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); } 50% { transform: translate(-25vw, 15vh) rotate(180deg) scale(1.1); } }
         @keyframes float-fast { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(25vw, 15vh) scale(1.3); } }
         .demo-link:hover { background: var(--border-color-strong) !important; }
-        .hover-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid var(--border-color-strong); background: var(--card-bg); }
-        .hover-card:hover { transform: translateY(-5px); border-color: var(--card-border-hover); background: var(--surface-hover); box-shadow: 0 20px 40px -10px rgba(37,99,235,0.1); }
-        .btn-primary { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); transition: opacity 0.2s; }
-        .btn-primary:hover { opacity: 0.9; box-shadow: 0 0 20px rgba(37,99,235,0.4); }
+        .btn-primary { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); transition: opacity 0.2s, box-shadow 0.2s; }
+        .btn-primary:hover { opacity: 0.95; box-shadow: 0 0 20px rgba(37,99,235,0.4); }
         .btn-outline { background: transparent; border: 1px solid var(--border-color-strong); transition: all 0.2s; color: var(--text-primary) !important; }
         .btn-outline:hover { background: var(--border-color); border-color: var(--text-secondary); }
         .text-gradient { background: linear-gradient(to right, var(--text-primary), var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -133,12 +221,15 @@ export default async function HomePage() {
             <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '3rem', maxWidth: '600px', marginInline: 'auto' }}>
               A state-of-the-art platform engineered to manage teams, schedule programs seamlessly, and broadcast live standings with breathtaking speed.
             </p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/demo" className="btn-primary" style={{ display: 'inline-block', padding: '1rem 2.5rem', fontSize: '1.1rem', fontWeight: 600, color: '#ffffff', borderRadius: '12px', textDecoration: 'none' }}>
                 Experience Demo Fest
               </Link>
-              <Link href="/login" className="btn-outline" style={{ display: 'inline-block', padding: '1rem 2.5rem', fontSize: '1.1rem', fontWeight: 600, borderRadius: '12px', textDecoration: 'none' }}>
-                Get Started
+              <a href="#active-fests" className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '1rem 2rem', fontSize: '1.1rem', fontWeight: 600, borderRadius: '12px', textDecoration: 'none' }}>
+                Explore Active Fests ↓
+              </a>
+              <Link href="/login" className="btn-outline" style={{ display: 'inline-block', padding: '1rem 2rem', fontSize: '1.1rem', fontWeight: 600, borderRadius: '12px', textDecoration: 'none' }}>
+                Client Portal
               </Link>
             </div>
           </div>
@@ -161,58 +252,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Active Events */}
-        <section style={{ padding: '5rem 1.5rem' }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Active Fests</h2>
-              <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: 600, background: 'rgba(56, 189, 248, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '20px' }}>
-                <span style={{ display: 'inline-block', width: '8px', height: '8px', background: '#38bdf8', borderRadius: '50%', marginRight: '6px', animation: 'pulse 2s infinite' }}></span>
-                {events.length} Live
-              </span>
-            </div>
-            
-            {dbError && (
-              <div style={{ padding: '2rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '16px', color: '#EF4444' }}>
-                <h3 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.25rem' }}>⚠️</span> Database Connection Error
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.95rem', opacity: 0.9 }}>{dbError}</p>
-              </div>
-            )}
-            
-            {!dbError && events.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--surface-color)', border: '1px solid var(--border-color-strong)', borderRadius: '16px', color: 'var(--text-muted)' }}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>No fests are currently active.</p>
-                <Link href="/login" className="btn-outline" style={{ display: 'inline-block', padding: '0.75rem 2rem', borderRadius: '8px', textDecoration: 'none' }}>Create One Now</Link>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
-                {events.map(event => (
-                  <div key={event.id} className="hover-card" style={{ padding: '2rem', borderRadius: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                      <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0, lineHeight: 1.2 }}>{event.name}</h3>
-                    </div>
-                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-                      <div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{event._count.teams}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Teams</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{event._count.programs}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Programs</div>
-                      </div>
-                    </div>
-                    <Link href={`/fest/${event.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#38bdf8', fontWeight: 600, textDecoration: 'none', fontSize: '1rem' }}>
-                      <span>View Live Standings</span>
-                      <span style={{ fontSize: '1.2rem' }}>&rarr;</span>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+        {/* Active Festivals Section with Logo, Banner, and Best Design Box Layout */}
+        <ActiveFestsSection events={events} dbError={dbError} />
       </main>
 
       <footer style={{ padding: '3rem 1.5rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-color)' }}>
@@ -230,13 +271,6 @@ export default async function HomePage() {
         </div>
         <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>&copy; {new Date().getFullYear()} All rights reserved. Designed for excellence.</p>
       </footer>
-      <style>{`
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
-          70% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
-        }
-      `}</style>
     </div>
   );
 }
