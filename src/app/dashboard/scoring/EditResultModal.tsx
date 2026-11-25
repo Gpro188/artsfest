@@ -4,7 +4,11 @@ import { useState } from "react";
 import { updateResultDetails } from "./actions";
 
 export default function EditResultModal({ result, onClose }: { result: any, onClose: () => void }) {
-  const [marks, setMarks] = useState(result.marks !== undefined && result.marks !== null ? result.marks.toString() : "");
+  const [marks, setMarks] = useState(
+    result.points !== undefined && result.points !== null 
+      ? result.points.toString() 
+      : (result.marks !== undefined && result.marks !== null ? result.marks.toString() : "")
+  );
   const [rank, setRank] = useState<string>(result.rank ? result.rank.toString() : "");
   const [grade, setGrade] = useState<string>(result.grade || "");
   const [isPublished, setIsPublished] = useState<boolean>(!!result.isPublished);
@@ -84,7 +88,7 @@ export default function EditResultModal({ result, onClose }: { result: any, onCl
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700 }}>Marks / Score</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700 }}>Total Points / Marks</label>
               <input 
                 type="number" 
                 step="0.01"

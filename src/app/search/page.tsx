@@ -103,6 +103,7 @@ export default async function SearchPage(props: {
             include: { program: true } 
           },
           results: {
+            where: { isPublished: true },
             include: { program: true }
           }
         }
@@ -134,8 +135,9 @@ export default async function SearchPage(props: {
           event: true,
           category: true,
           results: {
+            where: { isPublished: true },
             orderBy: { marks: 'desc' },
-            include: { candidate: { include: { team: true } } }
+            include: { candidate: { include: { team: true } }, team: true }
           },
           assignments: {
             include: { candidate: { include: { team: true } } }
@@ -227,7 +229,7 @@ export default async function SearchPage(props: {
                                             {p.program.name}
                                           </Link>
                                           <span className={`status-pill ${hasResult ? 'status-entered' : 'status-upcoming'}`}>
-                                            {hasResult ? 'RESULT ENTERED' : 'UPCOMING'}
+                                            {hasResult ? 'RESULT PUBLISHED' : 'UPCOMING'}
                                           </span>
                                         </div>
                                         <div className="prog-item-meta font-body">
@@ -243,11 +245,15 @@ export default async function SearchPage(props: {
 
                                       {matchResult && (
                                         <div className="prog-item-score-col">
-                                          {matchResult.rank && (
+                                          {matchResult.rank ? (
                                             <div className="prog-rank-chip font-mono-num">
                                               Rank #{matchResult.rank}
                                             </div>
-                                          )}
+                                          ) : matchResult.grade ? (
+                                            <div className="prog-rank-chip font-mono-num">
+                                              Grade {matchResult.grade}
+                                            </div>
+                                          ) : null}
                                           {matchResult.points !== undefined && (
                                             <div className="prog-pts-chip font-mono-num">
                                               +{matchResult.points} pts
@@ -313,13 +319,13 @@ export default async function SearchPage(props: {
                                     {res.rank ? `Rank #${res.rank}` : res.grade ? `Grade ${res.grade}` : 'Award'}
                                   </div>
                                   <div className="mini-winner-name font-display">
-                                    {res.candidate?.name}
+                                    {res.candidate?.name || res.team?.name || 'Winner'}
                                     {res.candidate?.chestNumber && (
                                       <span className="mini-chest font-mono-num"> ({res.candidate.chestNumber})</span>
                                     )}
                                   </div>
                                   <div className="mini-winner-team font-body" style={{ color: teamColor }}>
-                                    {res.candidate?.team?.name}
+                                    {res.candidate?.team?.name || res.team?.name}
                                   </div>
                                   <div className="mini-winner-pts font-mono-num">
                                     +{res.points} pts

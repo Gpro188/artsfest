@@ -175,7 +175,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
           existingEntries[res.candidateId] = {
             rank: res.rank ? String(res.rank) : "",
             grade: res.grade || "",
-            marks: res.marks !== undefined && res.marks !== null ? String(res.marks) : (res.points ? String(res.points) : ""),
+            marks: res.points !== undefined && res.points !== null ? String(res.points) : (res.marks !== undefined && res.marks !== null ? String(res.marks) : ""),
             status: res.status || "COMPLETED"
           };
         } else if (!isIndividual && res.teamId) {
@@ -184,7 +184,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
           existingEntries[key] = {
             rank: res.rank ? String(res.rank) : "",
             grade: res.grade || "",
-            marks: res.marks !== undefined && res.marks !== null ? String(res.marks) : (res.points ? String(res.points) : ""),
+            marks: res.points !== undefined && res.points !== null ? String(res.points) : (res.marks !== undefined && res.marks !== null ? String(res.marks) : ""),
             status: res.status || "COMPLETED"
           };
         }
@@ -837,7 +837,7 @@ export default function ScoringForm({ events }: { events: any[] }) {
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 900 }}>TOTAL MARKS</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 900 }}>TOTAL POINTS</label>
               <input 
                 type="number" 
                 step="0.01"

@@ -160,7 +160,21 @@ export async function submitMarks(data: {
 
     let rank = isAbsentOrDisqualified ? null : (data.manualRank || null);
     let grade = isAbsentOrDisqualified ? null : (data.manualGrade || null);
-    let points = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
+    const defaultCalculatedPoints = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
+
+    // If custom points / marks was provided, respect it; otherwise fallback to point calculation
+    let rawPoints = isAbsentOrDisqualified ? 0 : (
+      (data.marks !== undefined && data.marks !== null && !isNaN(data.marks))
+        ? data.marks
+        : defaultCalculatedPoints
+    );
+
+    let finalPoints = rawPoints;
+    if (isAbsentOrDisqualified) {
+      finalPoints = 0;
+    } else if ((penaltyTarget === "INDIVIDUAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
+      finalPoints = Math.max(0, rawPoints - penaltyMarks);
+    }
 
     if (candidateId) {
       await prisma.result.upsert({
@@ -169,7 +183,7 @@ export async function submitMarks(data: {
           marks: finalMarks, 
           rank: isAbsentOrDisqualified ? null : (data.manualRank !== undefined ? data.manualRank : undefined), 
           grade: isAbsentOrDisqualified ? null : (data.manualGrade !== undefined ? data.manualGrade : undefined),
-          points: isAbsentOrDisqualified ? 0 : ((data.manualRank || data.manualGrade) ? points : undefined),
+          points: isAbsentOrDisqualified ? 0 : finalPoints,
           status,
           penaltyMarks,
           penaltyReason,
@@ -182,7 +196,7 @@ export async function submitMarks(data: {
           marks: finalMarks,
           rank: rank,
           grade: grade,
-          points: points,
+          points: isAbsentOrDisqualified ? 0 : finalPoints,
           status,
           penaltyMarks,
           penaltyReason,
@@ -205,7 +219,7 @@ export async function submitMarks(data: {
           marks: finalMarks, 
           rank: isAbsentOrDisqualified ? null : (data.manualRank !== undefined ? data.manualRank : undefined), 
           grade: isAbsentOrDisqualified ? null : (data.manualGrade !== undefined ? data.manualGrade : undefined),
-          points: isAbsentOrDisqualified ? 0 : ((data.manualRank || data.manualGrade) ? points : undefined),
+          points: isAbsentOrDisqualified ? 0 : finalPoints,
           status,
           penaltyMarks,
           penaltyReason,
@@ -219,7 +233,7 @@ export async function submitMarks(data: {
           marks: finalMarks,
           rank: rank,
           grade: grade,
-          points: points,
+          points: isAbsentOrDisqualified ? 0 : finalPoints,
           status,
           penaltyMarks,
           penaltyReason,
@@ -296,14 +310,23 @@ export async function submitBulkProgramResults(data: {
 
       const rank = isAbsentOrDisqualified ? null : (entry.rank || null);
       const grade = isAbsentOrDisqualified ? null : (entry.grade || null);
-      const points = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
+      const defaultCalculatedPoints = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
 
-      let rawMarks = (entry.marks !== undefined && entry.marks > 0) ? entry.marks : points;
-      let finalMarks = rawMarks;
+      // If custom points / marks was provided, respect it; otherwise fallback to point calculation
+      let rawPoints = isAbsentOrDisqualified ? 0 : (
+        (entry.marks !== undefined && entry.marks !== null && !isNaN(entry.marks))
+          ? entry.marks
+          : defaultCalculatedPoints
+      );
+
+      let finalPoints = rawPoints;
+      let finalMarks = rawPoints;
       if (isAbsentOrDisqualified) {
         finalMarks = 0;
+        finalPoints = 0;
       } else if ((penaltyTarget === "INDIVIDUAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
-        finalMarks = Math.max(0, rawMarks - penaltyMarks);
+        finalMarks = Math.max(0, rawPoints - penaltyMarks);
+        finalPoints = Math.max(0, rawPoints - penaltyMarks);
       }
 
       let candidateId = entry.candidateId;
@@ -325,7 +348,7 @@ export async function submitBulkProgramResults(data: {
             marks: finalMarks,
             rank,
             grade,
-            points,
+            points: finalPoints,
             status,
             penaltyMarks,
             penaltyReason,
@@ -338,7 +361,7 @@ export async function submitBulkProgramResults(data: {
             marks: finalMarks,
             rank,
             grade,
-            points,
+            points: finalPoints,
             status,
             penaltyMarks,
             penaltyReason,
@@ -361,7 +384,7 @@ export async function submitBulkProgramResults(data: {
             marks: finalMarks,
             rank,
             grade,
-            points,
+            points: finalPoints,
             status,
             penaltyMarks,
             penaltyReason,
@@ -375,7 +398,7 @@ export async function submitBulkProgramResults(data: {
             marks: finalMarks,
             rank,
             grade,
-            points,
+            points: finalPoints,
             status,
             penaltyMarks,
             penaltyReason,
@@ -467,7 +490,6 @@ export async function deleteResult(id: string) {
     }
 
     await prisma.result.delete({ where: { id } });
-    await recalculateProgramResults(result.programId);
     revalidatePath("/dashboard/scoring");
     revalidatePath("/dashboard");
     revalidatePath("/");
@@ -482,8 +504,7 @@ export async function deleteResult(id: string) {
 
 export async function updateResultMark(id: string, marks: number) {
   try {
-    const result = await prisma.result.update({ where: { id }, data: { marks } });
-    await recalculateProgramResults(result.programId);
+    const result = await prisma.result.update({ where: { id }, data: { marks, points: marks } });
     revalidatePath("/dashboard/scoring");
     revalidatePath("/dashboard");
     revalidatePath("/");
@@ -547,13 +568,22 @@ export async function updateResultDetails(data: {
 
     const rank = isAbsentOrDisqualified ? null : (data.rank !== undefined ? data.rank : existing.rank);
     const grade = isAbsentOrDisqualified ? null : (data.grade !== undefined ? data.grade : existing.grade);
-    const points = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
+    const defaultCalculatedPoints = isAbsentOrDisqualified ? 0 : calculatePoints(rank, grade, pointsConfig);
 
-    let finalMarks = data.marks;
+    let rawPoints = isAbsentOrDisqualified ? 0 : (
+      (data.marks !== undefined && data.marks !== null && !isNaN(data.marks))
+        ? data.marks
+        : defaultCalculatedPoints
+    );
+
+    let finalPoints = rawPoints;
+    let finalMarks = rawPoints;
     if (isAbsentOrDisqualified) {
       finalMarks = 0;
+      finalPoints = 0;
     } else if ((penaltyTarget === "INDIVIDUAL" || penaltyTarget === "BOTH") && penaltyMarks > 0) {
-      finalMarks = Math.max(0, finalMarks - penaltyMarks);
+      finalMarks = Math.max(0, rawPoints - penaltyMarks);
+      finalPoints = Math.max(0, rawPoints - penaltyMarks);
     }
 
     await prisma.result.update({
@@ -562,7 +592,7 @@ export async function updateResultDetails(data: {
         marks: finalMarks,
         rank: rank || null,
         grade: grade || null,
-        points,
+        points: finalPoints,
         status,
         penaltyMarks,
         penaltyReason,
