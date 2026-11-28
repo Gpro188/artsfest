@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import CustomerGuidelines from "./CustomerGuidelines";
 import { getFestivalEventIds } from "@/lib/eventScope";
+import DashboardIcons from "./DashboardIcons";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -14,7 +15,7 @@ export default async function DashboardPage() {
   let stats: {
     label: string;
     value: string | number;
-    icon: string;
+    iconKey: string;
     accentStart: string;
     accentEnd: string;
     trend?: string;
@@ -63,42 +64,42 @@ export default async function DashboardPage() {
         {
           label: "Your Team",
           value: userTeam.name,
-          icon: "🛡️",
+          iconKey: "shield",
           accentStart: "#6366f1",
           accentEnd: "#818cf8",
         },
         {
           label: "Candidates",
           value: candidatesCount,
-          icon: "👤",
+          iconKey: "user-circle",
           accentStart: "#ec4899",
           accentEnd: "#f472b6",
         },
         {
           label: "Approved",
           value: `${approvedCandidatesCount} / ${candidatesCount}`,
-          icon: "✅",
+          iconKey: "check-circle",
           accentStart: "#10b981",
           accentEnd: "#34d399",
         },
         {
           label: "Program Entries",
           value: assignmentsCount,
-          icon: "📜",
+          iconKey: "file-text",
           accentStart: "#f59e0b",
           accentEnd: "#fbbf24",
         },
         {
           label: "Points Published",
           value: publishedPoints,
-          icon: "🏆",
+          iconKey: "trophy",
           accentStart: "#8b5cf6",
           accentEnd: "#a78bfa",
         },
         {
           label: "Total Points",
           value: totalPoints,
-          icon: "✨",
+          iconKey: "sparkles",
           accentStart: "#e11d48",
           accentEnd: "#fb7185",
         },
@@ -143,7 +144,7 @@ export default async function DashboardPage() {
       {
         label: "Total Events",
         value: eventsCount,
-        icon: "🎭",
+        iconKey: "calendar-days",
         accentStart: "#6366f1",
         accentEnd: "#818cf8",
         trend: "Active",
@@ -151,7 +152,7 @@ export default async function DashboardPage() {
       {
         label: "Active Teams",
         value: teamsCount,
-        icon: "🛡️",
+        iconKey: "shield",
         accentStart: "#ec4899",
         accentEnd: "#f472b6",
         trend: "Competing",
@@ -159,7 +160,7 @@ export default async function DashboardPage() {
       {
         label: "Programmes",
         value: programsCount,
-        icon: "📜",
+        iconKey: "file-text",
         accentStart: "#f59e0b",
         accentEnd: "#fbbf24",
         trend: "Scheduled",
@@ -167,7 +168,7 @@ export default async function DashboardPage() {
       {
         label: "Participants",
         value: participantsCount,
-        icon: "👤",
+        iconKey: "user-circle",
         accentStart: "#10b981",
         accentEnd: "#34d399",
         trend: "Registered",
@@ -175,7 +176,7 @@ export default async function DashboardPage() {
       {
         label: "Programs Published",
         value: publishedResults,
-        icon: "🏆",
+        iconKey: "trophy",
         accentStart: "#8b5cf6",
         accentEnd: "#a78bfa",
         trend: "Live",
@@ -183,7 +184,7 @@ export default async function DashboardPage() {
       {
         label: "Programs Pending",
         value: pendingResults,
-        icon: "⏳",
+        iconKey: "clock",
         accentStart: "#ef4444",
         accentEnd: "#f87171",
         trend: "Awaiting",
@@ -205,7 +206,7 @@ export default async function DashboardPage() {
             "--card-accent-end": "#fbbf24",
           } as React.CSSProperties}
         >
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⚠️</div>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}><DashboardIcons iconKey="alert-triangle" size={48} /></div>
           <h2 style={{ color: "#d97706", marginBottom: "1rem", fontSize: "1.25rem" }}>
             Account Setup Pending
           </h2>
@@ -222,29 +223,29 @@ export default async function DashboardPage() {
     );
   }
 
-  const quickLinks: { label: string; href: string; icon: string; color: string }[] = [];
+  const quickLinks: { label: string; href: string; iconKey: string; color: string }[] = [];
   if (["ADMIN", "SUPER_ADMIN"].includes(role)) {
     quickLinks.push(
-      { label: "Results Entry", href: "/dashboard/scoring", icon: "🏆", color: "#6366f1" },
-      { label: "Reports & Hall of Fame", href: "/dashboard/reports", icon: "📊", color: "#8b5cf6" },
-      { label: "Manage Schedule", href: "/dashboard/schedule", icon: "📅", color: "#10b981" },
-      { label: "Media Branding", href: "/dashboard/media", icon: "🎨", color: "#0ea5e9" }
+      { label: "Results Entry", href: "/dashboard/scoring", iconKey: "trophy", color: "#6366f1" },
+      { label: "Reports & Hall of Fame", href: "/dashboard/reports", iconKey: "bar-chart", color: "#8b5cf6" },
+      { label: "Manage Schedule", href: "/dashboard/schedule", iconKey: "calendar-days", color: "#10b981" },
+      { label: "Media Branding", href: "/dashboard/media", iconKey: "palette", color: "#0ea5e9" }
     );
   } else if (role === "MANAGER" && hasTeam) {
     quickLinks.push(
-      { label: "Register Candidates", href: "/dashboard/candidates", icon: "👤", color: "#ec4899" },
-      { label: "View Assignments", href: "/dashboard/assignments", icon: "📜", color: "#f59e0b" },
-      { label: "Fest Reports", href: "/dashboard/reports", icon: "📊", color: "#8b5cf6" },
-      { label: "Print Schedule", href: "/dashboard/schedule", icon: "🖨️", color: "#10b981" }
+      { label: "Register Candidates", href: "/dashboard/candidates", iconKey: "user-circle", color: "#ec4899" },
+      { label: "View Assignments", href: "/dashboard/assignments", iconKey: "clipboard-list", color: "#f59e0b" },
+      { label: "Fest Reports", href: "/dashboard/reports", iconKey: "bar-chart", color: "#8b5cf6" },
+      { label: "Print Schedule", href: "/dashboard/schedule", iconKey: "printer", color: "#10b981" }
     );
   } else if (role === "MEDIA") {
     quickLinks.push(
-      { label: "Poster Branding", href: "/dashboard/media", icon: "🎨", color: "#0ea5e9" },
-      { label: "Live Hub", href: "/hub", icon: "📡", color: "#6366f1" }
+      { label: "Poster Branding", href: "/dashboard/media", iconKey: "palette", color: "#0ea5e9" },
+      { label: "Live Hub", href: "/hub", iconKey: "radio", color: "#6366f1" }
     );
   } else if (role === "JUDGE") {
     quickLinks.push(
-      { label: "Results Entry", href: "/dashboard/scoring", icon: "🏆", color: "#6366f1" }
+      { label: "Results Entry", href: "/dashboard/scoring", iconKey: "trophy", color: "#6366f1" }
     );
   }
 
@@ -266,7 +267,7 @@ export default async function DashboardPage() {
             className="btn btn-success"
             style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
           >
-            <span>📡</span> Live Management Hub
+            <DashboardIcons iconKey="radio" size={18} /> Live Management Hub
           </Link>
         </div>
       </div>
@@ -300,13 +301,13 @@ export default async function DashboardPage() {
                   borderRadius: "12px",
                   background: `linear-gradient(135deg, ${stat.accentStart}22, ${stat.accentEnd}33)`,
                   border: `1px solid ${stat.accentStart}33`,
+                  color: stat.accentStart,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "1.25rem",
                 }}
               >
-                {stat.icon}
+                <DashboardIcons iconKey={stat.iconKey} size={22} />
               </div>
               {stat.trend && (
                 <span
@@ -353,7 +354,7 @@ export default async function DashboardPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           gap: "1.25rem",
           marginBottom: "2rem",
         }}
@@ -367,13 +368,13 @@ export default async function DashboardPage() {
                 height: "36px",
                 borderRadius: "10px",
                 background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+                color: "#ffffff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "1rem",
               }}
             >
-              👋
+              <DashboardIcons iconKey="hand-wave" size={20} />
             </div>
             <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>Welcome Back</h3>
           </div>
@@ -408,7 +409,7 @@ export default async function DashboardPage() {
                     gap: "0.35rem",
                   }}
                 >
-                  <span style={{ fontSize: "0.85rem" }}>{link.icon}</span>
+                  <DashboardIcons iconKey={link.iconKey} size={15} />
                   {link.label}
                 </Link>
               ))}
@@ -425,13 +426,13 @@ export default async function DashboardPage() {
                 height: "36px",
                 borderRadius: "10px",
                 background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
+                color: "#ffffff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "1rem",
               }}
             >
-              🔗
+              <DashboardIcons iconKey="link" size={20} />
             </div>
             <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>Manager Resources</h3>
           </div>
@@ -446,7 +447,7 @@ export default async function DashboardPage() {
               className="btn btn-sm btn-secondary"
               style={{ justifyContent: "flex-start", gap: "0.5rem" }}
             >
-              <span>🚀</span> ImgBB <span style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>(Recommended)</span>
+              <DashboardIcons iconKey="external-link" size={14} /> ImgBB <span style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>(Recommended)</span>
             </a>
             <a
               href="https://postimages.org"
@@ -455,7 +456,7 @@ export default async function DashboardPage() {
               className="btn btn-sm btn-secondary"
               style={{ justifyContent: "flex-start", gap: "0.5rem" }}
             >
-              <span>🖼️</span> PostImages
+              <DashboardIcons iconKey="image" size={14} /> PostImages
             </a>
           </div>
         </div>

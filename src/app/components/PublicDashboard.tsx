@@ -15,6 +15,12 @@ import {
   ArrowRight,
   ChevronDown,
   X,
+  Printer,
+  BarChart3,
+  Crown,
+  Medal,
+  Flag,
+  Clock,
 } from "lucide-react";
 
 export default function PublicDashboard({
@@ -361,7 +367,7 @@ export default function PublicDashboard({
             </div>
           ) : (
             <div className="dashboard-empty-card">
-              <div className="empty-icon">🔍</div>
+              <div className="empty-icon"><Search size={36} style={{ color: "var(--text-muted)" }} /></div>
               <h4 className="font-display">No results found</h4>
               <p>Try searching for a different program name or chest number.</p>
             </div>
@@ -375,7 +381,7 @@ export default function PublicDashboard({
             <div className="leaderboard-card">
               <div className="card-header-row">
                 <div>
-                  <h3 className="card-title font-display">🏆 Team Leaderboard</h3>
+                  <h3 className="card-title font-display"><Trophy size={20} style={{ display: "inline", verticalAlign: "middle", marginRight: "6px" }} />Team Leaderboard</h3>
                   <p className="card-subtitle">Live cumulative standings across all events</p>
                 </div>
               </div>
@@ -440,7 +446,7 @@ export default function PublicDashboard({
 
           {/* Sidebar Column: Team Detail Cards */}
           <div className="standings-side-col">
-            <h3 className="side-section-title font-display">🚩 Team Details</h3>
+            <h3 className="side-section-title font-display"><Flag size={18} style={{ display: "inline", verticalAlign: "middle", marginRight: "6px" }} />Team Details</h3>
             <div className="team-cards-grid">
               {data.leaderboard.map((team) => {
                 const teamColor = getTeamColor(team.name, team.flagColor);
@@ -489,7 +495,7 @@ export default function PublicDashboard({
           <div style={{ gridColumn: '1 / -1', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', padding: '12px 18px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
             <div>
               <span style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ⭐ Full Hall of Fame & Total Students Standings
+                <Star size={18} style={{ color: '#f59e0b' }} /> Full Hall of Fame & Total Students Standings
               </span>
               <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 View complete student list with total achieved points, Excel export, and official printable PDF.
@@ -503,21 +509,21 @@ export default function PublicDashboard({
                 className="btn btn-primary"
                 style={{ fontSize: '0.8rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                🖨️ Printable PDF
+                <Printer size={15} style={{ display: "inline", verticalAlign: "middle" }} /> Printable PDF
               </a>
               <Link
                 href={`/dashboard/reports?eventId=${activeEventId}`}
                 className="btn btn-secondary"
                 style={{ fontSize: '0.8rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                📊 Admin Reports & Excel
+                <BarChart3 size={15} style={{ display: "inline", verticalAlign: "middle" }} /> Admin Reports & Excel
               </Link>
             </div>
           </div>
 
           {/* Left Column: Overall Top 5 Stars */}
           <div className="hall-overall-col">
-            <h3 className="side-section-title font-display">👑 Overall Top 5 Stars</h3>
+            <h3 className="side-section-title font-display"><Crown size={18} style={{ display: "inline", verticalAlign: "middle", marginRight: "6px", color: "#f59e0b" }} />Overall Top 5 Stars</h3>
 
             {data.topStars.length === 0 ? (
               <div className="dashboard-empty-card">
@@ -653,7 +659,7 @@ export default function PublicDashboard({
 
           {/* Right Column: Category Champions (Dropdown selector on top) */}
           <div className="hall-category-col">
-            <h3 className="side-section-title font-display">🎖️ Category Champions</h3>
+            <h3 className="side-section-title font-display"><Medal size={18} style={{ display: "inline", verticalAlign: "middle", marginRight: "6px", color: "#6366f1" }} />Category Champions</h3>
             <div className="category-champs-card">
               {categoryNames.length > 0 ? (
                 <>
@@ -735,7 +741,7 @@ export default function PublicDashboard({
 
           {data.latestResults.length === 0 ? (
             <div className="dashboard-empty-card empty-feed-state">
-              <div className="empty-icon">⏳</div>
+              <div className="empty-icon"><Clock size={36} style={{ color: "var(--text-muted)" }} /></div>
               <h4 className="font-display">No new results yet</h4>
               <p>
                 Judges and tabulators are evaluating performances. Published results

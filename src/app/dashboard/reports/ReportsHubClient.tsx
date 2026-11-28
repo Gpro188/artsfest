@@ -20,7 +20,15 @@ import {
   ExternalLink,
   ChevronRight,
   CheckCircle2,
-  Award
+  Award,
+  Crown,
+  UserCircle,
+  ClipboardList,
+  Theater,
+  MapPin,
+  CreditCard,
+  PenLine,
+  BarChart3,
 } from "lucide-react";
 import type {
   ReportsDataResponse,
@@ -371,7 +379,7 @@ export default function ReportsHubClient({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <span style={{ fontSize: "1.5rem" }}>📊</span>
+            <BarChart3 size={28} strokeWidth={2} style={{ color: "var(--primary)" }} />
             <h1 style={{ margin: 0, fontSize: "1.75rem", fontWeight: "800", letterSpacing: "-0.5px" }}>
               Official Reports & Printables Hub
             </h1>
@@ -1767,7 +1775,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>👑</span>
+                  <Crown size={28} strokeWidth={2} style={{ color: "#f59e0b" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Hall of Fame & Student Standings</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1790,7 +1798,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>🏆</span>
+                  <Trophy size={28} strokeWidth={2} style={{ color: "#6366f1" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Team Championship Leaderboard</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1813,7 +1821,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>📜</span>
+                  <FileText size={28} strokeWidth={2} style={{ color: "#10b981" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Published Competition Results</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1836,7 +1844,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>👤</span>
+                  <UserCircle size={28} strokeWidth={2} style={{ color: "#ec4899" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Approved Candidate Chest Number Roll</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1859,7 +1867,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>📅</span>
+                  <Calendar size={28} strokeWidth={2} style={{ color: "#0ea5e9" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Official Festival Schedule</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1882,7 +1890,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>📝</span>
+                  <PenLine size={28} strokeWidth={2} style={{ color: "#8b5cf6" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Judges Tabulation Sheets</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1905,7 +1913,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>🎭</span>
+                  <Theater size={28} strokeWidth={2} style={{ color: "#f43f5e" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Stage Manager Duty Sheet</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1928,7 +1936,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>📍</span>
+                  <MapPin size={28} strokeWidth={2} style={{ color: "#f59e0b" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Venue & Stage Allocation</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>
@@ -1951,7 +1959,7 @@ export default function ReportsHubClient({
             <div className="glass-panel" style={{ padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.5rem" }}>🪪</span>
+                  <CreditCard size={28} strokeWidth={2} style={{ color: "#0ea5e9" }} />
                   <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Candidate Identity Cards</h4>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem", lineHeight: "1.5" }}>

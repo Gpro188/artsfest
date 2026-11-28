@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import * as XLSX from "xlsx";
+import {
+  Search as SearchIcon,
+  FolderOpen,
+  Tag,
+  CheckCircle2,
+  PenLine,
+  BarChart3,
+  Printer,
+  FileSpreadsheet,
+} from "lucide-react";
 
 interface ExportAndPrintModalProps {
   eventId: string;
@@ -102,7 +112,8 @@ export default function ResultsExportPrintBar({
       {/* Filter Selectors */}
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)" }}>
-          <span>🔍 Filter:</span>
+          <SearchIcon size={15} strokeWidth={2.5} />
+          <span>Filter:</span>
         </div>
 
         {/* Category Dropdown */}
@@ -112,7 +123,7 @@ export default function ResultsExportPrintBar({
           className="form-select"
           style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "8px", background: "var(--surface)", border: "1px solid var(--border-color)", color: "var(--text-primary)", fontWeight: 600 }}
         >
-          <option value="ALL">📁 All Categories</option>
+          <option value="ALL">All Categories</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -128,7 +139,7 @@ export default function ResultsExportPrintBar({
           className="form-select"
           style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "8px", background: "var(--surface)", border: "1px solid var(--border-color)", color: "var(--text-primary)", fontWeight: 600 }}
         >
-          <option value="ALL">🏷️ All Types</option>
+          <option value="ALL">All Types</option>
           <option value="INDIVIDUAL">Individual</option>
           <option value="GROUP">Group</option>
           <option value="GENERAL">General</option>
@@ -141,8 +152,8 @@ export default function ResultsExportPrintBar({
           className="form-select"
           style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "8px", background: "var(--surface)", border: "1px solid var(--border-color)", color: "var(--text-primary)", fontWeight: 600 }}
         >
-          <option value="published">✅ Published Only</option>
-          <option value="all">📝 All (Published & Draft)</option>
+          <option value="published">Published Only</option>
+          <option value="all">All (Published & Draft)</option>
         </select>
       </div>
 
@@ -166,7 +177,7 @@ export default function ResultsExportPrintBar({
             textDecoration: "none"
           }}
         >
-          📊 Reports & Hall of Fame
+          <BarChart3 size={15} strokeWidth={2.5} /> Reports & Hall of Fame
         </a>
 
         {/* Print Filtered Results Button */}
@@ -190,7 +201,7 @@ export default function ResultsExportPrintBar({
             cursor: "pointer"
           }}
         >
-          🖨️ Print Result Sheet
+          <Printer size={15} strokeWidth={2.5} /> Print Result Sheet
         </a>
 
         {/* Excel Export Button */}
@@ -211,7 +222,7 @@ export default function ResultsExportPrintBar({
             cursor: "pointer"
           }}
         >
-          📊 Export to Excel ({filteredResults.length})
+          <FileSpreadsheet size={15} strokeWidth={2.5} /> Export to Excel ({filteredResults.length})
         </button>
       </div>
     </div>

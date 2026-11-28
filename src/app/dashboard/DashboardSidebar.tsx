@@ -5,6 +5,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 import ThemeToggle from "@/app/components/ThemeToggle";
+import {
+  LayoutDashboard,
+  Radio,
+  CalendarDays,
+  Shield,
+  UserCircle,
+  FileText,
+  ClipboardList,
+  Trophy,
+  BarChart3,
+  Clock,
+  Palette,
+  Settings,
+  Home,
+  Printer,
+  Menu,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 
 interface SidebarProps {
   role: string;
@@ -18,7 +37,7 @@ interface SidebarProps {
 interface NavItem {
   name: string;
   subtitle: string;
-  icon: string;
+  icon: LucideIcon;
   href: string;
   highlight?: boolean;
 }
@@ -33,13 +52,13 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
       {
         name: "Dashboard",
         subtitle: "Overview & quick stats",
-        icon: "📊",
+        icon: LayoutDashboard,
         href: "/dashboard",
       },
       {
         name: "Live Hub",
         subtitle: "Real-time public standings",
-        icon: "📡",
+        icon: Radio,
         href: "/hub",
         highlight: true,
       },
@@ -53,69 +72,69 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
         {
           name: "Events",
           subtitle: "Create & manage festival events",
-          icon: "🎭",
+          icon: CalendarDays,
           href: "/dashboard/events",
         },
         {
           name: "Teams",
           subtitle: "Teams, managers & flag colors",
-          icon: "🛡️",
+          icon: Shield,
           href: "/dashboard/teams",
         },
         {
           name: "Candidates",
           subtitle: "Register & approve participants",
-          icon: "👤",
+          icon: UserCircle,
           href: "/dashboard/candidates",
         },
         {
           name: "Programs",
           subtitle: "Competition programs & rules",
-          icon: "📜",
+          icon: FileText,
           href: "/dashboard/programs",
         },
         {
           name: "Program Assignments",
           subtitle: "Enroll candidates into programs",
-          icon: "📝",
+          icon: ClipboardList,
           href: "/dashboard/assignments",
         },
         {
           name: "Results & Scoring",
           subtitle: "Enter marks & publish results",
-          icon: "🏆",
+          icon: Trophy,
           href: "/dashboard/scoring",
         },
         {
           name: "Reports Hub",
           subtitle: "Hall of Fame, PDF & Excel",
-          icon: "📊",
+          icon: BarChart3,
           href: "/dashboard/reports",
           highlight: true,
         },
         {
           name: "Global Schedule",
           subtitle: "Timeline & venue planning",
-          icon: "📅",
+          icon: Clock,
           href: "/dashboard/schedule",
         },
         {
           name: "Media Branding",
           subtitle: "Posters, logos & branding",
-          icon: "🎨",
+          icon: Palette,
           href: "/dashboard/media",
           highlight: true,
         },
         {
           name: "Settings",
           subtitle: "Config, audit & maintenance",
-          icon: "⚙️",
+          icon: Settings,
           href: "/dashboard/settings",
         },
         {
           name: "Homepage & Theme",
           subtitle: "Colors, hero & committee",
-          icon: "🎨",
+          icon: Home,
           href: "/dashboard/settings/homepage",
         },
       ],
@@ -129,14 +148,14 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
         {
           name: "Poster Branding",
           subtitle: "Design result posters",
-          icon: "🎨",
+          icon: Palette,
           href: "/dashboard/media",
           highlight: true,
         },
         {
           name: "View Results",
           subtitle: "Browse published results",
-          icon: "🏆",
+          icon: Trophy,
           href: "/dashboard/scoring",
         },
       ],
@@ -150,25 +169,25 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
         {
           name: "Candidates",
           subtitle: "Register your team's participants",
-          icon: "👤",
+          icon: UserCircle,
           href: "/dashboard/candidates",
         },
         {
           name: "Program Assignments",
           subtitle: "Enroll candidates in programs",
-          icon: "📜",
+          icon: ClipboardList,
           href: "/dashboard/assignments",
         },
         {
           name: "Fest Reports",
           subtitle: "Standings, points & PDF prints",
-          icon: "📊",
+          icon: BarChart3,
           href: "/dashboard/reports",
         },
         {
           name: "Print Schedule",
           subtitle: "View & print team timetable",
-          icon: "🖨️",
+          icon: Printer,
           href: "/dashboard/schedule",
         },
       ],
@@ -315,7 +334,7 @@ export default function DashboardSidebar({
                 style={item.highlight && !isActive(item.href) ? { borderLeftColor: "rgba(14,165,233,0.3)" } : undefined}
               >
                 <div className="nav-icon">
-                  <span style={{ fontSize: "0.95rem" }}>{item.icon}</span>
+                  <item.icon size={18} strokeWidth={2} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span
@@ -367,7 +386,7 @@ export default function DashboardSidebar({
           </span>
         </div>
         <button onClick={toggle} className="burger-btn" aria-label="Toggle menu">
-          {isOpen ? "✕" : "☰"}
+          {isOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
         </button>
       </header>
 
