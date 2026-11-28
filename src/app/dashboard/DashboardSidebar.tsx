@@ -87,6 +87,13 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
           href: "/dashboard/scoring",
         },
         {
+          name: "Reports Hub",
+          subtitle: "Hall of Fame, PDF & Excel",
+          icon: "📊",
+          href: "/dashboard/reports",
+          highlight: true,
+        },
+        {
           name: "Global Schedule",
           subtitle: "Timeline & venue planning",
           icon: "📅",
@@ -151,6 +158,12 @@ function getNavItems(role: string): { section: string; items: NavItem[] }[] {
           subtitle: "Enroll candidates in programs",
           icon: "📜",
           href: "/dashboard/assignments",
+        },
+        {
+          name: "Fest Reports",
+          subtitle: "Standings, points & PDF prints",
+          icon: "📊",
+          href: "/dashboard/reports",
         },
         {
           name: "Print Schedule",

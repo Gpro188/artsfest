@@ -485,6 +485,36 @@ export default function PublicDashboard({
       ) : activeTab === "hall" ? (
         /* ─── TAB 2: HALL OF FAME ─── */
         <div className="hall-layout">
+          {/* Top Banner for Full Hall of Fame & Exports */}
+          <div style={{ gridColumn: '1 / -1', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', padding: '12px 18px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <div>
+              <span style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                ⭐ Full Hall of Fame & Total Students Standings
+              </span>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                View complete student list with total achieved points, Excel export, and official printable PDF.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <a
+                href={`/print/hall-of-fame?eventId=${activeEventId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ fontSize: '0.8rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                🖨️ Printable PDF
+              </a>
+              <Link
+                href={`/dashboard/reports?eventId=${activeEventId}`}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.8rem', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                📊 Admin Reports & Excel
+              </Link>
+            </div>
+          </div>
+
           {/* Left Column: Overall Top 5 Stars */}
           <div className="hall-overall-col">
             <h3 className="side-section-title font-display">👑 Overall Top 5 Stars</h3>

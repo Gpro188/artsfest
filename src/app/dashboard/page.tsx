@@ -226,6 +226,7 @@ export default async function DashboardPage() {
   if (["ADMIN", "SUPER_ADMIN"].includes(role)) {
     quickLinks.push(
       { label: "Results Entry", href: "/dashboard/scoring", icon: "🏆", color: "#6366f1" },
+      { label: "Reports & Hall of Fame", href: "/dashboard/reports", icon: "📊", color: "#8b5cf6" },
       { label: "Manage Schedule", href: "/dashboard/schedule", icon: "📅", color: "#10b981" },
       { label: "Media Branding", href: "/dashboard/media", icon: "🎨", color: "#0ea5e9" }
     );
@@ -233,6 +234,7 @@ export default async function DashboardPage() {
     quickLinks.push(
       { label: "Register Candidates", href: "/dashboard/candidates", icon: "👤", color: "#ec4899" },
       { label: "View Assignments", href: "/dashboard/assignments", icon: "📜", color: "#f59e0b" },
+      { label: "Fest Reports", href: "/dashboard/reports", icon: "📊", color: "#8b5cf6" },
       { label: "Print Schedule", href: "/dashboard/schedule", icon: "🖨️", color: "#10b981" }
     );
   } else if (role === "MEDIA") {

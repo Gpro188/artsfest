@@ -147,7 +147,28 @@ export default function ResultsExportPrintBar({
       </div>
 
       {/* Action Buttons: Print & Excel */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+        {/* Reports & Hall of Fame Link */}
+        <a
+          href={`/dashboard/reports?eventId=${eventId}`}
+          className="btn"
+          style={{
+            padding: "6px 14px",
+            fontSize: "0.82rem",
+            fontWeight: 700,
+            backgroundColor: "rgba(139, 92, 246, 0.12)",
+            color: "#8b5cf6",
+            border: "1.5px solid #8b5cf6",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            textDecoration: "none"
+          }}
+        >
+          📊 Reports & Hall of Fame
+        </a>
+
         {/* Print Filtered Results Button */}
         <a
           href={printUrl}
