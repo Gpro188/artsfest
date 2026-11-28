@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import CustomerGuidelines from "./CustomerGuidelines";
 import { getFestivalEventIds } from "@/lib/eventScope";
 import DashboardIcons from "./DashboardIcons";
 
@@ -461,8 +460,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-
-      <CustomerGuidelines role={role} />
     </div>
   );
 }

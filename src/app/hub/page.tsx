@@ -2,7 +2,6 @@ import { getHubData } from "../actions/hub";
 import HubClient from "../components/HubClient";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
-import HubTourWrapper from "./HubTourWrapper";
 import { Suspense } from "react";
 
 export const revalidate = 30; // Revalidate every 30 seconds to save serverless invocations
@@ -37,8 +36,6 @@ export default async function HubPage() {
       <footer style={{ padding: 'var(--spacing-xl) 0', borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.8rem' }}>
         <p>&copy; {new Date().getFullYear()} {settings.festName} Management Hub. All rights reserved.</p>
       </footer>
-
-      <HubTourWrapper />
     </div>
   );
 }

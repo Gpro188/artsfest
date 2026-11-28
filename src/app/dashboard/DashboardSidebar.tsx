@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
@@ -22,6 +22,9 @@ import {
   Printer,
   Menu,
   X,
+  PanelLeftOpen,
+  PanelLeftClose,
+  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 
@@ -223,10 +226,21 @@ export default function DashboardSidebar({
   teamName,
 }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [popout, setPopout] = useState<{
+    section: string;
+    items: NavItem[];
+    activeHref: string;
+    top: number;
+  } | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
 
   const toggle = () => setIsOpen(!isOpen);
-  const close = () => setIsOpen(false);
+  const close = () => {
+    setIsOpen(false);
+    setPopout(null);
+  };
 
   const isActive = useCallback(
     (href: string) => {
@@ -236,128 +250,239 @@ export default function DashboardSidebar({
     [pathname]
   );
 
+  const handleItemMouseEnter = (
+    e: React.MouseEvent<HTMLElement>,
+    section: string,
+    items: NavItem[],
+    itemHref: string
+  ) => {
+    if (isExpanded || isOpen) return;
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const maxTop = typeof window !== "undefined" ? window.innerHeight - Math.min(items.length * 52 + 64, 420) : rect.top;
+    setPopout({
+      section,
+      items,
+      activeHref: itemHref,
+      top: Math.max(12, Math.min(rect.top - 8, maxTop)),
+    });
+  };
+
+  const scheduleClosePopout = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setPopout(null);
+    }, 140);
+  };
+
+  const cancelClosePopout = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+  };
+
   const navGroups = getNavItems(role);
+  const showFull = isExpanded || isOpen;
 
   const SidebarContent = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Logo Area */}
-      <div className="sidebar-logo-area">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "10px",
-              background: festLogo ? "transparent" : "linear-gradient(135deg, #6366f1, #4f46e5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              boxShadow: festLogo ? "none" : "0 2px 8px rgba(99,102,241,0.35)",
-            }}
-          >
-            <img
-              src={festLogo || "/logo.png"}
-              alt="Logo"
-              style={{ width: festLogo ? "100%" : "26px", height: festLogo ? "100%" : "26px", objectFit: "contain", borderRadius: "10px" }}
-            />
-          </div>
-          <div>
+      <div className={`sidebar-logo-area ${!showFull ? "compact" : ""}`}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: showFull ? "space-between" : "center",
+            gap: "0.625rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
             <div
               style={{
-                fontWeight: 700,
-                fontSize: "1rem",
-                color: "var(--text-primary)",
-                lineHeight: 1.2,
+                width: "38px",
+                height: "38px",
+                borderRadius: "10px",
+                background: festLogo ? "transparent" : "linear-gradient(135deg, #6366f1, #4f46e5)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                boxShadow: festLogo ? "none" : "0 2px 8px rgba(99,102,241,0.35)",
               }}
             >
-              {festName}
+              <img
+                src={festLogo || "/logo.png"}
+                alt="Logo"
+                style={{ width: festLogo ? "100%" : "24px", height: festLogo ? "100%" : "24px", objectFit: "contain", borderRadius: "10px" }}
+              />
             </div>
-            <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "2px" }}>
-              {festMoto}
-            </div>
+            {showFull && (
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: "0.95rem",
+                    color: "var(--text-primary)",
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {festName}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    color: "var(--text-muted)",
+                    marginTop: "2px",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {festMoto}
+                </div>
+              </div>
+            )}
           </div>
+
+          {showFull && !isOpen && (
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="sidebar-collapse-btn"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          )}
         </div>
+
+        {!showFull && (
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="sidebar-collapse-btn compact-expand-btn"
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={16} />
+          </button>
+        )}
       </div>
 
       {/* User Area */}
-      <div className="sidebar-user-area">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+      <div className={`sidebar-user-area ${!showFull ? "compact" : ""}`}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: showFull ? "flex-start" : "center",
+            gap: "0.625rem",
+          }}
+          title={!showFull ? `${username} (${role.replace("_", " ")})` : undefined}
+        >
           <div
             style={{
-              width: "36px",
-              height: "36px",
+              width: "34px",
+              height: "34px",
               borderRadius: "50%",
               background: `linear-gradient(135deg, ${roleColor(role)}, ${roleColor(role)}aa)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              fontSize: "0.875rem",
+              fontSize: "0.85rem",
               fontWeight: 700,
               color: "white",
+              boxShadow: `0 2px 8px ${roleColor(role)}40`,
             }}
           >
             {username.charAt(0).toUpperCase()}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontWeight: 600,
-                fontSize: "0.85rem",
-                color: "var(--text-primary)",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {username}
+          {showFull && (
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  color: "var(--text-primary)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {username}
+              </div>
+              <div style={{ marginTop: "2px" }}>
+                <span className="role-badge">{role.replace("_", " ").toLowerCase()}</span>
+              </div>
             </div>
-            <div style={{ marginTop: "2px" }}>
-              <span className="role-badge">{role.replace("_", " ").toLowerCase()}</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="sidebar-nav no-scrollbar">
-        {navGroups.map((group) => (
+        {navGroups.map((group, groupIdx) => (
           <div key={group.section}>
-            <div className="nav-section-title">{group.section}</div>
-            {group.items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={close}
-                className={`nav-link-wrapper ${isActive(item.href) ? "active" : ""}`}
-                style={item.highlight && !isActive(item.href) ? { borderLeftColor: "rgba(14,165,233,0.3)" } : undefined}
-              >
-                <div className="nav-icon">
-                  <item.icon size={18} strokeWidth={2} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span
-                    className="nav-link-main"
-                    style={
-                      item.highlight && !isActive(item.href)
-                        ? { color: "#0ea5e9", fontWeight: 600 }
-                        : undefined
-                    }
-                  >
-                    {item.name}
-                  </span>
-                  <span className="nav-link-subtitle">{item.subtitle}</span>
-                </div>
-              </Link>
-            ))}
+            {showFull ? (
+              <div className="nav-section-title">{group.section}</div>
+            ) : (
+              groupIdx > 0 && <div className="nav-rail-divider" />
+            )}
+            {group.items.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={close}
+                  onMouseEnter={(e) => handleItemMouseEnter(e, group.section, group.items, item.href)}
+                  onMouseLeave={scheduleClosePopout}
+                  className={`nav-link-wrapper ${active ? "active" : ""} ${!showFull ? "compact" : ""}`}
+                  style={
+                    showFull && item.highlight && !active
+                      ? { borderLeftColor: "rgba(14,165,233,0.35)" }
+                      : undefined
+                  }
+                >
+                  <div className="nav-icon">
+                    <item.icon size={18} strokeWidth={2} />
+                  </div>
+                  {showFull && (
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span
+                        className="nav-link-main"
+                        style={
+                          item.highlight && !active
+                            ? { color: "#0ea5e9", fontWeight: 600 }
+                            : undefined
+                        }
+                      >
+                        {item.name}
+                      </span>
+                      <span className="nav-link-subtitle">{item.subtitle}</span>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         ))}
       </nav>
 
       {/* Footer */}
-      <div className="sidebar-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <LogoutButton />
+      <div
+        className="sidebar-footer"
+        style={{
+          display: "flex",
+          flexDirection: showFull ? "row" : "column",
+          alignItems: "center",
+          justifyContent: showFull ? "space-between" : "center",
+          gap: "0.625rem",
+          padding: showFull ? "0.875rem 1.25rem" : "0.75rem 0.5rem",
+        }}
+      >
+        <LogoutButton compact={!showFull} />
         <ThemeToggle />
       </div>
     </div>
@@ -394,9 +519,44 @@ export default function DashboardSidebar({
       {isOpen && <div className="sidebar-overlay" onClick={close} />}
 
       {/* Sidebar */}
-      <aside className={`dashboard-sidebar no-print ${isOpen ? "open" : ""}`}>
+      <aside className={`dashboard-sidebar no-print ${isExpanded ? "expanded" : "collapsed"} ${isOpen ? "open" : ""}`}>
         <SidebarContent />
       </aside>
+
+      {/* Floating Pop-out Menu (Desktop minimal rail) */}
+      {!showFull && popout && (
+        <div
+          className="sidebar-popout no-print"
+          style={{ top: `${popout.top}px` }}
+          onMouseEnter={cancelClosePopout}
+          onMouseLeave={scheduleClosePopout}
+        >
+          <div className="sidebar-popout-header">{popout.section}</div>
+          <div className="sidebar-popout-list">
+            {popout.items.map((item) => {
+              const active = isActive(item.href);
+              const hovered = popout.activeHref === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={close}
+                  className={`sidebar-popout-item ${active ? "active" : ""} ${hovered ? "hovered" : ""}`}
+                >
+                  <div className="sidebar-popout-icon">
+                    <item.icon size={16} strokeWidth={2} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="sidebar-popout-title">{item.name}</div>
+                    <div className="sidebar-popout-sub">{item.subtitle}</div>
+                  </div>
+                  <ChevronRight size={14} className="sidebar-popout-arrow" />
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -354,10 +354,6 @@ function LoginForm() {
           `
         }} />
       </div>
-
-      {!isSuperAdmin && (
-        <OnboardingTour pageId="login" steps={getTourSteps("login")} />
-      )}
     </div>
   );
 }
