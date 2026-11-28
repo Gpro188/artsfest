@@ -389,27 +389,48 @@ export default function ReportsHubClient({
           </p>
         </div>
 
-        {events.length > 1 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600" }}>
-              Festival Event:
-            </label>
-            <select
-              value={activeEventId}
-              onChange={(e) => {
-                window.location.href = `/dashboard/reports?eventId=${e.target.value}`;
-              }}
-              className="form-control"
-              style={{ padding: "6px 12px", fontSize: "0.85rem", borderRadius: "8px", minWidth: "160px" }}
-            >
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setActiveTab("printCenter")}
+            className={activeTab === "printCenter" ? "btn btn-primary" : "btn btn-secondary"}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 14px",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              borderRadius: "10px",
+              borderColor: activeTab === "printCenter" ? undefined : "rgba(99, 102, 241, 0.35)",
+              color: activeTab === "printCenter" ? "#fff" : "var(--primary)",
+            }}
+          >
+            <Printer size={16} />
+            <span>Print Center (All PDFs)</span>
+          </button>
+
+          {events.length > 1 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600" }}>
+                Festival Event:
+              </label>
+              <select
+                value={activeEventId}
+                onChange={(e) => {
+                  window.location.href = `/dashboard/reports?eventId=${e.target.value}`;
+                }}
+                className="form-control"
+                style={{ padding: "6px 12px", fontSize: "0.85rem", borderRadius: "8px", minWidth: "160px" }}
+              >
+                {events.map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    {ev.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ─── QUICK STATS BANNER ─── */}
@@ -482,22 +503,23 @@ export default function ReportsHubClient({
       <div
         style={{
           display: "flex",
-          gap: "8px",
+          flexWrap: "wrap",
+          gap: "6px",
           borderBottom: "1px solid var(--border-color)",
           marginBottom: "1.5rem",
-          overflowX: "auto",
-          paddingBottom: "4px"
+          paddingBottom: "8px"
         }}
       >
         <button
           onClick={() => setActiveTab("hall")}
           style={{
-            padding: "10px 18px",
+            padding: "8px 14px",
             border: "none",
-            background: "none",
+            background: activeTab === "hall" ? "rgba(99, 102, 241, 0.08)" : "none",
+            borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.875rem",
             color: activeTab === "hall" ? "var(--primary)" : "var(--text-muted)",
             borderBottom: activeTab === "hall" ? "2px solid var(--primary)" : "2px solid transparent",
             display: "inline-flex",
@@ -524,12 +546,13 @@ export default function ReportsHubClient({
         <button
           onClick={() => setActiveTab("teams")}
           style={{
-            padding: "10px 18px",
+            padding: "8px 14px",
             border: "none",
-            background: "none",
+            background: activeTab === "teams" ? "rgba(99, 102, 241, 0.08)" : "none",
+            borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.875rem",
             color: activeTab === "teams" ? "var(--primary)" : "var(--text-muted)",
             borderBottom: activeTab === "teams" ? "2px solid var(--primary)" : "2px solid transparent",
             display: "inline-flex",
@@ -556,12 +579,13 @@ export default function ReportsHubClient({
         <button
           onClick={() => setActiveTab("results")}
           style={{
-            padding: "10px 18px",
+            padding: "8px 14px",
             border: "none",
-            background: "none",
+            background: activeTab === "results" ? "rgba(99, 102, 241, 0.08)" : "none",
+            borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.875rem",
             color: activeTab === "results" ? "var(--primary)" : "var(--text-muted)",
             borderBottom: activeTab === "results" ? "2px solid var(--primary)" : "2px solid transparent",
             display: "inline-flex",
@@ -588,12 +612,13 @@ export default function ReportsHubClient({
         <button
           onClick={() => setActiveTab("candidates")}
           style={{
-            padding: "10px 18px",
+            padding: "8px 14px",
             border: "none",
-            background: "none",
+            background: activeTab === "candidates" ? "rgba(99, 102, 241, 0.08)" : "none",
+            borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.875rem",
             color: activeTab === "candidates" ? "var(--primary)" : "var(--text-muted)",
             borderBottom: activeTab === "candidates" ? "2px solid var(--primary)" : "2px solid transparent",
             display: "inline-flex",
@@ -609,12 +634,13 @@ export default function ReportsHubClient({
         <button
           onClick={() => setActiveTab("schedule")}
           style={{
-            padding: "10px 18px",
+            padding: "8px 14px",
             border: "none",
-            background: "none",
+            background: activeTab === "schedule" ? "rgba(99, 102, 241, 0.08)" : "none",
+            borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.875rem",
             color: activeTab === "schedule" ? "var(--primary)" : "var(--text-muted)",
             borderBottom: activeTab === "schedule" ? "2px solid var(--primary)" : "2px solid transparent",
             display: "inline-flex",
@@ -630,12 +656,13 @@ export default function ReportsHubClient({
         <button
           onClick={() => setActiveTab("printCenter")}
           style={{
-            padding: "10px 18px",
+            padding: "8px 14px",
             border: "none",
-            background: "none",
+            background: activeTab === "printCenter" ? "rgba(99, 102, 241, 0.08)" : "none",
+            borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.875rem",
             color: activeTab === "printCenter" ? "var(--primary)" : "var(--text-muted)",
             borderBottom: activeTab === "printCenter" ? "2px solid var(--primary)" : "2px solid transparent",
             display: "inline-flex",
